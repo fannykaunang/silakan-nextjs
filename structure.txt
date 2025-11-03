@@ -1,0 +1,63 @@
+D:\FANNY\silakan\silakan
+├── app
+|  ├── (auth)
+|  |  └── login
+|  ├── (dashboard)
+|  |  ├── dashboard
+|  |  ├── layout.tsx
+|  |  └── profile
+|  ├── api
+|  |  ├── laporan
+|  |  ├── login
+|  |  ├── logout
+|  |  ├── profile
+|  |  └── test
+|  ├── apple-touch-icon.png
+|  ├── favicon.ico
+|  ├── globals.css
+|  ├── layout.tsx
+|  └── page.tsx
+├── catatan.md
+├── components
+|  ├── layout
+|  |  ├── DashboardLayout.tsx
+|  |  ├── DashboardShell.tsx
+|  |  ├── HeaderClient.tsx
+|  |  ├── SidebarClient copy.tsx
+|  |  ├── SidebarClient.tsx
+|  |  └── unused_ProfileLayout.tsx
+|  ├── theme-provider.tsx
+|  └── ui
+|     ├── avatar.tsx
+|     ├── badge.tsx
+|     ├── button.tsx
+|     ├── card.tsx
+|     ├── dropdown-menu.tsx
+|     ├── input.tsx
+|     ├── scroll-area.tsx
+|     ├── separator.tsx
+|     ├── sheet.tsx
+|     ├── table.tsx
+|     ├── tabs.tsx
+|     └── theme-toggle.tsx
+├── components.json
+├── components2.json
+├── eslint.config.mjs
+├── lib
+|  ├── db.ts
+|  ├── helpers
+|  |  ├── auth-helper.ts
+|  |  ├── db-helpers.ts
+|  |  └── entago-helper.ts
+|  ├── models
+|  |  ├── laporan.model.ts
+|  |  ├── log.model.ts
+|  |  └── pegawai.model.ts
+|  ├── types
+|  |  ├── index.ts
+|  |  ├── laporan.types.ts
+|  |  ├── log.types.ts
+|  |  └── pegawai.types.ts
+|  └── utils.ts
+├── next-env.d.ts
+├── next.config.ts
