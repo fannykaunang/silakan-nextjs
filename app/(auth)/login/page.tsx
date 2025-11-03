@@ -182,7 +182,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-                SILAKAN Masuk
+                SILAKAN
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Sistem Informasi Laporan Kegiatan

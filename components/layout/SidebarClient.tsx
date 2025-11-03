@@ -14,7 +14,10 @@ import {
   Bell,
   FileText,
   Briefcase,
-  ScrollText, // Menambahkan ikon baru untuk Laporan
+  ClipboardList,
+  FileBarChart,
+  Calendar,
+  TrendingUp,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -79,82 +82,114 @@ export default function SidebarClient({
 }: SidebarProps) {
   const pathname = usePathname();
 
-  // 1. Definisikan item menu berdasarkan grup fungsional
+  // 1. Definisikan semua item link yang relevan berdasarkan level pengguna
 
-  // --- A. Bagian Umum (Level >= 0) ---
-  const generalItems: MenuItemLink[] = [
+  // --- A. Bagian Dashboard & Profil (Semua Level) ---
+  const dashboardItems: MenuItemLink[] = [
     { href: "/dashboard", label: "Beranda", icon: Home },
-    { href: "/profile", label: "Profil", icon: User },
-    { href: "/notifikasi", label: "Notifikasi", icon: Bell },
+    { href: "/profile", label: "Profil Saya", icon: User },
   ];
 
-  // --- B. Bagian Kegiatan (Level >= 1) ---
-  const kegiatanItems: MenuItemLink[] = [];
+  // --- B. Bagian Kegiatan (Level >= 0) ---
+  const activityItems: MenuItemLink[] = [
+    { href: "/kegiatan", label: "Kegiatan Saya", icon: ClipboardList },
+    { href: "/jadwal", label: "Jadwal", icon: Calendar },
+  ];
+
+  // --- C. Bagian Laporan (Level >= 0) ---
+  const reportItems: MenuItemLink[] = [
+    {
+      href: "/laporan-kegiatan",
+      label: "Laporan Kegiatan",
+      icon: FileBarChart,
+    },
+  ];
+
+  // Tambahkan laporan statistik untuk level supervisor ke atas
+  if (userLevel >= 2) {
+    reportItems.push({
+      href: "/laporan/statistik",
+      label: "Statistik",
+      icon: TrendingUp,
+    });
+  }
+
+  // --- D. Bagian Manajemen Data (Level >= 1) ---
+  const managementItems: MenuItemLink[] = [];
+
   if (userLevel >= 1) {
-    kegiatanItems.push(
+    managementItems.push(
+      { href: "/pegawai", label: "Data Pegawai", icon: Users },
       {
         href: "/template-kegiatan",
         label: "Template Kegiatan",
         icon: FileText,
-      },
-      { href: "/laporan", label: "Laporan Kegiatan", icon: ScrollText } // ITEM BARU
-    );
-  }
-
-  // --- C. Bagian Master Data (Level >= 1) ---
-  const masterDataItems: MenuItemLink[] = [];
-  if (userLevel >= 1) {
-    masterDataItems.push({ href: "/pegawai", label: "Pegawai", icon: Users });
-  }
-  // Hanya Admin (Level 3)
-  if (userLevel === 3) {
-    masterDataItems.push(
-      {
-        href: "/atasan-pegawai",
-        label: "Atasan Pegawai",
-        icon: Briefcase,
-      },
-      {
-        href: "/kategori-kegiatan",
-        label: "Kategori Kegiatan",
-        icon: Tag,
       }
     );
   }
 
-  // --- D. Bagian Administrasi (Level 3) ---
-  const adminItems: MenuItemLink[] = [];
+  // --- E. Bagian Konfigurasi (Level 2-3) ---
+  const configItems: MenuItemLink[] = [];
+
+  if (userLevel >= 2) {
+    configItems.push({
+      href: "/atasan-pegawai",
+      label: "Atasan Pegawai",
+      icon: Briefcase,
+    });
+  }
+
   if (userLevel === 3) {
-    adminItems.push(
+    configItems.push({
+      href: "/kategori-kegiatan",
+      label: "Kategori Kegiatan",
+      icon: Tag,
+    });
+  }
+
+  // --- F. Bagian Notifikasi (Semua Level) ---
+  const notificationItems: MenuItemLink[] = [
+    { href: "/notifikasi", label: "Notifikasi", icon: Bell },
+  ];
+
+  // --- G. Bagian Sistem (Admin Only - Level 3) ---
+  const systemItems: MenuItemLink[] = [];
+  if (userLevel === 3) {
+    systemItems.push(
       { href: "/logs", label: "Log Aktivitas", icon: Activity },
-      { href: "/settings", label: "Pengaturan", icon: Settings }
+      { href: "/settings", label: "Pengaturan Sistem", icon: Settings }
     );
   }
 
   // 2. Gabungkan item-item yang sudah difilter ke dalam array seksi
-  const menuSections: MenuSection[] = [{ title: "Umum", items: generalItems }];
+  const menuSections: MenuSection[] = [
+    { title: "Dashboard", items: dashboardItems },
+    { title: "Kegiatan", items: activityItems },
+    { title: "Laporan", items: reportItems },
+  ];
 
-  if (kegiatanItems.length > 0) {
-    menuSections.push({ title: "Kegiatan", items: kegiatanItems });
+  if (managementItems.length > 0) {
+    menuSections.push({ title: "Manajemen Data", items: managementItems });
   }
 
-  if (masterDataItems.length > 0) {
-    menuSections.push({ title: "Master Data", items: masterDataItems });
+  if (configItems.length > 0) {
+    menuSections.push({ title: "Konfigurasi", items: configItems });
   }
 
-  if (adminItems.length > 0) {
-    menuSections.push({ title: "Administrasi", items: adminItems });
+  menuSections.push({ title: "Notifikasi", items: notificationItems });
+
+  if (systemItems.length > 0) {
+    menuSections.push({ title: "Sistem", items: systemItems });
   }
 
   return (
     <aside
-      // PERUBAHAN: Menambahkan flex flex-col untuk layout scrollable
       className={`fixed left-0 top-0 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-40 transition-all flex flex-col ${
         sidebarOpen ? "w-64" : "w-20"
       }`}
       aria-label="Sidebar navigasi">
-      {/* Header / brand + toggle (dibuat 'flex-shrink-0' agar tidak ter-scroll) */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+      {/* Header / brand + toggle */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
         {sidebarOpen && (
           <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             SILAKAN
@@ -173,8 +208,8 @@ export default function SidebarClient({
         </button>
       </div>
 
-      {/* Menu Navigasi Bertingkat (dibuat 'flex-grow' dan 'overflow-y-auto' untuk scrolling) */}
-      <nav className="p-4 space-y-4 flex-grow overflow-y-auto">
+      {/* Menu Navigasi dengan Scroll */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
         {menuSections.map(
           (section) =>
             // Hanya render bagian jika ada item di dalamnya
@@ -187,8 +222,7 @@ export default function SidebarClient({
                   </h3>
                 ) : (
                   // Untuk sidebar tertutup, tambahkan sedikit pemisah vertikal antar grup
-                  // Pemisah ini tidak akan muncul pada grup terakhir
-                  <hr className="my-4 border-gray-200 dark:border-gray-700 last:hidden" />
+                  <div className="h-px bg-gray-200 dark:bg-gray-700 my-4" />
                 )}
 
                 {/* List Item Menu dalam bentuk UL/LI */}
@@ -207,25 +241,48 @@ export default function SidebarClient({
         )}
       </nav>
 
-      {/* Footer - User Level Badge (dibuat 'flex-shrink-0' dan dihapus 'absolute') */}
-      <div className="p-4 flex-shrink-0">
-        {sidebarOpen && (
-          <div className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+      {/* Footer - User Level Badge */}
+      {sidebarOpen && (
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+          <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Level:{" "}
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {userLevel === 3
-                  ? "Admin"
-                  : userLevel === 2
-                  ? "Supervisor"
-                  : userLevel === 1
-                  ? "Operator"
-                  : "User"}
-              </span>
+              Level Akses
+            </p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-1">
+              {userLevel === 3
+                ? "👑 Administrator"
+                : userLevel === 2
+                ? "⭐ Supervisor"
+                : userLevel === 1
+                ? "📋 Operator"
+                : "👤 User"}
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Scrollbar Custom Styles */}
+      <style jsx>{`
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 3px;
+        }
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: #4b5563;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+        .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: #6b7280;
+        }
+      `}</style>
     </aside>
   );
 }
