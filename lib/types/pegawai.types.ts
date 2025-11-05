@@ -13,6 +13,7 @@ export interface Pegawai extends RowDataPacket {
   pegawai_privilege?: string;
   pegawai_status?: number;
   jabatan?: string;
+  skpdid?: number | null;
   skpd?: string;
   sotk?: string;
   tgl_mulai_kerja?: string;
@@ -42,6 +43,7 @@ export interface CreatePegawaiInput {
   pegawai_privilege?: string;
   pegawai_status?: number;
   jabatan?: string;
+  skpdid?: number | null;
   skpd?: string;
   sotk?: string;
   tgl_mulai_kerja?: string;

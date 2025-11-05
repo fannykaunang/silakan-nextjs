@@ -12,7 +12,11 @@ import {
 } from "@/lib/helpers/entago-helper";
 import { upsertPegawai } from "@/lib/models/pegawai.model";
 import { createLog } from "@/lib/models/log.model";
-import { setAuthCookie, getClientInfo } from "@/lib/helpers/auth-helper";
+import {
+  setAuthCookie,
+  getClientInfo,
+  getUserFromCookie,
+} from "@/lib/helpers/auth-helper";
 
 import {
   getIp,
@@ -23,6 +27,40 @@ import {
   clearDuplicate,
 } from "@/lib/rate-limit";
 import { redis } from "@/lib/redis";
+
+export async function GET() {
+  try {
+    const user = await getUserFromCookie();
+
+    if (!user) {
+      return NextResponse.json(
+        { result: 0, response: "Belum login" },
+        { status: 401 }
+      );
+    }
+
+    const maskedEmail = user.email
+      ? user.email.replace(/(.{3}).+(@.+)/, "$1***$2")
+      : "";
+
+    return NextResponse.json(
+      {
+        result: 1,
+        response: "Session aktif",
+        email: maskedEmail,
+        level: user.level ?? null,
+        skpdid: user.skpdid ?? null,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Failed to load session info:", error);
+    return NextResponse.json(
+      { result: 0, response: "Gagal memuat informasi sesi" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(req: Request) {
   try {

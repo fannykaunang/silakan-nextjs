@@ -12,10 +12,47 @@ import { createLog } from "@/lib/models/log.model";
 // GET: Fetch semua pegawai
 export async function GET() {
   try {
-    console.log("🔍 Fetching all pegawai...");
+    const user = await requireAuth();
+    const isAdmin = user.level >= 3;
+    const isSubAdmin = user.level === 2;
+
+    console.log(
+      `🔍 Fetching pegawai for user level ${user.level} (pegawai_id: ${user.pegawai_id}, skpdid: ${user.skpdid})`
+    );
+
+    const params: (string | number)[] = [];
+    let whereClause = "";
+
+    if (isAdmin) {
+      whereClause = "";
+    } else if (isSubAdmin) {
+      if (typeof user.skpdid !== "number") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Data SKPD pengguna tidak tersedia",
+          },
+          { status: 400 }
+        );
+      }
+
+      whereClause = " WHERE skpdid = ?";
+      params.push(user.skpdid);
+    } else if (typeof user.pegawai_id === "number") {
+      whereClause = " WHERE pegawai_id = ?";
+      params.push(user.pegawai_id);
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Data pegawai tidak ditemukan untuk pengguna ini",
+        },
+        { status: 400 }
+      );
+    }
 
     const pegawaiList = await executeQuery<any>(
-      `SELECT 
+      `SELECT
         pegawai_id,
         pegawai_pin,
         pegawai_nip,
@@ -28,10 +65,12 @@ export async function GET() {
         pegawai_status,
         jabatan,
         skpd,
+        skpdid,
         sotk,
         photo_path
-      FROM pegawai_cache
-      ORDER BY pegawai_nama ASC`
+         FROM pegawai_cache${whereClause}
+      ORDER BY pegawai_nama ASC`,
+      params
     );
 
     console.log(`✅ Found ${pegawaiList.length} pegawai`);
@@ -45,7 +84,19 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("❌ Error fetching pegawai:", error);
+    if (
+      error.message?.includes("Unauthorized") ||
+      error.message?.includes("login")
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Silakan login terlebih dahulu",
+        },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

@@ -1,3 +1,4 @@
+// app/(dashboard)/dashboard/pegawai/_client.tsx
 "use client";
 
 import { useCsrfToken } from "@/hooks/useCsrfToken";
@@ -15,6 +16,7 @@ import {
   Search,
   Edit2,
   Trash2,
+  FileText,
   X,
   Save,
   Plus,
@@ -40,6 +42,7 @@ interface PegawaiData {
   pegawai_privilege: string;
   pegawai_status: number;
   jabatan: string;
+  skpdid: number | null;
   skpd: string;
   sotk: string;
   photo_path: string;
@@ -60,6 +63,8 @@ export default function PegawaiClient() {
   const [editedData, setEditedData] = useState<PegawaiData | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [userLevel, setUserLevel] = useState<number | null>(null);
+  const [userSkpdid, setUserSkpdid] = useState<number | null>(null);
 
   // ✅ Destructure dengan nama yang jelas
   const {
@@ -72,7 +77,19 @@ export default function PegawaiClient() {
 
   // Fetch data pegawai
   useEffect(() => {
-    fetchPegawaiList();
+    //fetchPegawaiList();
+    const initialize = async () => {
+      const session = await fetchSessionInfo();
+
+      if (!session) {
+        setIsFetching(false);
+        return;
+      }
+
+      await fetchPegawaiList(session);
+    };
+
+    initialize();
   }, []);
 
   // Filter berdasarkan search
@@ -96,7 +113,62 @@ export default function PegawaiClient() {
     }
   }, [searchQuery, pegawaiList]);
 
-  const fetchPegawaiList = async () => {
+  const fetchSessionInfo = async (): Promise<{
+    level: number | null;
+    skpdid: number | null;
+  } | null> => {
+    try {
+      const response = await fetch("/api/login", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result?.result !== 1) {
+        const message =
+          result?.response ||
+          result?.message ||
+          "Gagal mengambil informasi sesi pengguna";
+        setError(message);
+        return null;
+      }
+
+      const parsedLevel = Number(result.level);
+      const normalizedLevel = Number.isNaN(parsedLevel) ? null : parsedLevel;
+
+      const parsedSkpdidRaw =
+        result.skpdid === null || result.skpdid === undefined
+          ? null
+          : Number(result.skpdid);
+      let normalizedSkpdid: number | null = null;
+      if (parsedSkpdidRaw !== null && !Number.isNaN(parsedSkpdidRaw)) {
+        normalizedSkpdid = parsedSkpdidRaw;
+      }
+
+      setUserLevel(normalizedLevel);
+      setUserSkpdid(normalizedSkpdid);
+      setError(null);
+
+      return { level: normalizedLevel, skpdid: normalizedSkpdid };
+    } catch (err: any) {
+      console.error("Error fetching session info:", err);
+      setError(
+        err?.message || "Terjadi kesalahan saat memuat informasi sesi pengguna"
+      );
+      return null;
+    }
+  };
+
+  const fetchPegawaiList = async (sessionInfo?: {
+    level: number | null;
+    skpdid: number | null;
+  }) => {
     try {
       setIsFetching(true);
       setError(null);
@@ -116,8 +188,32 @@ export default function PegawaiClient() {
         throw new Error(result.message || "Gagal memuat data pegawai");
       }
 
-      setPegawaiList(result.data);
-      setFilteredList(result.data);
+      //setPegawaiList(result.data);
+      //setFilteredList(result.data);
+
+      const rawData = Array.isArray(result.data) ? result.data : [];
+
+      const normalizedData: PegawaiData[] = rawData.map((pegawai: any) => ({
+        ...pegawai,
+        skpdid:
+          pegawai?.skpdid === null || pegawai?.skpdid === undefined
+            ? null
+            : Number(pegawai.skpdid),
+      }));
+
+      const effectiveLevel = sessionInfo?.level ?? userLevel ?? null;
+      const effectiveSkpdid = sessionInfo?.skpdid ?? userSkpdid ?? null;
+
+      const finalData =
+        effectiveLevel === 2 && typeof effectiveSkpdid === "number"
+          ? normalizedData.filter(
+              (pegawai) => pegawai.skpdid === effectiveSkpdid
+            )
+          : normalizedData;
+
+      setPegawaiList(finalData);
+      setFilteredList(finalData);
+      setCurrentPage(1);
     } catch (err: any) {
       console.error("Error fetching pegawai:", err);
       setError(err?.message || "Terjadi kesalahan saat memuat data");
@@ -320,6 +416,8 @@ export default function PegawaiClient() {
     );
   };
 
+  const isAdminUser = userLevel !== null && userLevel >= 3;
+
   // ✅ Loading state - hanya check fetching, bukan token loading
   if (isFetching && pegawaiList.length === 0) {
     return (
@@ -344,11 +442,11 @@ export default function PegawaiClient() {
             {error || tokenError}
           </p>
           <div className="flex gap-3 justify-center mt-4">
-            <button
+            {/* <button
               onClick={fetchPegawaiList}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
               Coba Lagi
-            </button>
+            </button> */}
             {tokenError && (
               <button
                 onClick={refetchToken}
@@ -559,20 +657,34 @@ export default function PegawaiClient() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(pegawai)}
-                            disabled={!isTokenReady}
-                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={isTokenReady ? "Edit" : "Token belum siap"}>
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(pegawai)}
-                            disabled={!isTokenReady}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={isTokenReady ? "Hapus" : "Token belum siap"}>
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <Link
+                            href={`/laporan-kegiatan?pegawai_id=${pegawai.pegawai_id}`}
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900 rounded-lg transition"
+                            title="Lihat laporan">
+                            <FileText className="w-4 h-4" />
+                          </Link>
+                          {isAdminUser && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(pegawai)}
+                                disabled={!isTokenReady}
+                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={
+                                  isTokenReady ? "Edit" : "Token belum siap"
+                                }>
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(pegawai)}
+                                disabled={!isTokenReady}
+                                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={
+                                  isTokenReady ? "Hapus" : "Token belum siap"
+                                }>
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

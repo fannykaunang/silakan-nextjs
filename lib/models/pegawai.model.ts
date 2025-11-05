@@ -22,9 +22,9 @@ export async function upsertPegawai(data: CreatePegawaiInput): Promise<void> {
     `INSERT INTO pegawai_cache (
       pegawai_id, pegawai_pin, pegawai_nip, pegawai_nama,
       tempat_lahir, tgl_lahir, gender, pegawai_telp,
-      pegawai_privilege, pegawai_status, jabatan, skpd, sotk,
+      pegawai_privilege, pegawai_status, jabatan, skpd, skpdid, sotk,
       tgl_mulai_kerja, photo_path, last_sync
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ON DUPLICATE KEY UPDATE
       pegawai_nip = VALUES(pegawai_nip),
       pegawai_nama = VALUES(pegawai_nama),
@@ -35,6 +35,7 @@ export async function upsertPegawai(data: CreatePegawaiInput): Promise<void> {
       pegawai_privilege = VALUES(pegawai_privilege),
       pegawai_status = VALUES(pegawai_status),
       jabatan = VALUES(jabatan),
+      skpdid = VALUES(skpdid),
       skpd = VALUES(skpd),
       sotk = VALUES(sotk),
       tgl_mulai_kerja = VALUES(tgl_mulai_kerja),

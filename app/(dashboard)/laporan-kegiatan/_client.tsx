@@ -1,4 +1,4 @@
-// app/(dashboard)/dashboard/laporan/_client.tsx
+// app/(dashboard)/dashboard/laporan-kegiatan/_client.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";

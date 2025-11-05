@@ -1,3 +1,4 @@
+// app/(dashboard)/dashboard/_client.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -12,76 +13,121 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Home, Users, ShoppingCart, BarChart3 } from "lucide-react";
+import {
+  CheckCircle,
+  FileText,
+  LucideIcon,
+  RefreshCw,
+  Users,
+} from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 type Props = { userEmail?: string };
 
-const salesData = [
-  { month: "Jan", revenue: 4000, orders: 240 },
-  { month: "Feb", revenue: 3000, orders: 198 },
-  { month: "Mar", revenue: 5000, orders: 320 },
-  { month: "Apr", revenue: 4500, orders: 278 },
-  { month: "May", revenue: 6000, orders: 389 },
-  { month: "Jun", revenue: 5500, orders: 349 },
-];
+type MonthlySeriesItem = {
+  month: string;
+  total: number;
+};
 
-const recentOrders = [
-  {
-    id: "#3452",
-    customer: "Ahmad Rizki",
-    amount: "Rp 2.450.000",
-    status: "Selesai",
-    date: "10 Okt 2025",
+type DashboardData = {
+  totals: {
+    diajukan: number;
+    diverifikasi: number;
+    revisi: number;
+    pegawai: number;
+  };
+  kegiatanByMonth: MonthlySeriesItem[];
+  pegawaiByMonth: MonthlySeriesItem[];
+  latestLaporan: {
+    laporan_id: number;
+    nama_kegiatan: string;
+    status_laporan: string;
+    pegawai_nama: string | null;
+    created_at: string | null;
+  }[];
+};
+
+type DashboardResponse = {
+  success: boolean;
+  data?: DashboardData;
+  message?: string;
+};
+
+const STATUS_BADGE_STYLES: Record<string, string> = {
+  Diverifikasi: "bg-green-100 text-green-800",
+  Diajukan: "bg-blue-100 text-blue-800",
+  Revisi: "bg-yellow-100 text-yellow-800",
+  Draft: "bg-gray-100 text-gray-800",
+  Ditolak: "bg-red-100 text-red-800",
+};
+
+const generateEmptySeries = (): MonthlySeriesItem[] => {
+  const now = new Date();
+  return Array.from({ length: 6 }).map((_, index) => {
+    const offset = 5 - index;
+    const current = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    return {
+      month: current.toLocaleDateString("id-ID", {
+        month: "short",
+        year: "numeric",
+      }),
+      total: 0,
+    };
+  });
+};
+
+const defaultStats: DashboardData = {
+  totals: {
+    diajukan: 0,
+    diverifikasi: 0,
+    revisi: 0,
+    pegawai: 0,
   },
-  {
-    id: "#3451",
-    customer: "Siti Nurhaliza",
-    amount: "Rp 1.230.000",
-    status: "Proses",
-    date: "10 Okt 2025",
-  },
-  {
-    id: "#3450",
-    customer: "Budi Santoso",
-    amount: "Rp 3.890.000",
-    status: "Selesai",
-    date: "9 Okt 2025",
-  },
-  {
-    id: "#3449",
-    customer: "Dewi Lestari",
-    amount: "Rp 890.000",
-    status: "Pending",
-    date: "9 Okt 2025",
-  },
-];
+  kegiatanByMonth: generateEmptySeries(),
+  pegawaiByMonth: generateEmptySeries(),
+  latestLaporan: [],
+};
+
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("id-ID").format(value ?? 0);
+
+const formatDate = (value: string | null) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+  return date.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 const StatCard = ({
   title,
   value,
-  change,
   icon: Icon,
   color,
+  description,
+  isLoading,
 }: {
   title: string;
   value: string;
-  change: number;
-  icon: any;
+  icon: LucideIcon;
   color: string;
+  description: string;
+  isLoading: boolean;
 }) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between">
-      <div>
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex-1">
         <p className="text-sm dark:text-gray-300 font-medium">{title}</p>
         <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">
-          {value}
+          {isLoading ? "-" : value}
         </h3>
-        <p
-          className={`text-sm mt-2 ${
-            change >= 0 ? "text-green-600" : "text-red-600"
-          }`}>
-          {change >= 0 ? "↑" : "↓"} {Math.abs(change)}% dari bulan lalu
+        <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
+          {description}
         </p>
       </div>
       <div
@@ -94,6 +140,9 @@ const StatCard = ({
 
 export default function DashboardClient({ userEmail }: Props) {
   const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [stats, setStats] = useState<DashboardData>(defaultStats);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userEmail) {
@@ -108,7 +157,41 @@ export default function DashboardClient({ userEmail }: Props) {
     }
   }, [userEmail]);
 
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/dashboard");
+
+        if (!response.ok) {
+          throw new Error("Gagal memuat data dashboard");
+        }
+
+        const payload: DashboardResponse = await response.json();
+
+        if (!payload.success || !payload.data) {
+          throw new Error(payload.message || "Data dashboard tidak tersedia");
+        }
+
+        setStats(payload.data);
+        setError(null);
+      } catch (err) {
+        console.error(err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Terjadi kesalahan saat memuat data dashboard"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
   const displayEmail = userEmail || user?.email || "email@domain.com";
+  const latestLaporan = stats.latestLaporan;
 
   return (
     <DashboardLayout userEmail={displayEmail}>
@@ -118,39 +201,49 @@ export default function DashboardClient({ userEmail }: Props) {
           Selamat Datang Kembali! 👋
         </h2>
         <p className="text-gray-700 dark:text-gray-300 mt-1">
-          Berikut adalah ringkasan bisnis Anda hari ini
+          Berikut adalah ringkasan aktivitas SILAKAN hari ini
         </p>
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          title="Total Pendapatan"
-          value="Rp 45.2M"
-          change={12.5}
-          icon={BarChart3}
+          title="Kegiatan Diajukan"
+          value={formatNumber(stats.totals.diajukan)}
+          icon={FileText}
           color="bg-gradient-to-br from-blue-500 to-blue-600"
+          description="Jumlah laporan kegiatan dengan status Diajukan."
+          isLoading={isLoading}
         />
         <StatCard
-          title="Total Pesanan"
-          value="1,845"
-          change={8.2}
-          icon={ShoppingCart}
-          color="bg-gradient-to-br from-purple-500 to-purple-600"
-        />
-        <StatCard
-          title="Pelanggan Baru"
-          value="342"
-          change={-3.1}
-          icon={Users}
+          title="Kegiatan Diverifikasi"
+          value={formatNumber(stats.totals.diverifikasi)}
+          icon={CheckCircle}
           color="bg-gradient-to-br from-green-500 to-green-600"
+          description="Laporan kegiatan yang telah diverifikasi."
+          isLoading={isLoading}
         />
         <StatCard
-          title="Produk Terjual"
-          value="3,248"
-          change={15.3}
-          icon={Home}
-          color="bg-gradient-to-br from-orange-500 to-orange-600"
+          title="Kegiatan Revisi"
+          value={formatNumber(stats.totals.revisi)}
+          icon={RefreshCw}
+          color="bg-gradient-to-br from-amber-500 to-amber-600"
+          description="Laporan kegiatan yang membutuhkan revisi."
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Total Pegawai"
+          value={formatNumber(stats.totals.pegawai)}
+          icon={Users}
+          color="bg-gradient-to-br from-purple-500 to-purple-600"
+          description="Total pegawai yang terdaftar pada sistem."
+          isLoading={isLoading}
         />
       </div>
 
@@ -160,7 +253,7 @@ export default function DashboardClient({ userEmail }: Props) {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Pendapatan
+                Kegiatan 6 Bulan Terakhir
               </h3>
               <p className="text-sm dark:text-gray-400">6 bulan terakhir</p>
             </div>
@@ -169,14 +262,19 @@ export default function DashboardClient({ userEmail }: Props) {
             </button>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={salesData}>
+            <LineChart data={stats.kegiatanByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" stroke="#94a3b8" />
+              <XAxis
+                dataKey="month"
+                stroke="#94a3b8"
+                tickLine={false}
+                axisLine={false}
+              />
               <YAxis stroke="#94a3b8" />
               <Tooltip />
               <Line
                 type="monotone"
-                dataKey="revenue"
+                dataKey="total"
                 stroke="#3b82f6"
                 strokeWidth={3}
                 dot={{ fill: "#3b82f6" }}
@@ -189,7 +287,7 @@ export default function DashboardClient({ userEmail }: Props) {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Pesanan
+                Pegawai 6 Bulan Terakhir
               </h3>
               <p className="text-sm dark:text-gray-400">6 bulan terakhir</p>
             </div>
@@ -198,12 +296,17 @@ export default function DashboardClient({ userEmail }: Props) {
             </button>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={salesData}>
+            <BarChart data={stats.pegawaiByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" stroke="#94a3b8" />
+              <XAxis
+                dataKey="month"
+                stroke="#94a3b8"
+                tickLine={false}
+                axisLine={false}
+              />
               <YAxis stroke="#94a3b8" />
               <Tooltip />
-              <Bar dataKey="orders" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="total" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -214,10 +317,10 @@ export default function DashboardClient({ userEmail }: Props) {
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Pesanan Terbaru
+              Laporan Kegiatan Terbaru
             </h3>
             <p className="text-sm dark:text-gray-400">
-              Daftar pesanan terbaru dari pelanggan
+              Daftar 10 laporan kegiatan yang terakhir dibuat
             </p>
           </div>
           <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
@@ -230,53 +333,59 @@ export default function DashboardClient({ userEmail }: Props) {
             <thead className="bg-gray-50 dark:bg-gray-800/60">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  ID Pesanan
+                  No
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 uppercase">
-                  Pelanggan
+                  Nama Kegiatan
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 uppercase">
-                  Jumlah
+                  Nama Pegawai
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 uppercase">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium dark:text-gray-400 uppercase">
-                  Tanggal
+                  Dibuat Pada
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {recentOrders.map((order, idx) => (
+              {latestLaporan.map((laporan, index) => (
                 <tr
-                  key={idx}
+                  key={laporan.laporan_id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {order.id}
+                    {index + 1}
                   </td>
                   <td className="px-6 py-4 text-sm dark:text-gray-300">
-                    {order.customer}
+                    {laporan.nama_kegiatan}
                   </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                    {order.amount}
+                  <td className="px-6 py-4 text-sm dark:text-gray-300">
+                    {laporan.pegawai_nama ?? "-"}
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                        order.status === "Selesai"
-                          ? "bg-green-100 text-green-800"
-                          : order.status === "Proses"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-yellow-100 text-yellow-800"
+                        STATUS_BADGE_STYLES[laporan.status_laporan] ||
+                        "bg-slate-100 text-slate-800"
                       }`}>
-                      {order.status}
+                      {laporan.status_laporan}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm dark:text-gray-400">
-                    {order.date}
+                    {formatDate(laporan.created_at)}
                   </td>
                 </tr>
               ))}
+              {latestLaporan.length === 0 && !isLoading && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-6 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                    Belum ada data laporan kegiatan.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
