@@ -1,4 +1,6 @@
 // app/api/login/route.ts
+// OPTIMIZED VERSION - Non-blocking Database Operations
+
 import "server-only";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -13,7 +15,6 @@ import { createLog } from "@/lib/models/log.model";
 import { setAuthCookie, getClientInfo } from "@/lib/helpers/auth-helper";
 
 import {
-  RATE_LIMITS,
   getIp,
   isRateLimited,
   markFailedAttempt,
@@ -21,7 +22,7 @@ import {
   markDuplicate,
   clearDuplicate,
 } from "@/lib/rate-limit";
-import { redis } from "@/lib/redis"; // optional: dipakai untuk get lockKey langsung
+import { redis } from "@/lib/redis";
 
 export async function POST(req: Request) {
   try {
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
 
     // 2) Validate body
     const BodySchema = z.object({
-      email: z.email(),
+      email: z.string().email(),
       pwd: z.string().min(1),
     });
     const raw = await req.json();
@@ -84,7 +85,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4) Persistent lockout check (defensif; sebenarnya sudah di isRateLimited)
+    // 4) Persistent lockout check
     const lockKey = `lock:email:${email}`;
     const isLocked = await redis.get(lockKey);
     if (isLocked) {
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
     const loginResult = await loginToEabsen(email, pwd);
     if (!loginResult.success) {
       await markFailedAttempt(email);
-      await clearDuplicate(email); // agar user bisa coba lagi setelah jeda singkat
+      await clearDuplicate(email);
       return NextResponse.json(
         { result: 0, response: "Email atau password salah" },
         { status: 401 }
@@ -118,39 +119,42 @@ export async function POST(req: Request) {
     const maskedUserEmail = userEmail.replace(/(.{3}).+(@.+)/, "$1***$2");
     console.info("Login success:", maskedUserEmail);
 
-    // 7) Fetch & cache pegawai, lalu logging aktivitas
-    const pegawaiData = await fetchPegawaiFromEabsen(pin);
-    if (pegawaiData) {
-      try {
-        await upsertPegawai(pegawaiData);
+    // 7) ✅ CRITICAL: Set session cookie IMMEDIATELY (sebelum operasi DB)
+    // Ini yang paling penting untuk user experience
+    await setAuthCookie({ email: userEmail, pin, level, skpdid });
 
-        const clientInfo = getClientInfo(req);
-        await createLog({
+    // 8) ✅ OPTIMASI: Jalankan operasi DB secara NON-BLOCKING
+    // Fire-and-forget pattern: jangan gunakan await
+    const pegawaiData = await fetchPegawaiFromEabsen(pin);
+
+    if (pegawaiData) {
+      // Jalankan di background tanpa menunggu selesai
+      Promise.allSettled([
+        upsertPegawai(pegawaiData),
+        createLog({
           pegawai_id: pegawaiData.pegawai_id,
           aksi: "Login",
           modul: "Auth",
           detail_aksi: `User ${pegawaiData.pegawai_nama} berhasil login`,
           data_sebelum: null,
           data_sesudah: null,
-          ip_address: clientInfo.ip_address,
-          user_agent: clientInfo.user_agent,
+          ip_address: getClientInfo(req).ip_address,
+          user_agent: getClientInfo(req).user_agent,
           endpoint: "/api/login",
           method: "POST",
-        });
-      } catch {
-        console.warn("Login succeeded but cache/logging failed");
-      }
+        }),
+      ]).catch((err) => {
+        // Log error tapi jangan ganggu response ke client
+        console.error("Background DB operations failed:", err);
+      });
     } else {
       console.warn("Could not fetch pegawai data for PIN (masked).");
     }
 
-    // 8) Set session cookie (HttpOnly, Secure, SameSite, dsb. ditangani helper)
-    await setAuthCookie({ email: userEmail, pin, level, skpdid });
-
-    // 9) Bersihkan marker duplikat (TTL juga akan beres sendiri)
+    // 9) Bersihkan marker duplikat
     await clearDuplicate(email);
 
-    // 10) Response aman (jangan bocorkan rahasia)
+    // 10) ✅ Response SEGERA - tidak menunggu operasi DB selesai
     return NextResponse.json(
       {
         result: 1,
@@ -162,15 +166,14 @@ export async function POST(req: Request) {
       {
         status: 200,
         headers: {
-          // Tambahkan header keamanan
           "X-Content-Type-Options": "nosniff",
-          "Content-Security-Policy": "default-src 'self'", // Aturan CSP spesifik
-          "X-Frame-Options": "DENY", // Mencegah Clickjacking
+          "Content-Security-Policy": "default-src 'self'",
+          "X-Frame-Options": "DENY",
         },
       }
     );
-  } catch {
-    console.error("Server error during login");
+  } catch (error) {
+    console.error("Server error during login:", error);
     return NextResponse.json(
       { result: 0, response: "Terjadi kesalahan pada server" },
       { status: 500 }

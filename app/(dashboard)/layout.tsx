@@ -1,7 +1,10 @@
-// app/(dashboard)/layout.tsx  (Server Component)
+// app/(dashboard)/layout.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import DashboardShell from "@/components/layout/DashboardShell";
+import { LoadingProvider } from "@/components/providers/LoadingProvider";
+import LoadingBar from "@/components/ui/LoadingBar";
+import { NavigationProvider } from "@/components/providers/NavigationProvider";
 
 export default async function DashboardLayout({
   children,
@@ -17,18 +20,22 @@ export default async function DashboardLayout({
 
   try {
     const parsed = JSON.parse(Buffer.from(raw, "base64").toString());
-    // pastikan login route kamu memang menyimpan email (& nama jika ada)
     userEmail = parsed?.email;
-    userName = parsed?.name || parsed?.full_name; // opsional kalau ada
+    userName = parsed?.name || parsed?.full_name;
     if (typeof parsed?.level === "number") userLevel = parsed.level;
   } catch {}
 
   return (
-    <DashboardShell
-      userEmail={userEmail}
-      userName={userName}
-      userLevel={userLevel}>
-      {children}
-    </DashboardShell>
+    <LoadingProvider>
+      <NavigationProvider>
+        <LoadingBar />
+        <DashboardShell
+          userEmail={userEmail}
+          userName={userName}
+          userLevel={userLevel}>
+          {children}
+        </DashboardShell>
+      </NavigationProvider>
+    </LoadingProvider>
   );
 }

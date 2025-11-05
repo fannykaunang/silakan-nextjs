@@ -24,6 +24,7 @@ import {
   Download,
   Eye,
 } from "lucide-react";
+import { formatTanggal } from "@/lib/utils/formattanggal";
 
 // ============================================================================
 // INTERFACES
@@ -48,11 +49,11 @@ interface LaporanDetail {
   pegawai_id: number;
   pegawai_nama: string;
   pegawai_nip: string;
-  skpd_nama: string;
+  skpd: string;
   tanggal_kegiatan: string;
   kategori_id: number;
-  kategori_nama: string;
-  kategori_kode: string;
+  nama_kategori: string;
+  kode_kategori: string;
   nama_kegiatan: string;
   deskripsi_kegiatan: string;
   target_output: string | null;
@@ -144,24 +145,15 @@ export default function DetailEditClient() {
     try {
       setLoading(true);
 
-      const url = `/api/laporan/${id}`;
+      const url = `/api/laporan-kegiatan/${id}`;
 
       const response = await fetch(url);
-      console.log("Response status:", response.status);
-      console.log("Response OK:", response.ok);
-
       const result = await response.json();
-
-      // ===== TAMBAHKAN INI =====
-      console.log("📦 Full Response:", result);
-      console.log("📁 Files in response:", result.data?.files);
-      console.log("📊 Files count:", result.data?.files?.length || 0);
-      // ========================
 
       if (result.success) {
         setLaporan(result.data);
         setCanEdit(result.canEdit);
-
+        console.log("data: ", result.data);
         // Set form data
         setFormData({
           kategori_id: result.data.kategori_id,
@@ -446,7 +438,7 @@ export default function DetailEditClient() {
       }
 
       // Update laporan
-      const response = await fetch(`/api/laporan/${id}`, {
+      const response = await fetch(`/api/laporan-kegiatan/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -635,7 +627,7 @@ export default function DetailEditClient() {
                 </>
               )}
               <button
-                onClick={() => router.push("/laporan")}
+                onClick={() => router.push("/laporan-kegiatan")}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                 Kembali
               </button>
@@ -694,11 +686,9 @@ export default function DetailEditClient() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  SKPD
+                  Satuan Kerja
                 </label>
-                <p className="text-gray-900 dark:text-white">
-                  {laporan.skpd_nama}
-                </p>
+                <p className="text-gray-900 dark:text-white">{laporan.skpd}</p>
               </div>
             </div>
           </div>
@@ -748,7 +738,7 @@ export default function DetailEditClient() {
                   </select>
                 ) : (
                   <p className="text-gray-900 dark:text-white">
-                    {laporan.kategori_kode} - {laporan.kategori_nama}
+                    {laporan.kode_kategori} - {laporan.nama_kategori}
                   </p>
                 )}
               </div>
@@ -1229,7 +1219,7 @@ export default function DetailEditClient() {
                   Dibuat:{" "}
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  {new Date(laporan.created_at).toLocaleString("id-ID")}
+                  {formatTanggal(laporan.created_at)}
                 </span>
               </div>
               <div>
@@ -1237,7 +1227,7 @@ export default function DetailEditClient() {
                   Terakhir diupdate:{" "}
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  {new Date(laporan.updated_at).toLocaleString("id-ID")}
+                  {formatTanggal(laporan.updated_at)}
                 </span>
               </div>
             </div>

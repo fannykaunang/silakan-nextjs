@@ -2,7 +2,13 @@
 // Copy file ini ke: app/laporan-kegiatan/[id]/page.tsx
 
 import { Suspense } from "react";
+import { Metadata } from "next";
 import DetailEditClient from "./DetailEditClient";
+
+export const metadata: Metadata = {
+  title: "Detail Laporan Kegiatan | SILAKAN",
+  description: "Kelola laporan kegiatan harian ASN",
+};
 
 export default function LaporanKegiatanDetailPage() {
   return (

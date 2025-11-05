@@ -161,6 +161,7 @@ export async function getLaporanById(
       pc.pegawai_nama,
       pc.pegawai_nip,
       pc.skpd,
+      kk.kode_kategori,
       kk.nama_kategori,
       v.pegawai_nama as verifikator_nama
     FROM laporan_kegiatan lk

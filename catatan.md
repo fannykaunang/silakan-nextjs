@@ -26,3 +26,7 @@ berikut adalah halaman login web saya menggunakan next js 16 app router (copy au
 4. tes bikin laporan dengan upload file
 5. tambahkan efek loading saat berpindah halaman.
 6. ubah posisi animasi orang
+
+# 05-11-2025
+1. deploy ke debian 13 berhasil..
+2. tanya ke ams agus soal alamat ip 118.98.121.67 tidak bisa akses ke server entago 118.98.121.85

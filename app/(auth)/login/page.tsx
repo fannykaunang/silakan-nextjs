@@ -1,5 +1,5 @@
 // app/(auth)/login/page.tsx
-// THEME-AWARE LOGIN PAGE with Working People Animation
+// OPTIMIZED LOGIN PAGE - Fixed Response Delay
 
 "use client";
 import { useRouter } from "next/navigation";
@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-//import { useThemeDetector } from "@/hooks/useThemeDetector"; // You may need to create this
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { useThreeBackground, PRESET_CONFIGS } from "@/hooks/useThreeBackground";
 import WorkingPeopleAnimation from "@/components/WorkingPeopleAnimation";
 
@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   const router = useRouter();
+  const { startLoading, stopLoading } = useLoading();
 
   // ✅ Detect theme changes
   useEffect(() => {
@@ -30,10 +31,8 @@ export default function LoginPage() {
       setTheme(isDark ? "dark" : "light");
     };
 
-    // Initial check
     checkTheme();
 
-    // Watch for theme changes
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -52,7 +51,7 @@ export default function LoginPage() {
     logoImage: "/Lambang_Kabupaten_Merauke.png",
     logoCount: 15,
     logoSize: 8,
-    theme: theme, // ← Pass theme
+    theme: theme,
   });
 
   // Fetch CSRF token
@@ -85,6 +84,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMsg(null);
     setShowAlert(false);
+    startLoading(); // Start loading bar
 
     try {
       const res = await fetch("/api/login", {
@@ -119,12 +119,20 @@ export default function LoginPage() {
         throw new Error(message);
       }
 
+      // ✅ SUCCESS: Show alert immediately
       setShowAlert(true);
-      setTimeout(() => router.push("/dashboard"), 800);
+
+      // ✅ Stop loading bar immediately after success
+      stopLoading();
+
+      // ✅ Navigate without artificial delay
+      // Use router.push directly with prefetch
+      router.push("/dashboard");
     } catch (err: any) {
       setErrorMsg(err?.message || "Terjadi kesalahan saat login.");
+      stopLoading(); // Stop loading on error
 
-      // Refresh CSRF token
+      // Refresh CSRF token on error
       try {
         const res = await fetch("/api/csrf-token", {
           credentials: "include",

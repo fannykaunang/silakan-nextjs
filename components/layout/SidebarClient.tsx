@@ -2,6 +2,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import {
   Home,
   User,
@@ -49,15 +50,26 @@ function NavItem({
   pathname: string;
   sidebarOpen: boolean;
 }) {
+  const { startLoading, stopLoading } = useLoading();
   // Pengecekan aktif untuk link saat ini atau sub-path-nya
   const active =
     pathname === item.href || pathname?.startsWith(item.href + "/");
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Always trigger loading when a link is clicked
+    startLoading();
+
+    // Ensure loading stops after navigation completes
+    setTimeout(() => {
+      stopLoading();
+    }, 1000);
+  };
   return (
     <li className="list-none">
       <Link
         key={item.href}
         href={item.href}
+        onClick={handleClick}
         // Pastikan styling responsif baik saat sidebar terbuka (w-64) maupun tertutup (w-20)
         className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors cursor-pointer
           ${

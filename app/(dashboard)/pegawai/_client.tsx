@@ -1,4 +1,3 @@
-// app/(dashboard)/dashboard/pegawai/_client.tsx
 "use client";
 
 import { useCsrfToken } from "@/hooks/useCsrfToken";
@@ -321,16 +320,14 @@ export default function PegawaiClient() {
     );
   };
 
-  // ✅ Loading state - check both fetching and token loading
-  if ((isFetching || isTokenLoading) && pegawaiList.length === 0) {
+  // ✅ Loading state - hanya check fetching, bukan token loading
+  if (isFetching && pegawaiList.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-700 dark:text-gray-300">
-            {isTokenLoading
-              ? "Memuat token keamanan..."
-              : "Memuat data pegawai..."}
+            Memuat data pegawai...
           </p>
         </div>
       </div>
@@ -368,19 +365,6 @@ export default function PegawaiClient() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* ✅ Warning jika token tidak ready */}
-        {!isTokenReady && (
-          <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-              <AlertCircle className="w-5 h-5" />
-              <p className="text-sm font-medium">
-                Token keamanan sedang dimuat. Fitur edit dan hapus akan aktif
-                setelah token siap.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
