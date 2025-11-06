@@ -33,7 +33,8 @@ berikut adalah halaman login web saya menggunakan next js 16 app router (copy au
 
 # 06-11-2025
 1. prompt ke chatgpt/codex :
-saya sudah punya halaman dengan route app/(dashboard)/laporan-kegiatan/[id]/DetailEditClient.tsx dan menghasilkan halaman http://localhost:3000/laporan-kegiatan/21 untuk menampilkan detail laporan kegiatan. sekarang, tolong buatkan saya halaman dengan route app/(dashboard)/laporan-kegiatan/pegawai/[id]/_client.tsx yang akan menghasilkan halaman http://localhost:3000/laporan-kegiatan/pegawai/{pegawai_id}. apakah bisa seperti itu?
-kalau bisa. berikut rincian halamannya :
+saya sudah punya halaman dengan route app/(dashboard)/laporan-kegiatan/[id]/DetailEditClient.tsx dan menghasilkan halaman http://localhost:3000/laporan-kegiatan/21 untuk menampilkan detail laporan kegiatan. sekarang, tolong buatkan saya halaman dengan route app/(dashboard)/laporan-kegiatan/pegawai/[id]/_client.tsx yang akan menghasilkan halaman http://localhost:3000/laporan-kegiatan/pegawai/{pegawai_id}.
+
+berikut rincian halamannya :
 
 1. berisi daftar laporan kegiatan berdasarkan field pegawai_id (dalam bentuk tabel dengan pagination, filter tabel berdasarkan field kategori_id dan status_laporan serta input pencarian). halaman ini tampilannya mirip dengan halaman app/(dashboard)/dashboard/laporan-kegiatan/_client.tsx

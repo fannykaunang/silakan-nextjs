@@ -658,7 +658,7 @@ export default function PegawaiClient() {
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <Link
-                            href={`/laporan-kegiatan?pegawai_id=${pegawai.pegawai_id}`}
+                            href={`/laporan-kegiatan/pegawai/${pegawai.pegawai_id}`}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900 rounded-lg transition"
                             title="Lihat laporan">
                             <FileText className="w-4 h-4" />
