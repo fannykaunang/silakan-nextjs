@@ -54,6 +54,7 @@ export async function upsertPegawai(data: CreatePegawaiInput): Promise<void> {
       data.pegawai_privilege || "0",
       data.pegawai_status || 1,
       data.jabatan || null,
+      data.skpdid || 1,
       data.skpd || null,
       data.sotk || null,
       data.tgl_mulai_kerja || null,

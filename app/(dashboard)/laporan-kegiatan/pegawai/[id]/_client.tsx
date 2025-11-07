@@ -20,6 +20,7 @@ import {
   Building2,
   XCircle,
   PenSquare,
+  Printer,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -88,6 +89,8 @@ export default function PegawaiLaporanListClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterKategori, setFilterKategori] = useState("");
   const [filterStatus, setFilterStatus] = useState<"" | LaporanStatus>("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -103,7 +106,14 @@ export default function PegawaiLaporanListClient() {
 
   useEffect(() => {
     applyFilters();
-  }, [laporanList, searchQuery, filterKategori, filterStatus]);
+  }, [
+    laporanList,
+    searchQuery,
+    filterKategori,
+    filterStatus,
+    startDate,
+    endDate,
+  ]);
 
   const fetchData = async (id: string) => {
     try {
@@ -202,6 +212,25 @@ export default function PegawaiLaporanListClient() {
       );
     }
 
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filtered = filtered.filter((laporan) => {
+        const laporanDate = new Date(laporan.tanggal_kegiatan);
+        laporanDate.setHours(0, 0, 0, 0);
+        return laporanDate >= start;
+      });
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((laporan) => {
+        const laporanDate = new Date(laporan.tanggal_kegiatan);
+        return laporanDate <= end;
+      });
+    }
+
     setFilteredList(filtered);
     setCurrentPage(1);
   };
@@ -210,6 +239,14 @@ export default function PegawaiLaporanListClient() {
     setSearchQuery("");
     setFilterKategori("");
     setFilterStatus("");
+    setStartDate("");
+    setEndDate("");
+  };
+
+  const handlePrint = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -417,12 +454,20 @@ export default function PegawaiLaporanListClient() {
                   className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 />
               </div>
-              <button
-                onClick={clearFilters}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                <X className="w-4 h-4" />
-                Reset Filter
-              </button>
+              <div className="flex items-center gap-2 self-start">
+                <button
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/40 rounded-lg transition">
+                  <Printer className="w-4 h-4" />
+                  Cetak
+                </button>
+                <button
+                  onClick={clearFilters}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                  <X className="w-4 h-4" />
+                  Reset Filter
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -473,13 +518,28 @@ export default function PegawaiLaporanListClient() {
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                   Periode
                 </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <select
-                    disabled
-                    className="w-full pl-10 pr-4 py-2 text-sm border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900/50 text-gray-500">
-                    <option>Semua waktu</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                      placeholder="Dari"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      min={startDate || undefined}
+                      className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                      placeholder="Sampai"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -507,7 +567,7 @@ export default function PegawaiLaporanListClient() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Aksi
                   </th>
                 </tr>

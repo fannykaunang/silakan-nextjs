@@ -38,3 +38,6 @@ saya sudah punya halaman dengan route app/(dashboard)/laporan-kegiatan/[id]/Deta
 berikut rincian halamannya :
 
 1. berisi daftar laporan kegiatan berdasarkan field pegawai_id (dalam bentuk tabel dengan pagination, filter tabel berdasarkan field kategori_id dan status_laporan serta input pencarian). halaman ini tampilannya mirip dengan halaman app/(dashboard)/dashboard/laporan-kegiatan/_client.tsx
+
+# 07-11-2025
+1. prompt ke chatgpt/codex : tambahkan filter periode untuk halaman http://localhost:3000/laporan-kegiatan/pegawai/49 agar bisa di-print bulanan
