@@ -41,3 +41,6 @@ berikut rincian halamannya :
 
 # 07-11-2025
 1. prompt ke chatgpt/codex : tambahkan filter periode untuk halaman http://localhost:3000/laporan-kegiatan/pegawai/49 agar bisa di-print bulanan
+
+# 08-11-2025
+1. perbaiki api https://dev.api.eabsen.merauke.go.id/api/checkin/today?pin=30649&scan_date=2025-11-06 agar yg success true hanya pas absen pagi saja

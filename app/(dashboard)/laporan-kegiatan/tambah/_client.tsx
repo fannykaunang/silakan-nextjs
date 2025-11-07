@@ -1,4 +1,4 @@
-// app/(dashboard)/dashboard/laporan/tambah/_client.tsx
+// app/(dashboard)/laporan-kegiatan/tambah/_client.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -302,7 +302,7 @@ export default function TambahLaporanClient() {
       };
 
       // Submit laporan
-      const response = await fetch("/api/laporan", {
+      const response = await fetch("/api/laporan-kegiatan", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -320,7 +320,7 @@ export default function TambahLaporanClient() {
             title: "Belum Absen",
             text:
               result.error ||
-              "Anda belum absen hari ini. Silakan absen terlebih dahulu.",
+              "Anda belum absen pada tanggal yang dipilih. Silakan absen terlebih dahulu.",
             background: document.documentElement.classList.contains("dark")
               ? "#1f2937"
               : "#fff",
@@ -356,7 +356,7 @@ export default function TambahLaporanClient() {
       });
 
       // Redirect to list page
-      router.push("/dashboard/laporan");
+      router.push("/laporan-kegiatan");
     } catch (error: any) {
       console.error("Error submitting laporan:", error);
       await Swal.fire({

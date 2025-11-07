@@ -116,7 +116,7 @@ export async function POST(req: Request) {
           pegawai_id: pegawaiData?.pegawai_id || null,
           aksi: "Create",
           modul: "Kategori Kegiatan",
-          detail_aksi: `Menambah kategori kegiatan: ${nama_kategori} (${kode_kategori})`,
+          detail_aksi: `Membuat kategori kegiatan: ${nama_kategori} (${kode_kategori})`,
           data_sebelum: null,
           data_sesudah: JSON.stringify({
             kategori_id: kategoriId,

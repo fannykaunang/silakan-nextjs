@@ -91,23 +91,31 @@ export async function POST(req: Request) {
     }
 
     // Check if creating laporan for today
-    const today = getTodayFormatted();
-    const isToday = body.tanggal_kegiatan === today;
+    //const today = getTodayFormatted();
+    //const isToday = body.tanggal_kegiatan === today;
+
+    const tanggalKegiatan: string = `${body.tanggal_kegiatan}`.trim(); // ekspektasi "YYYY-MM-DD"
+    const attendanceCheck = await checkAttendanceToday(
+      user.pin,
+      tanggalKegiatan
+    );
 
     // If creating for today, check attendance
-    if (isToday) {
-      const attendanceCheck = await checkAttendanceToday(user.pin, today);
+    //if (isToday) {
+    //const attendanceCheck = await checkAttendanceToday(user.pin, tanggalKegiatan);
 
-      if (!attendanceCheck.success) {
-        return NextResponse.json(
-          {
-            error: attendanceCheck.message || "Anda belum absen hari ini",
-            requiresAttendance: true,
-          },
-          { status: 403 }
-        );
-      }
+    if (!attendanceCheck.success) {
+      return NextResponse.json(
+        {
+          error:
+            attendanceCheck.message ||
+            "Anda belum absen pada tanggal yang dipilih!",
+          requiresAttendance: true,
+        },
+        { status: 403 }
+      );
     }
+    //}
 
     // Prepare laporan data
     const laporanData: CreateLaporanData = {
@@ -138,7 +146,10 @@ export async function POST(req: Request) {
     await updateAllRekaps(user.pegawai_id!, body.tanggal_kegiatan);
 
     // Log aktivitas
-    const clientInfo = await getClientInfoWithEndpoint(req, "/api/laporan");
+    const clientInfo = await getClientInfoWithEndpoint(
+      req,
+      "/api/laporan-kegiatan/tambah"
+    );
     await createLogWithData({
       pegawai_id: user.pegawai_id!,
       aksi: "Create",

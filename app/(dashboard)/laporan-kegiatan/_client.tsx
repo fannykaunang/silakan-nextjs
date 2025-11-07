@@ -22,6 +22,8 @@ import {
   User,
   Tag,
   AlertCircle,
+  FileBarChart,
+  PenSquare,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -58,6 +60,7 @@ export default function LaporanListClient() {
   const [kategoris, setKategoris] = useState<Kategori[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,6 +97,7 @@ export default function LaporanListClient() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
 
       // Fetch laporan
       const laporanRes = await fetch("/api/laporan-kegiatan");
@@ -119,8 +123,9 @@ export default function LaporanListClient() {
           setKategoris(kategoriResponse.data);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching data:", error);
+      setError(error?.message || "Terjadi kesalahan saat memuat data");
       await Swal.fire({
         icon: "error",
         title: "Error",
@@ -361,24 +366,45 @@ export default function LaporanListClient() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700 dark:text-gray-300">
+            Memuat Laporan Kegiatan...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && laporanList.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
+          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+          <p className="text-red-600 dark:text-red-400 text-lg font-semibold">
+            {error}
+          </p>
+          <button
+            onClick={fetchData}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Coba Lagi
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-7 h-7 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Laporan Kegiatan Harian
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Kelola dan pantau laporan kegiatan harian ASN
               </p>
             </div>
@@ -392,39 +418,34 @@ export default function LaporanListClient() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Total Laporan
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {laporanList.length}
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Draft</p>
-              <p className="text-2xl font-bold text-gray-500 dark:text-gray-400">
-                {laporanList.filter((l) => l.status_laporan === "Draft").length}
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Diverifikasi
-              </p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {
-                  laporanList.filter((l) => l.status_laporan === "Diverifikasi")
-                    .length
-                }
-              </p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Hasil Filter
-              </p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {filteredList.length}
-              </p>
-            </div>
+            <StatCard
+              title="Total Laporan"
+              value={laporanList.length}
+              icon={FileBarChart}
+            />
+            <StatCard
+              title="Draft"
+              value={
+                laporanList.filter((l) => l.status_laporan === "Draft").length
+              }
+              icon={PenSquare}
+              accent="bg-gray-100 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200"
+            />
+            <StatCard
+              title="Diverifikasi"
+              value={
+                laporanList.filter((l) => l.status_laporan === "Diverifikasi")
+                  .length
+              }
+              icon={Eye}
+              accent="bg-green-50 text-green-600 dark:bg-green-900/40 dark:text-green-200"
+            />
+            <StatCard
+              title="Hasil Filter"
+              value={filteredList.length}
+              icon={Filter}
+              accent="bg-blue-70 text-blue-700 dark:bg-blue-700/40 dark:text-blue-200"
+            />
           </div>
 
           {/* Search & Filters */}
@@ -449,7 +470,7 @@ export default function LaporanListClient() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari nama kegiatan, pegawai, kategori..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
@@ -772,6 +793,34 @@ export default function LaporanListClient() {
               </div>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  accent?: string;
+}
+
+function StatCard({ title, value, icon: Icon, accent }: StatCardProps) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+            {value}
+          </p>
+        </div>
+        <div
+          className={`p-3 rounded-lg ${
+            accent ||
+            "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200"
+          }`}>
+          <Icon className="w-6 h-6" />
         </div>
       </div>
     </div>

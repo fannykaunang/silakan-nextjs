@@ -19,6 +19,7 @@ import {
   FileBarChart,
   Calendar,
   TrendingUp,
+  Building2,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -138,6 +139,14 @@ export default function SidebarClient({
         icon: FileText,
       }
     );
+
+    if (userLevel === 3) {
+      managementItems.push({
+        href: "/jabatan",
+        label: "Daftar Jabatan",
+        icon: Building2,
+      });
+    }
   }
 
   // --- E. Bagian Konfigurasi (Level 2-3) ---

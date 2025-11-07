@@ -46,7 +46,8 @@ export async function checkAttendanceToday(
       return {
         success: false,
         scan_date: null,
-        message: "Anda belum absen hari ini. Silakan absen terlebih dahulu.",
+        message:
+          "Anda belum absen pada tanggal yang dipilih. Silakan absen terlebih dahulu.",
       };
     }
 

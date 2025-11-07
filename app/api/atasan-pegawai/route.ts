@@ -8,6 +8,7 @@ import {
 } from "@/lib/helpers/auth-helper";
 import { CreateAtasanPegawaiInput } from "@/lib/types/atasan-pegawai.types";
 import { createSimpleLog, createLogWithData } from "@/lib/models/log.model";
+import { getPegawaiById } from "@/lib/models/pegawai.model";
 
 const MODUL_NAME = "Atasan Pegawai";
 
@@ -161,7 +162,13 @@ export async function POST(request: NextRequest) {
     }
 
     const id = await AtasanPegawaiModel.create(body);
-    const dataSesudah = { ...body, id };
+    const atasan = await getPegawaiById(body.atasan_id);
+    const atasanName = atasan?.pegawai_nama ?? String(body.atasan_id);
+    const dataSesudah = {
+      ...body,
+      id,
+      atasan_nama: atasan?.pegawai_nama ?? null,
+    };
 
     // --- LOGGING ---
     try {
@@ -169,7 +176,7 @@ export async function POST(request: NextRequest) {
         pegawai_id: userSession.pegawai_id!,
         aksi: "Create",
         modul: MODUL_NAME,
-        detail_aksi: `Membuat relasi baru (ID: ${id})`,
+        detail_aksi: `Membuat Atasan Pegawai ${atasanName}`,
         data_sebelum: null,
         data_sesudah: dataSesudah,
         ...clientInfo,
