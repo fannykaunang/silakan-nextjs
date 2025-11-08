@@ -205,7 +205,7 @@ export default function SidebarClient({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-40 transition-all flex flex-col ${
+      className={`fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-40 transition-[width] duration-300 ease-in-out flex flex-col overflow-hidden ${
         sidebarOpen ? "w-64" : "w-20"
       }`}
       aria-label="Sidebar navigasi">

@@ -2,7 +2,7 @@
 
 interface AttendanceCheckResult {
   success: boolean;
-  scan_date: string | null;
+  date: string | null;
   message?: string;
 }
 
@@ -12,12 +12,24 @@ interface AttendanceCheckResult {
  * @param scanDate - Date to check (format: YYYY-MM-DD)
  * @returns Promise with attendance check result
  */
+
+type ApiResponse = {
+  success: boolean;
+  checkin_time?: string | null;
+  date?: string | null; // jaga-jaga bila Anda nanti ganti nama field di server
+  scan_date?: string | null; // jaga-jaga kalau pakai nama ini
+};
+
 export async function checkAttendanceToday(
   pin: string,
   scanDate: string
 ): Promise<AttendanceCheckResult> {
   try {
-    const apiUrl = `https://dev.api.eabsen.merauke.go.id/api/checkin/today?pin=${pin}&scan_date=${scanDate}`;
+    const ymd = normalizeYMD(scanDate); // penting: zero-pad agar cocok "yyyy-MM-dd"
+
+    const apiUrl = `https://dev.api.eabsen.merauke.go.id/api/checkin/morning-checkin?pin=${encodeURIComponent(
+      pin
+    )}&date=${encodeURIComponent(ymd)}`;
 
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -25,6 +37,7 @@ export async function checkAttendanceToday(
         EabsenApiKey: process.env.EABSEN_API_KEY || "eabsen_api_key_here",
         "Content-Type": "application/json",
       },
+      // cache: "no-store", // opsional: jika ingin selalu fresh
     });
 
     if (!response.ok) {
@@ -35,17 +48,21 @@ export async function checkAttendanceToday(
       );
       return {
         success: false,
-        scan_date: null,
+        date: null,
         message: "Gagal mengecek kehadiran. Silakan coba lagi.",
       };
     }
 
-    const data: AttendanceCheckResult = await response.json();
+    const data: ApiResponse = await response.json();
 
-    if (!data.success || !data.scan_date) {
+    // Backend kita kirim "checkin_time". Namun untuk kompatibilitas,
+    // fallback ke "date" atau "scan_date" jika Anda mengubah server di masa depan.
+    const foundTime = data.checkin_time || data.date || data.scan_date || null;
+
+    if (!data.success || !foundTime) {
       return {
         success: false,
-        scan_date: null,
+        date: null,
         message:
           "Anda belum absen pada tanggal yang dipilih. Silakan absen terlebih dahulu.",
       };
@@ -53,14 +70,14 @@ export async function checkAttendanceToday(
 
     return {
       success: true,
-      scan_date: data.scan_date,
+      date: foundTime,
       message: "Anda sudah absen hari ini.",
     };
   } catch (error) {
     console.error("Error checking attendance:", error);
     return {
       success: false,
-      scan_date: null,
+      date: null,
       message: "Terjadi kesalahan saat mengecek kehadiran.",
     };
   }
@@ -69,16 +86,14 @@ export async function checkAttendanceToday(
 /**
  * Format date to YYYY-MM-DD for API
  */
-export function formatDateForAPI(date: Date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * Get today's date formatted for API
- */
-export function getTodayFormatted(): string {
-  return formatDateForAPI(new Date());
+function normalizeYMD(input: string): string {
+  // Pastikan format tepat "YYYY-MM-DD"
+  // Hindari timezone offset: jangan pakai toISOString() di sini.
+  // Gunakan padding manual agar lolos TryParseExact di server.
+  const m = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return input; // biarkan apa adanya; anggap sudah benar
+  const [_, y, mo, d] = m;
+  const mm = mo.padStart(2, "0");
+  const dd = d.padStart(2, "0");
+  return `${y}-${mm}-${dd}`;
 }

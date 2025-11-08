@@ -9,10 +9,7 @@ import {
 } from "@/lib/models/laporan.model";
 import { updateAllRekaps } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
-import {
-  checkAttendanceToday,
-  getTodayFormatted,
-} from "@/lib/helpers/attendance-helper";
+import { checkAttendanceToday } from "@/lib/helpers/attendance-helper";
 
 // GET - Mengambil semua laporan
 export async function GET(req: Request) {
@@ -94,15 +91,11 @@ export async function POST(req: Request) {
     //const today = getTodayFormatted();
     //const isToday = body.tanggal_kegiatan === today;
 
-    const tanggalKegiatan: string = `${body.tanggal_kegiatan}`.trim(); // ekspektasi "YYYY-MM-DD"
+    const tanggalKegiatan = `${body.tanggal_kegiatan}`.trim(); // ekspektasi "YYYY-MM-DD"
     const attendanceCheck = await checkAttendanceToday(
       user.pin,
       tanggalKegiatan
     );
-
-    // If creating for today, check attendance
-    //if (isToday) {
-    //const attendanceCheck = await checkAttendanceToday(user.pin, tanggalKegiatan);
 
     if (!attendanceCheck.success) {
       return NextResponse.json(

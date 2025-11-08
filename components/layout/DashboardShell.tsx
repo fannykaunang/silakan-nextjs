@@ -18,7 +18,7 @@ export default function DashboardShell({
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <SidebarClient
         sidebarOpen={open}
         setSidebarOpen={setOpen}
