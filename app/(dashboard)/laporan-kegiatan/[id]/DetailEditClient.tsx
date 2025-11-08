@@ -186,7 +186,7 @@ export default function DetailEditClient() {
             ? "#fff"
             : "#000",
         });
-        router.push("/laporan");
+        //router.push("/laporan-kegiatan");
       }
     } catch (error) {
       console.error("CATCH ERROR:", error);

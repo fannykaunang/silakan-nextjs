@@ -44,3 +44,7 @@ berikut rincian halamannya :
 
 # 08-11-2025
 1. perbaiki api https://dev.api.eabsen.merauke.go.id/api/checkin/today?pin=30649&scan_date=2025-11-06 agar yg success true hanya pas absen pagi saja
+2. tanya gpt codex untuk menampilkan daftar laporan kegiatan berdasarkan atasan pegawai
+
+# 09-11-2025
+1. baca ulang ketentuan VERIFIKASI ULANG di AI https://chatgpt.com/c/69047f07-7250-8323-9b5b-0d2eae67ae6f dan https://chat.z.ai/c/27d0b07f-46a5-4c71-a267-ddb4953add9a

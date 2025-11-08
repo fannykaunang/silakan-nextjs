@@ -13,6 +13,7 @@ import {
 } from "@/lib/models/laporan.model";
 import { updateAllRekaps } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
+import { AtasanPegawaiModel } from "@/lib/models/atasan-pegawai.model";
 
 // GET - Mengambil detail laporan by ID
 export async function GET(
@@ -44,8 +45,19 @@ export async function GET(
     // Check authorization (only admin or owner can view)
     const isAdmin = user.level === 3;
     const isOwner = laporan.pegawai_id === user.pegawai_id;
+    let isAtasan = false;
 
-    if (!isAdmin && !isOwner) {
+    if (!isAdmin && user.pegawai_id) {
+      const today = new Date().toISOString().split("T")[0];
+      const subordinateIds = await AtasanPegawaiModel.getActiveSubordinateIds(
+        user.pegawai_id,
+        today
+      );
+
+      isAtasan = subordinateIds.includes(laporan.pegawai_id);
+    }
+
+    if (!isAdmin && !isOwner && !isAtasan) {
       return NextResponse.json(
         { error: "Anda tidak memiliki akses ke laporan ini" },
         { status: 403 }

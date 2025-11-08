@@ -10,6 +10,7 @@ import {
 import { updateAllRekaps } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
 import { checkAttendanceToday } from "@/lib/helpers/attendance-helper";
+import { AtasanPegawaiModel } from "@/lib/models/atasan-pegawai.model";
 
 // GET - Mengambil semua laporan
 export async function GET(req: Request) {
@@ -18,14 +19,47 @@ export async function GET(req: Request) {
 
     // Check if admin (level 3)
     const isAdmin = user.level === 3;
+    if (!isAdmin && !user.pegawai_id) {
+      return NextResponse.json(
+        { success: false, message: "Pegawai tidak ditemukan pada sesi aktif" },
+        { status: 400 }
+      );
+    }
 
-    // Get all laporan (filtered by pegawai_id if not admin)
-    const laporanList = await getAllLaporan(
-      isAdmin ? undefined : user.pegawai_id,
-      isAdmin
-    );
+    const today = new Date().toISOString().split("T")[0];
 
-    return NextResponse.json(laporanList);
+    const manageableIds = new Set<number>();
+    let isAtasan = false;
+
+    if (!isAdmin && user.pegawai_id) {
+      manageableIds.add(user.pegawai_id);
+
+      const subordinateIds = await AtasanPegawaiModel.getActiveSubordinateIds(
+        user.pegawai_id,
+        today
+      );
+
+      if (subordinateIds.length > 0) {
+        isAtasan = true;
+        subordinateIds.forEach((id) => manageableIds.add(id));
+      }
+    }
+
+    const allowedPegawaiIds = isAdmin
+      ? undefined
+      : Array.from(manageableIds.values());
+
+    const laporanList = await getAllLaporan(allowedPegawaiIds, isAdmin);
+
+    return NextResponse.json({
+      success: true,
+      data: laporanList,
+      meta: {
+        isAdmin,
+        isAtasan,
+        manageablePegawaiIds: isAdmin ? null : allowedPegawaiIds,
+      },
+    });
   } catch (error: any) {
     console.error("Error fetching laporan:", error);
 

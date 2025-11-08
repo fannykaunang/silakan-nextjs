@@ -1,11 +1,10 @@
-// app/(dashboard)/dashboard/laporan-kegiatan/_client.tsx
+// app/(dashboard)/laporan-kegiatan/_client.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  FileText,
   Search,
   Plus,
   Edit2,
@@ -19,11 +18,11 @@ import {
   Eye,
   Calendar,
   Clock,
-  User,
   Tag,
   AlertCircle,
   FileBarChart,
   PenSquare,
+  CheckCircle,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -53,6 +52,17 @@ interface Kategori {
   nama_kategori: string;
 }
 
+interface LaporanListResponse {
+  success: boolean;
+  data?: LaporanData[];
+  message?: string;
+  meta?: {
+    isAdmin?: boolean;
+    isAtasan?: boolean;
+    manageablePegawaiIds?: number[] | null;
+  };
+}
+
 export default function LaporanListClient() {
   const router = useRouter();
   const [laporanList, setLaporanList] = useState<LaporanData[]>([]);
@@ -60,6 +70,10 @@ export default function LaporanListClient() {
   const [kategoris, setKategoris] = useState<Kategori[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAtasan, setIsAtasan] = useState(false);
+  const [manageablePegawaiIds, setManageablePegawaiIds] = useState<number[]>(
+    []
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Filter states
@@ -92,7 +106,15 @@ export default function LaporanListClient() {
 
   useEffect(() => {
     applyFilters();
-  }, [laporanList, searchQuery, filterSKPD, filterKategori, filterStatus]);
+  }, [
+    laporanList,
+    searchQuery,
+    filterSKPD,
+    filterKategori,
+    filterStatus,
+    isAdmin,
+    manageablePegawaiIds,
+  ]);
 
   const fetchData = async () => {
     try {
@@ -102,17 +124,25 @@ export default function LaporanListClient() {
       // Fetch laporan
       const laporanRes = await fetch("/api/laporan-kegiatan");
       if (!laporanRes.ok) throw new Error("Gagal mengambil data laporan");
-      const laporanData = await laporanRes.json();
-      setLaporanList(laporanData);
+      const laporanPayload: LaporanListResponse = await laporanRes.json();
 
-      // Check if admin (if first item has different pegawai_id, then admin)
-      if (laporanData.length > 0) {
-        // Simple check: if we see multiple different pegawai_ids, user is admin
-        const uniquePegawaiIds = new Set(
-          laporanData.map((l: LaporanData) => l.pegawai_id)
+      if (!laporanPayload.success) {
+        throw new Error(
+          laporanPayload.message || "Gagal mengambil data laporan"
         );
-        setIsAdmin(uniquePegawaiIds.size > 1);
       }
+
+      const data = laporanPayload.data ?? [];
+      setLaporanList(data);
+
+      const meta = laporanPayload.meta ?? {};
+      setIsAdmin(Boolean(meta.isAdmin));
+      setIsAtasan(Boolean(meta.isAtasan));
+      setManageablePegawaiIds(
+        Array.isArray(meta.manageablePegawaiIds)
+          ? meta.manageablePegawaiIds
+          : []
+      );
 
       // Fetch kategoris for filter (only active ones)
       const kategoriRes = await fetch("/api/kategori?is_active=1");
@@ -126,10 +156,13 @@ export default function LaporanListClient() {
     } catch (error: any) {
       console.error("Error fetching data:", error);
       setError(error?.message || "Terjadi kesalahan saat memuat data");
+      const message =
+        error instanceof Error ? error.message : "Gagal mengambil data laporan";
+
       await Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Gagal mengambil data laporan",
+        text: message,
         background: document.documentElement.classList.contains("dark")
           ? "#1f2937"
           : "#fff",
@@ -145,6 +178,12 @@ export default function LaporanListClient() {
   const applyFilters = () => {
     let filtered = [...laporanList];
 
+    if (!isAdmin && manageablePegawaiIds.length > 0) {
+      filtered = filtered.filter((laporan) =>
+        manageablePegawaiIds.includes(laporan.pegawai_id)
+      );
+    }
+
     // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -158,7 +197,7 @@ export default function LaporanListClient() {
     }
 
     // SKPD filter (admin only)
-    if (filterSKPD) {
+    if (isAdmin && filterSKPD) {
       filtered = filtered.filter((laporan) => laporan.skpd === filterSKPD);
     }
 
@@ -281,6 +320,10 @@ export default function LaporanListClient() {
     });
   };
 
+  const handleVerify = (laporan: LaporanData) => {
+    router.push(`/laporan-kegiatan/verifikasi/${laporan.laporan_id}`);
+  };
+
   const clearFilters = () => {
     setSearchQuery("");
     setFilterSKPD("");
@@ -355,6 +398,12 @@ export default function LaporanListClient() {
   const canEdit = (status: string) => {
     return ["Draft", "Diajukan", "Revisi"].includes(status);
   };
+
+  const canVerify = (status: string) => {
+    return status === "Diajukan" || status === "Revisi";
+  };
+
+  const isRestrictedAtasan = isAtasan && !isAdmin;
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -665,34 +714,49 @@ export default function LaporanListClient() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
                           {/* View/Edit */}
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/laporan-kegiatan/${laporan.laporan_id}`
-                              )
-                            }
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                            title={
-                              canEdit(laporan.status_laporan) ? "Edit" : "Lihat"
-                            }>
-                            {canEdit(laporan.status_laporan) ? (
-                              <Edit2 className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
 
-                          {/* Delete */}
-                          {canEdit(laporan.status_laporan) && (
-                            <button
-                              onClick={() => handleDelete(laporan)}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                              title="Hapus">
-                              <Trash2 className="w-5 h-5" />
-                            </button>
+                          {!isRestrictedAtasan && (
+                            <>
+                              <button
+                                onClick={() =>
+                                  router.push(
+                                    `/laporan-kegiatan/${laporan.laporan_id}`
+                                  )
+                                }
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                title={
+                                  canEdit(laporan.status_laporan)
+                                    ? "Edit"
+                                    : "Lihat"
+                                }>
+                                {canEdit(laporan.status_laporan) ? (
+                                  <Edit2 className="w-5 h-5" />
+                                ) : (
+                                  <Eye className="w-5 h-5" />
+                                )}
+                              </button>
+
+                              {canEdit(laporan.status_laporan) && (
+                                <button
+                                  onClick={() => handleDelete(laporan)}
+                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                  title="Hapus">
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              )}
+                            </>
                           )}
 
                           {/* Print */}
+                          {isRestrictedAtasan &&
+                            canVerify(laporan.status_laporan) && (
+                              <button
+                                onClick={() => handleVerify(laporan)}
+                                className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                                title="Verifikasi">
+                                <CheckCircle className="w-5 h-5" />
+                              </button>
+                            )}
                           <button
                             onClick={() => handlePrint(laporan)}
                             className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
@@ -798,6 +862,7 @@ export default function LaporanListClient() {
     </div>
   );
 }
+
 interface StatCardProps {
   title: string;
   value: number;

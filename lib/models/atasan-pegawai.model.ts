@@ -33,6 +33,55 @@ export class AtasanPegawaiModel {
   }
 
   /**
+   * Get active subordinate pegawai IDs for a specific atasan on the given date
+   */
+  static async getActiveSubordinateIds(
+    atasanId: number,
+    referenceDate: string
+  ): Promise<number[]> {
+    const query = `
+      SELECT pegawai_id
+      FROM atasan_pegawai
+      WHERE atasan_id = ?
+        AND is_active = 1
+        AND tanggal_mulai <= ?
+        AND (tanggal_selesai IS NULL OR tanggal_selesai >= ?)
+    `;
+
+    const rows = await executeQuery<{ pegawai_id: number } & RowDataPacket>(
+      query,
+      [atasanId, referenceDate, referenceDate]
+    );
+
+    return rows.map((row) => row.pegawai_id);
+  }
+
+  static async isSupervisorOf(
+    atasanId: number,
+    pegawaiId: number,
+    referenceDate: string
+  ): Promise<boolean> {
+    const query = `
+      SELECT COUNT(*) as total
+      FROM atasan_pegawai
+      WHERE atasan_id = ?
+        AND pegawai_id = ?
+        AND is_active = 1
+        AND tanggal_mulai <= ?
+        AND (tanggal_selesai IS NULL OR tanggal_selesai >= ?)
+    `;
+
+    const result = await getOne<{ total: number } & RowDataPacket>(query, [
+      atasanId,
+      pegawaiId,
+      referenceDate,
+      referenceDate,
+    ]);
+
+    return Boolean(result?.total);
+  }
+
+  /**
    * Get atasan pegawai by ID
    */
   static async getById(id: number): Promise<AtasanPegawaiData | null> {

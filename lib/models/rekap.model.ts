@@ -221,6 +221,20 @@ export async function getRekapBulananByYear(
 // HELPER FUNCTION - Update all rekaps for a tanggal
 // ============================================
 
+export async function updateRekapHarianCompletion(
+  pegawaiId: number,
+  tanggal: string,
+  isComplete: boolean
+): Promise<void> {
+  const query = `
+    UPDATE rekap_harian
+    SET is_complete = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE pegawai_id = ? AND tanggal = ?
+  `;
+
+  await executeUpdate(query, [isComplete ? 1 : 0, pegawaiId, tanggal]);
+}
+
 export async function updateAllRekaps(
   pegawaiId: number,
   tanggal: string

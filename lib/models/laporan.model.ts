@@ -117,13 +117,20 @@ export interface UpdateLaporanData {
   status_laporan?: "Draft" | "Diajukan" | "Revisi";
 }
 
+export interface VerifikasiLaporanData {
+  status_laporan: "Diverifikasi" | "Ditolak" | "Revisi";
+  verifikasi_oleh: number;
+  catatan_verifikasi?: string | null;
+  rating_kualitas?: number | null;
+}
+
 // ============================================
 // LAPORAN KEGIATAN CRUD
 // ============================================
 
 // Get all laporan with details (JOIN pegawai & kategori)
 export async function getAllLaporan(
-  pegawaiId?: number,
+  pegawaiIds?: number | number[],
   isAdmin: boolean = false
 ): Promise<LaporanWithDetails[]> {
   let query = `
@@ -141,9 +148,20 @@ export async function getAllLaporan(
   const params: any[] = [];
 
   // Jika bukan admin, filter berdasarkan pegawai_id
-  if (!isAdmin && pegawaiId) {
-    query += ` WHERE lk.pegawai_id = ?`;
-    params.push(pegawaiId);
+  if (!isAdmin) {
+    const idsArray = Array.isArray(pegawaiIds)
+      ? pegawaiIds
+      : typeof pegawaiIds === "number"
+      ? [pegawaiIds]
+      : [];
+
+    if (idsArray.length === 0) {
+      query += " WHERE 1 = 0";
+    } else {
+      const placeholders = idsArray.map(() => "?").join(", ");
+      query += ` WHERE lk.pegawai_id IN (${placeholders})`;
+      params.push(...idsArray);
+    }
   }
 
   query += ` ORDER BY lk.tanggal_kegiatan DESC, lk.created_at DESC`;
@@ -209,6 +227,30 @@ export async function getLaporanById(
 
   return laporan;
 }
+
+export async function verifikasiLaporan(
+  laporanId: number,
+  data: VerifikasiLaporanData
+): Promise<number> {
+  const query = `
+    UPDATE laporan_kegiatan
+    SET status_laporan = ?,
+        verifikasi_oleh = ?,
+        tanggal_verifikasi = NOW(),
+        catatan_verifikasi = ?,
+        rating_kualitas = ?
+    WHERE laporan_id = ?
+  `;
+
+  return await executeUpdate(query, [
+    data.status_laporan,
+    data.verifikasi_oleh,
+    data.catatan_verifikasi ?? null,
+    data.rating_kualitas ?? null,
+    laporanId,
+  ]);
+}
+
 // ==============================================
 
 // Create new laporan
