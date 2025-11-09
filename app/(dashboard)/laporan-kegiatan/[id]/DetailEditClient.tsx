@@ -482,6 +482,108 @@ export default function DetailEditClient() {
     }
   };
 
+  const handlePromoteDraft = async () => {
+    if (!laporan) return;
+
+    const confirmation = await Swal.fire({
+      title: "Ajukan Laporan?",
+      text: "Laporan akan dinaikkan statusnya menjadi Diajukan.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Ajukan",
+      cancelButtonText: "Batal",
+      background: document.documentElement.classList.contains("dark")
+        ? "#1f2937"
+        : "#fff",
+      color: document.documentElement.classList.contains("dark")
+        ? "#fff"
+        : "#000",
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
+    Swal.fire({
+      title: "Mengajukan...",
+      text: "Mohon tunggu",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      background: document.documentElement.classList.contains("dark")
+        ? "#1f2937"
+        : "#fff",
+      color: document.documentElement.classList.contains("dark")
+        ? "#fff"
+        : "#000",
+    });
+
+    try {
+      const response = await fetch(`/api/laporan-kegiatan/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          status_laporan: "Diajukan",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || result.error || "Gagal mengajukan laporan"
+        );
+      }
+
+      Swal.close();
+
+      setFormData((prev) => ({
+        ...prev,
+        status_laporan: "Diajukan",
+      }));
+      setLaporan((prev) =>
+        prev
+          ? {
+              ...prev,
+              status_laporan: "Diajukan",
+            }
+          : prev
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Laporan berhasil diajukan",
+        background: document.documentElement.classList.contains("dark")
+          ? "#1f2937"
+          : "#fff",
+        color: document.documentElement.classList.contains("dark")
+          ? "#fff"
+          : "#000",
+      });
+    } catch (error: any) {
+      console.error("Error promoting draft:", error);
+      Swal.close();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Terjadi kesalahan saat mengajukan laporan",
+        background: document.documentElement.classList.contains("dark")
+          ? "#1f2937"
+          : "#fff",
+        color: document.documentElement.classList.contains("dark")
+          ? "#fff"
+          : "#000",
+      });
+    }
+  };
+
   // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
@@ -595,6 +697,15 @@ export default function DetailEditClient() {
               </p>
             </div>
             <div className="flex gap-2">
+              {!isEditMode && canEdit && laporan.status_laporan === "Draft" && (
+                <button
+                  type="button"
+                  onClick={handlePromoteDraft}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                  <Upload className="w-4 h-4" />
+                  Ajukan
+                </button>
+              )}
               {!isEditMode && canEdit && (
                 <button
                   onClick={() => setIsEditMode(true)}
@@ -625,6 +736,7 @@ export default function DetailEditClient() {
                 </>
               )}
               <button
+                type="button"
                 onClick={() => router.push("/laporan-kegiatan")}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                 Kembali

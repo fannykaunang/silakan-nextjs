@@ -50,16 +50,6 @@ export async function GET(
   try {
     const user = await requireAuth();
 
-    if (user.level === 3) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Halaman verifikasi hanya untuk atasan pegawai",
-        },
-        { status: 403 }
-      );
-    }
-
     if (!user.pegawai_id) {
       return NextResponse.json(
         {
@@ -99,6 +89,7 @@ export async function GET(
       );
     }
 
+    const isAdmin = user.level === 3;
     const today = new Date().toISOString().split("T")[0];
     const isSupervisor = await AtasanPegawaiModel.isSupervisorOf(
       user.pegawai_id,
@@ -110,7 +101,9 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: "Anda bukan atasan dari pegawai tersebut",
+          message: isAdmin
+            ? "Halaman verifikasi hanya untuk atasan pegawai"
+            : "Anda bukan atasan dari pegawai tersebut",
         },
         { status: 403 }
       );
@@ -154,16 +147,6 @@ export async function POST(
   try {
     const user = await requireAuth();
 
-    if (user.level === 3) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Hanya atasan pegawai yang dapat memverifikasi laporan",
-        },
-        { status: 403 }
-      );
-    }
-
     if (!user.pegawai_id) {
       return NextResponse.json(
         {
@@ -203,6 +186,7 @@ export async function POST(
       );
     }
 
+    const isAdmin = user.level === 3;
     const today = new Date().toISOString().split("T")[0];
     const isSupervisor = await AtasanPegawaiModel.isSupervisorOf(
       user.pegawai_id,
@@ -214,7 +198,9 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          message: "Anda bukan atasan dari pegawai tersebut",
+          message: isAdmin
+            ? "Hanya atasan pegawai yang dapat memverifikasi laporan"
+            : "Anda bukan atasan dari pegawai tersebut",
         },
         { status: 403 }
       );
