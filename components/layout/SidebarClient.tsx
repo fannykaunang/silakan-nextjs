@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   Activity,
+  AlarmClock,
   Tag,
   Bell,
   FileText,
@@ -172,6 +173,12 @@ export default function SidebarClient({
   const notificationItems: MenuItemLink[] = [
     { href: "/notifikasi", label: "Notifikasi", icon: Bell },
   ];
+
+  notificationItems.push({
+    href: "/reminder",
+    label: "Reminder",
+    icon: AlarmClock,
+  });
 
   // --- G. Bagian Sistem (Admin Only - Level 3) ---
   const systemItems: MenuItemLink[] = [];

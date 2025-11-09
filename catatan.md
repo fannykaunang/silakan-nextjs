@@ -51,3 +51,7 @@ berikut rincian halamannya :
 2. tambahkan batas waktu (batas_waktu_submit_laporan di tabel settings)
 3. bikin form setting dari tabel settings
 4. implementasikan halaman app/(dashboard)/laporan-kegiatan/[id]/DetailEditClient.tsx dari GPT CODEX
+
+# 10-11-2025
+1. perbaiki tombol tambah reminder dan style di input dan select filter di halaman reminder
+2. pada halaman pegawai, ketika yang login ada NENI, daftar dirinya sendiri malah kosong
