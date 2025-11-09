@@ -1,4 +1,4 @@
-// app/api/laporan/route.ts
+// app/api/laporan-kegiatan/route.ts
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/helpers/auth-helper";
 import { getClientInfoWithEndpoint } from "@/lib/helpers/auth-helper";
@@ -6,16 +6,30 @@ import {
   getAllLaporan,
   createLaporan,
   CreateLaporanData,
+  autoVerifyDueReports,
 } from "@/lib/models/laporan.model";
 import { updateAllRekaps } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
 import { checkAttendanceToday } from "@/lib/helpers/attendance-helper";
 import { AtasanPegawaiModel } from "@/lib/models/atasan-pegawai.model";
+import {
+  loadLaporanSettings,
+  timeToMinutes,
+  calculateDayDifference,
+  getTodayDateString,
+} from "@/lib/helpers/laporan-settings";
 
 // GET - Mengambil semua laporan
 export async function GET(req: Request) {
   try {
     const user = await requireAuth();
+
+    const settings = await loadLaporanSettings();
+
+    if (settings.autoVerificationEnabled) {
+      const todayString = getTodayDateString();
+      await autoVerifyDueReports(todayString);
+    }
 
     // Check if admin (level 3)
     const isAdmin = user.level === 3;
@@ -26,7 +40,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = getTodayDateString();
 
     const accessiblePegawaiIds = new Set<number>();
     const supervisedPegawaiIds = new Set<number>();
@@ -126,6 +140,102 @@ export async function POST(req: Request) {
       );
     }
 
+    const settingsForValidation = await loadLaporanSettings();
+
+    const startMinutes = timeToMinutes(body.waktu_mulai);
+    const endMinutes = timeToMinutes(body.waktu_selesai);
+
+    if (startMinutes === null || endMinutes === null) {
+      return NextResponse.json(
+        { error: "Format waktu mulai dan selesai harus HH:MM" },
+        { status: 400 }
+      );
+    }
+
+    if (endMinutes <= startMinutes) {
+      return NextResponse.json(
+        { error: "Waktu selesai harus lebih besar dari waktu mulai" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      startMinutes < settingsForValidation.workStartMinutes ||
+      startMinutes > settingsForValidation.workEndMinutes
+    ) {
+      return NextResponse.json(
+        {
+          error: `Waktu mulai harus berada antara ${settingsForValidation.workStartLabel} dan ${settingsForValidation.workEndLabel}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (
+      endMinutes > settingsForValidation.workEndMinutes ||
+      endMinutes < settingsForValidation.workStartMinutes
+    ) {
+      return NextResponse.json(
+        {
+          error: `Waktu selesai harus berada antara ${settingsForValidation.workStartLabel} dan ${settingsForValidation.workEndLabel}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const durationMinutes = endMinutes - startMinutes;
+
+    if (durationMinutes < settingsForValidation.minDurasi) {
+      return NextResponse.json(
+        {
+          error: `Durasi kegiatan minimal ${settingsForValidation.minDurasi} menit`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (durationMinutes > settingsForValidation.maxDurasi) {
+      return NextResponse.json(
+        {
+          error: `Durasi kegiatan maksimal ${settingsForValidation.maxDurasi} menit`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const targetStatus = body.status_laporan || "Draft";
+
+    if (targetStatus === "Diajukan") {
+      const todayDate = getTodayDateString();
+      const diffDays = calculateDayDifference(body.tanggal_kegiatan, todayDate);
+
+      if (diffDays === null) {
+        return NextResponse.json(
+          { error: "Tanggal kegiatan tidak valid" },
+          { status: 400 }
+        );
+      }
+
+      if (diffDays < 0) {
+        return NextResponse.json(
+          {
+            error:
+              "Tanggal kegiatan tidak boleh lebih besar dari tanggal hari ini",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (diffDays > settingsForValidation.submissionDeadlineDays) {
+        return NextResponse.json(
+          {
+            error: `Pengajuan laporan maksimal ${settingsForValidation.submissionDeadlineDays} hari setelah tanggal kegiatan`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check if creating laporan for today
     //const today = getTodayFormatted();
     //const isToday = body.tanggal_kegiatan === today;
@@ -168,7 +278,7 @@ export async function POST(req: Request) {
       link_referensi: body.link_referensi?.trim() || null,
       kendala: body.kendala?.trim() || null,
       solusi: body.solusi?.trim() || null,
-      status_laporan: body.status_laporan || "Draft",
+      status_laporan: targetStatus,
     };
 
     // Create laporan

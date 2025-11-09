@@ -56,6 +56,31 @@ export class AtasanPegawaiModel {
     return rows.map((row) => row.pegawai_id);
   }
 
+  static async getPrimarySupervisor(
+    pegawaiId: number,
+    referenceDate: string
+  ): Promise<{ atasan_id: number; atasan_nama: string | null } | null> {
+    const query = `
+      SELECT ap.atasan_id, pc.pegawai_nama AS atasan_nama
+      FROM atasan_pegawai ap
+      LEFT JOIN pegawai_cache pc ON ap.atasan_id = pc.pegawai_id
+      WHERE ap.pegawai_id = ?
+        AND ap.is_active = 1
+        AND ap.tanggal_mulai <= ?
+        AND (ap.tanggal_selesai IS NULL OR ap.tanggal_selesai >= ?)
+      ORDER BY CASE ap.jenis_atasan WHEN 'Langsung' THEN 0 ELSE 1 END,
+               ap.tanggal_mulai DESC,
+               ap.created_at DESC
+      LIMIT 1
+    `;
+
+    const result = await getOne<
+      { atasan_id: number; atasan_nama: string | null } & RowDataPacket
+    >(query, [pegawaiId, referenceDate, referenceDate]);
+
+    return result ?? null;
+  }
+
   static async isSupervisorOf(
     atasanId: number,
     pegawaiId: number,

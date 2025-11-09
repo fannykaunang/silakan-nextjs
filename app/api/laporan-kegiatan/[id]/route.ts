@@ -14,6 +14,12 @@ import {
 import { updateAllRekaps } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
 import { AtasanPegawaiModel } from "@/lib/models/atasan-pegawai.model";
+import {
+  loadLaporanSettings,
+  timeToMinutes,
+  calculateDayDifference,
+  getTodayDateString,
+} from "@/lib/helpers/laporan-settings";
 
 // GET - Mengambil detail laporan by ID
 export async function GET(
@@ -156,6 +162,128 @@ export async function PUT(
         { error: "Deskripsi kegiatan tidak boleh kosong" },
         { status: 400 }
       );
+    }
+
+    const settings = await loadLaporanSettings();
+    const nextTanggal =
+      body.tanggal_kegiatan !== undefined
+        ? body.tanggal_kegiatan
+        : oldData.tanggal_kegiatan;
+    const nextWaktuMulai =
+      body.waktu_mulai !== undefined ? body.waktu_mulai : oldData.waktu_mulai;
+    const nextWaktuSelesai =
+      body.waktu_selesai !== undefined
+        ? body.waktu_selesai
+        : oldData.waktu_selesai;
+
+    const shouldValidateTimes =
+      body.waktu_mulai !== undefined ||
+      body.waktu_selesai !== undefined ||
+      (body.status_laporan === "Diajukan" &&
+        oldData.status_laporan !== "Diajukan");
+
+    if (shouldValidateTimes) {
+      if (!nextWaktuMulai || !nextWaktuSelesai) {
+        return NextResponse.json(
+          { error: "Waktu mulai dan selesai wajib diisi" },
+          { status: 400 }
+        );
+      }
+
+      const startMinutes = timeToMinutes(nextWaktuMulai);
+      const endMinutes = timeToMinutes(nextWaktuSelesai);
+
+      if (startMinutes === null || endMinutes === null) {
+        return NextResponse.json(
+          { error: "Format waktu mulai dan selesai harus HH:MM" },
+          { status: 400 }
+        );
+      }
+
+      if (endMinutes <= startMinutes) {
+        return NextResponse.json(
+          { error: "Waktu selesai harus lebih besar dari waktu mulai" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        startMinutes < settings.workStartMinutes ||
+        startMinutes > settings.workEndMinutes
+      ) {
+        return NextResponse.json(
+          {
+            error: `Waktu mulai harus berada antara ${settings.workStartLabel} dan ${settings.workEndLabel}`,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        endMinutes > settings.workEndMinutes ||
+        endMinutes < settings.workStartMinutes
+      ) {
+        return NextResponse.json(
+          {
+            error: `Waktu selesai harus berada antara ${settings.workStartLabel} dan ${settings.workEndLabel}`,
+          },
+          { status: 400 }
+        );
+      }
+
+      const durationMinutes = endMinutes - startMinutes;
+
+      if (durationMinutes < settings.minDurasi) {
+        return NextResponse.json(
+          {
+            error: `Durasi kegiatan minimal ${settings.minDurasi} menit`,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (durationMinutes > settings.maxDurasi) {
+        return NextResponse.json(
+          {
+            error: `Durasi kegiatan maksimal ${settings.maxDurasi} menit`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (
+      body.status_laporan === "Diajukan" &&
+      oldData.status_laporan !== "Diajukan"
+    ) {
+      const todayDate = getTodayDateString();
+      const diffDays = calculateDayDifference(nextTanggal, todayDate);
+
+      if (diffDays === null) {
+        return NextResponse.json(
+          { error: "Tanggal kegiatan tidak valid" },
+          { status: 400 }
+        );
+      }
+
+      if (diffDays < 0) {
+        return NextResponse.json(
+          {
+            error:
+              "Tanggal kegiatan tidak boleh lebih besar dari tanggal hari ini",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (diffDays > settings.submissionDeadlineDays) {
+        return NextResponse.json(
+          {
+            error: `Pengajuan laporan maksimal ${settings.submissionDeadlineDays} hari setelah tanggal kegiatan`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Prepare update data

@@ -34,3 +34,25 @@ export async function updateSettingValue(
     [newValue, settingId]
   );
 }
+
+export async function fetchSettingsByKeys(
+  keys: string[]
+): Promise<Record<string, Setting>> {
+  if (!keys.length) {
+    return {};
+  }
+
+  const placeholders = keys.map(() => "?").join(", ");
+  const rows = await executeQuery<Setting>(
+    `SELECT setting_id, setting_key, setting_value, setting_type, deskripsi,
+            kategori_setting, is_editable, created_at, updated_at
+       FROM settings
+      WHERE setting_key IN (${placeholders})`,
+    keys
+  );
+
+  return rows.reduce<Record<string, Setting>>((acc, row) => {
+    acc[row.setting_key] = row;
+    return acc;
+  }, {});
+}

@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { executeQuery } from "@/lib/helpers/db-helpers";
 import { RowDataPacket } from "mysql2";
 import { getUserFromCookie } from "@/lib/helpers/auth-helper";
+import {
+  loadLaporanSettings,
+  getTodayDateString,
+} from "@/lib/helpers/laporan-settings";
+import { autoVerifyDueReports } from "@/lib/models/laporan.model";
 
 type TotalRow = RowDataPacket & { total: number };
 type MonthlyRow = RowDataPacket & { month: string; total: number };
@@ -57,6 +62,12 @@ export async function GET() {
         },
         { status: 401 }
       );
+    }
+
+    const settings = await loadLaporanSettings();
+
+    if (settings.autoVerificationEnabled) {
+      await autoVerifyDueReports(getTodayDateString());
     }
 
     const isAdmin = user.level >= 3;

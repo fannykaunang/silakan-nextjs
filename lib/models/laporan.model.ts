@@ -8,6 +8,9 @@ import {
   getOne,
 } from "@/lib/helpers/db-helpers";
 import { RowDataPacket } from "mysql2";
+import { AtasanPegawaiModel } from "@/lib/models/atasan-pegawai.model";
+import { updateAllRekaps } from "@/lib/models/rekap.model";
+import { createLogWithData } from "@/lib/models/log.model";
 
 // ============================================
 // TYPES & INTERFACES
@@ -122,6 +125,16 @@ export interface VerifikasiLaporanData {
   verifikasi_oleh: number;
   catatan_verifikasi?: string | null;
   rating_kualitas?: number | null;
+}
+
+const AUTO_VERIFY_DELAY_DAYS = 3;
+
+interface AutoVerifyCandidate extends RowDataPacket {
+  laporan_id: number;
+  pegawai_id: number;
+  nama_kegiatan: string;
+  tanggal_kegiatan: string;
+  created_at: string;
 }
 
 // ============================================
@@ -249,6 +262,70 @@ export async function verifikasiLaporan(
     data.rating_kualitas ?? null,
     laporanId,
   ]);
+}
+
+export async function autoVerifyDueReports(
+  referenceDate: string
+): Promise<number> {
+  const candidates = await executeQuery<AutoVerifyCandidate>(
+    `SELECT laporan_id, pegawai_id, nama_kegiatan, tanggal_kegiatan, created_at
+       FROM laporan_kegiatan
+      WHERE status_laporan = 'Diajukan'
+        AND created_at <= DATE_SUB(NOW(), INTERVAL ${AUTO_VERIFY_DELAY_DAYS} DAY)`
+  );
+
+  if (!candidates.length) {
+    return 0;
+  }
+
+  let processed = 0;
+
+  for (const candidate of candidates) {
+    try {
+      const supervisor = await AtasanPegawaiModel.getPrimarySupervisor(
+        candidate.pegawai_id,
+        referenceDate
+      );
+
+      if (!supervisor) {
+        continue;
+      }
+
+      const before = await getLaporanById(candidate.laporan_id);
+
+      await verifikasiLaporan(candidate.laporan_id, {
+        status_laporan: "Diverifikasi",
+        verifikasi_oleh: supervisor.atasan_id,
+        catatan_verifikasi: "Diverifikasi otomatis oleh sistem",
+        rating_kualitas: null,
+      });
+
+      await updateAllRekaps(candidate.pegawai_id, candidate.tanggal_kegiatan);
+
+      const after = await getLaporanById(candidate.laporan_id);
+
+      await createLogWithData({
+        pegawai_id: supervisor.atasan_id,
+        aksi: "Update",
+        modul: "Laporan Kegiatan",
+        detail_aksi: `Verifikasi otomatis laporan ${candidate.nama_kegiatan}`,
+        data_sebelum: before,
+        data_sesudah: after,
+        endpoint: "AUTO_VERIFICATION",
+        method: "SYSTEM",
+      });
+
+      processed += 1;
+    } catch (error) {
+      console.error(
+        "Gagal melakukan verifikasi otomatis laporan",
+        candidate.laporan_id,
+        error
+      );
+    }
+  }
+
+  return processed;
 }
 
 // ==============================================
