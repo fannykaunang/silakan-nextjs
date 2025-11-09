@@ -1,6 +1,4 @@
 // File: app/laporan-kegiatan/[id]/DetailEditClient.tsx
-// Copy file ini ke: app/laporan-kegiatan/[id]/DetailEditClient.tsx
-// PART 1 OF 1 - COMPLETE FILE
 
 "use client";
 

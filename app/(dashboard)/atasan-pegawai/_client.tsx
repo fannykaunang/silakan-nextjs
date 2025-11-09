@@ -185,6 +185,19 @@ export default function AtasanPegawaiClient() {
       return;
     }
 
+    const alreadyHasSupervisor = atasanPegawai.some(
+      (item) =>
+        item.pegawai_id === formData.pegawai_id && Number(item.is_active) === 1
+    );
+
+    if (alreadyHasSupervisor) {
+      showError(
+        "Validasi Gagal",
+        "Pegawai yang bersangkutan sudah memiliki atasan"
+      );
+      return;
+    }
+
     try {
       showLoading("Menyimpan...", "Mohon tunggu sebentar");
 

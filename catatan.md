@@ -48,3 +48,6 @@ berikut rincian halamannya :
 
 # 09-11-2025
 1. baca ulang ketentuan VERIFIKASI ULANG di AI https://chatgpt.com/c/69047f07-7250-8323-9b5b-0d2eae67ae6f dan https://chat.z.ai/c/27d0b07f-46a5-4c71-a267-ddb4953add9a
+2. tambahkan batas waktu (batas_waktu_submit_laporan di tabel settings)
+3. bikin form setting dari tabel settings
+4. implementasikan halaman app/(dashboard)/laporan-kegiatan/[id]/DetailEditClient.tsx dari GPT CODEX

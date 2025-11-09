@@ -60,6 +60,7 @@ interface LaporanListResponse {
     isAdmin?: boolean;
     isAtasan?: boolean;
     manageablePegawaiIds?: number[] | null;
+    supervisedPegawaiIds?: number[] | null;
   };
 }
 
@@ -72,6 +73,9 @@ export default function LaporanListClient() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAtasan, setIsAtasan] = useState(false);
   const [manageablePegawaiIds, setManageablePegawaiIds] = useState<number[]>(
+    []
+  );
+  const [supervisedPegawaiIds, setSupervisedPegawaiIds] = useState<number[]>(
     []
   );
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +145,11 @@ export default function LaporanListClient() {
       setManageablePegawaiIds(
         Array.isArray(meta.manageablePegawaiIds)
           ? meta.manageablePegawaiIds
+          : []
+      );
+      setSupervisedPegawaiIds(
+        Array.isArray(meta.supervisedPegawaiIds)
+          ? meta.supervisedPegawaiIds
           : []
       );
 
@@ -404,6 +413,23 @@ export default function LaporanListClient() {
   };
 
   const isRestrictedAtasan = isAtasan && !isAdmin;
+  const canManageByAtasan = (laporan: LaporanData) => {
+    const isSupervisorContext =
+      isAtasan || (isAdmin && supervisedPegawaiIds.length > 0);
+
+    if (!isSupervisorContext) {
+      return false;
+    }
+
+    if (
+      supervisedPegawaiIds.length > 0 &&
+      !supervisedPegawaiIds.includes(laporan.pegawai_id)
+    ) {
+      return false;
+    }
+
+    return true;
+  };
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -748,7 +774,7 @@ export default function LaporanListClient() {
                           )}
 
                           {/* Print */}
-                          {isRestrictedAtasan &&
+                          {canManageByAtasan(laporan) &&
                             canVerify(laporan.status_laporan) && (
                               <button
                                 onClick={() => handleVerify(laporan)}

@@ -28,11 +28,12 @@ export async function GET(req: Request) {
 
     const today = new Date().toISOString().split("T")[0];
 
-    const manageableIds = new Set<number>();
+    const accessiblePegawaiIds = new Set<number>();
+    const supervisedPegawaiIds = new Set<number>();
     let isAtasan = false;
 
-    if (!isAdmin && user.pegawai_id) {
-      manageableIds.add(user.pegawai_id);
+    if (user.pegawai_id) {
+      accessiblePegawaiIds.add(user.pegawai_id);
 
       const subordinateIds = await AtasanPegawaiModel.getActiveSubordinateIds(
         user.pegawai_id,
@@ -41,13 +42,16 @@ export async function GET(req: Request) {
 
       if (subordinateIds.length > 0) {
         isAtasan = true;
-        subordinateIds.forEach((id) => manageableIds.add(id));
+        subordinateIds.forEach((id) => {
+          accessiblePegawaiIds.add(id);
+          supervisedPegawaiIds.add(id);
+        });
       }
     }
 
     const allowedPegawaiIds = isAdmin
       ? undefined
-      : Array.from(manageableIds.values());
+      : Array.from(accessiblePegawaiIds.values());
 
     const laporanList = await getAllLaporan(allowedPegawaiIds, isAdmin);
 
@@ -57,7 +61,8 @@ export async function GET(req: Request) {
       meta: {
         isAdmin,
         isAtasan,
-        manageablePegawaiIds: isAdmin ? null : allowedPegawaiIds,
+        manageablePegawaiIds: Array.from(accessiblePegawaiIds.values()),
+        supervisedPegawaiIds: Array.from(supervisedPegawaiIds.values()),
       },
     });
   } catch (error: any) {
