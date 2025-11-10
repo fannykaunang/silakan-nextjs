@@ -11,7 +11,7 @@ import {
   AtasanPegawaiData,
   CreateAtasanPegawaiInput,
   UpdateAtasanPegawaiInput,
-} from "@/lib/types/atasan-pegawai.types";
+} from "@/lib/types";
 
 export class AtasanPegawaiModel {
   /**

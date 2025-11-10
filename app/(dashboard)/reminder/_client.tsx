@@ -269,6 +269,14 @@ export default function ReminderClient() {
     [meta.currentPegawaiId, meta.isAdmin]
   );
 
+  const hasActiveFilters = useMemo(
+    () =>
+      Boolean(
+        searchValue.trim() !== "" || tipeFilter !== "all" || dayFilter !== "all"
+      ),
+    [dayFilter, searchValue, tipeFilter]
+  );
+
   const handleResetFilters = () => {
     setSearchValue("");
     setTipeFilter("all");
@@ -586,22 +594,27 @@ export default function ReminderClient() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-              Reset Filter
-            </button>
+          <div className="flex flex-col items-end gap-2">
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200">
+              className="px-6 py-2 pl-9 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 whitespace-nowrap">
               <Plus className="h-4 w-4" />
               Tambah Reminder
             </button>
           </div>
         </div>
+        {hasActiveFilters && (
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+              Reset Filter
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-gray-800">

@@ -5,3 +5,4 @@ export * from "./log.types";
 export * from "./jabatan.types";
 export * from "./settings.types";
 export * from "./reminder.types";
+export * from "./atasan-pegawai.types";

@@ -1,4 +1,4 @@
-// components/layout/HeaderClient.tsx (VERSI OPTIMAL)
+// components/layout/HeaderClient.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";

@@ -44,7 +44,8 @@ export async function GET() {
         created_at
       FROM notifikasi
       WHERE pegawai_id = ?
-      ORDER BY created_at DESC`,
+      ORDER BY created_at DESC
+      LIMIT 10;`,
       [pegawaiId]
     );
 

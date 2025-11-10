@@ -166,14 +166,34 @@ export async function POST(req: Request) {
     const pegawaiData = await fetchPegawaiFromEabsen(pin);
 
     if (pegawaiData) {
+      const normalizedSkpdidRaw =
+        pegawaiData.skpdid ?? pegawaiData.skpd_id ?? skpdid ?? null;
+      let normalizedSkpdid: number | null = null;
+
+      if (
+        normalizedSkpdidRaw !== null &&
+        normalizedSkpdidRaw !== undefined &&
+        !(
+          typeof normalizedSkpdidRaw === "string" &&
+          normalizedSkpdidRaw.trim() === ""
+        )
+      ) {
+        const parsed = Number(normalizedSkpdidRaw);
+        normalizedSkpdid = Number.isNaN(parsed) ? null : parsed;
+      }
+
+      const normalizedPegawaiData = {
+        ...pegawaiData,
+        skpdid: normalizedSkpdid,
+      };
       // Jalankan di background tanpa menunggu selesai
       Promise.allSettled([
-        upsertPegawai(pegawaiData),
+        upsertPegawai(normalizedPegawaiData),
         createLog({
-          pegawai_id: pegawaiData.pegawai_id,
+          pegawai_id: normalizedPegawaiData.pegawai_id,
           aksi: "Login",
           modul: "Auth",
-          detail_aksi: `User ${pegawaiData.pegawai_nama} berhasil login`,
+          detail_aksi: `User ${normalizedPegawaiData.pegawai_nama} berhasil login`,
           data_sebelum: null,
           data_sesudah: null,
           ip_address: getClientInfo(req).ip_address,

@@ -55,3 +55,6 @@ berikut rincian halamannya :
 # 10-11-2025
 1. perbaiki tombol tambah reminder dan style di input dan select filter di halaman reminder
 2. pada halaman pegawai, ketika yang login ada NENI, daftar dirinya sendiri malah kosong
+
+# 11-11-2025
+1. saat buat laporan, tambahkan template utk mempermudah pegawai
