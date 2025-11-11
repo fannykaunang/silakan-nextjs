@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/helpers/auth-helper";
 import { fetchAllSettings } from "@/lib/models/settings.model";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const user = await requireAuth();
 

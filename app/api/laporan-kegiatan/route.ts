@@ -84,7 +84,7 @@ export async function GET(req: Request) {
 
     if (error.message?.includes("Unauthorized")) {
       return NextResponse.json(
-        { error: "Unauthorized - Please login" },
+        { success: false, error: "Unauthorized - Please login" },
         { status: 401 }
       );
     }

@@ -1,7 +1,7 @@
 // app/(dashboard)/laporan-kegiatan/tambah/_client.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -56,12 +56,38 @@ interface UploadedFile {
   preview?: string;
 }
 
+interface TemplateKegiatanOption {
+  template_id: number;
+  pegawai_id: number;
+  nama_template: string;
+  kategori_id: number;
+  kategori_nama?: string | null;
+  deskripsi_template?: string | null;
+  target_output_default?: string | null;
+  lokasi_default?: string | null;
+  durasi_estimasi_menit?: number | null;
+  is_public: number;
+  unit_kerja_akses?: string | null;
+  jumlah_penggunaan?: number | null;
+  is_active?: number | null;
+}
+
+interface SessionInfo {
+  pegawai_id: number | null;
+  level: number | null;
+  skpdid: number | null;
+}
+
 export default function TambahLaporanClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [kategoris, setKategoris] = useState<Kategori[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [templates, setTemplates] = useState<TemplateKegiatanOption[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
+  const [templateError, setTemplateError] = useState<string | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
 
   const [formData, setFormData] = useState<FormData>({
     tanggal_kegiatan: new Date().toISOString().split("T")[0], // Today
@@ -88,6 +114,15 @@ export default function TambahLaporanClient() {
     fetchKategoris();
   }, []);
 
+  useEffect(() => {
+    const initializeTemplates = async () => {
+      const session = await fetchSessionInfo();
+      await fetchTemplates(session);
+    };
+
+    initializeTemplates();
+  }, []);
+
   const fetchKategoris = async () => {
     try {
       const response = await fetch("/api/kategori?is_active=1");
@@ -101,6 +136,203 @@ export default function TambahLaporanClient() {
       console.error("Error fetching kategoris:", error);
     }
   };
+
+  const fetchSessionInfo = async (): Promise<SessionInfo | null> => {
+    try {
+      const response = await fetch("/api/login", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload?.result !== 1) {
+        return null;
+      }
+
+      return {
+        pegawai_id:
+          typeof payload?.pegawai_id === "number" ? payload.pegawai_id : null,
+        level: typeof payload?.level === "number" ? payload.level : null,
+        skpdid: typeof payload?.skpdid === "number" ? payload.skpdid : null,
+      };
+    } catch (error) {
+      console.error("Error fetching session info:", error);
+      return null;
+    }
+  };
+
+  const canAccessTemplate = (
+    template: TemplateKegiatanOption,
+    session: SessionInfo | null
+  ) => {
+    const isActive = Number(template.is_active ?? 1) !== 0;
+    if (!isActive) {
+      return false;
+    }
+
+    const level = session?.level;
+    if (level !== null && level !== undefined && level >= 3) {
+      return true;
+    }
+
+    const isPublic = Number(template.is_public ?? 0) === 1;
+    if (isPublic) {
+      return true;
+    }
+
+    if (session?.pegawai_id && template.pegawai_id === session.pegawai_id) {
+      return true;
+    }
+
+    if (template.unit_kerja_akses && session?.skpdid) {
+      try {
+        const parsed = JSON.parse(template.unit_kerja_akses);
+        if (Array.isArray(parsed)) {
+          return parsed.some((value) => {
+            if (typeof value === "number") {
+              return value === session.skpdid;
+            }
+
+            if (typeof value === "string") {
+              const trimmed = value.trim();
+              if (!trimmed) {
+                return false;
+              }
+
+              const numeric = Number(trimmed);
+              if (!Number.isNaN(numeric)) {
+                return numeric === session.skpdid;
+              }
+
+              return trimmed === String(session.skpdid);
+            }
+
+            return false;
+          });
+        }
+      } catch (parseError) {
+        console.warn("Failed to parse unit_kerja_akses", parseError);
+      }
+    }
+
+    return false;
+  };
+
+  const fetchTemplates = async (session: SessionInfo | null) => {
+    try {
+      setIsLoadingTemplates(true);
+      setTemplateError(null);
+
+      const response = await fetch("/api/template-kegiatan", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || payload?.success !== true) {
+        throw new Error(
+          payload?.message || "Gagal memuat template kegiatan yang tersedia"
+        );
+      }
+
+      const rawTemplates: TemplateKegiatanOption[] = Array.isArray(
+        payload?.data
+      )
+        ? payload.data
+        : [];
+
+      const accessibleTemplates = rawTemplates.filter((template) =>
+        canAccessTemplate(template, session)
+      );
+
+      setTemplates(accessibleTemplates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      setTemplateError(
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan saat memuat template kegiatan"
+      );
+      setTemplates([]);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  const applyTemplateToForm = (template: TemplateKegiatanOption) => {
+    setFormData((prev) => ({
+      ...prev,
+      kategori_id: template.kategori_id
+        ? String(template.kategori_id)
+        : prev.kategori_id,
+      nama_kegiatan: template.nama_template || prev.nama_kegiatan,
+      deskripsi_kegiatan: template.deskripsi_template ?? "",
+      target_output: template.target_output_default ?? "",
+      lokasi_kegiatan: template.lokasi_default ?? "",
+    }));
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      [
+        "kategori_id",
+        "nama_kegiatan",
+        "deskripsi_kegiatan",
+        "target_output",
+        "lokasi_kegiatan",
+      ].forEach((field) => {
+        if (next[field]) {
+          delete next[field];
+        }
+      });
+      return next;
+    });
+  };
+
+  const handleTemplateSelect = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = event.target.value;
+    setSelectedTemplateId(value);
+
+    if (!value) {
+      return;
+    }
+
+    const template = templates.find(
+      (item) => item.template_id === Number(value)
+    );
+
+    if (template) {
+      applyTemplateToForm(template);
+    }
+  };
+
+  const handleTemplateReset = () => {
+    setSelectedTemplateId("");
+  };
+
+  const selectedTemplate = useMemo(() => {
+    if (!selectedTemplateId) {
+      return null;
+    }
+
+    return (
+      templates.find(
+        (item) => item.template_id === Number(selectedTemplateId)
+      ) || null
+    );
+  }, [selectedTemplateId, templates]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -341,6 +573,23 @@ export default function TambahLaporanClient() {
       //   await uploadFiles(laporanId);
       // }
 
+      if (selectedTemplateId) {
+        try {
+          await fetch(`/api/template-kegiatan/${selectedTemplateId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ action: "increment_usage" }),
+          });
+        } catch (templateUpdateError) {
+          console.error(
+            "Failed to increment template usage:",
+            templateUpdateError
+          );
+        }
+      }
+
       await Swal.fire({
         icon: "success",
         title: "Berhasil",
@@ -397,6 +646,137 @@ export default function TambahLaporanClient() {
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Buat laporan kegiatan harian baru
           </p>
+        </div>
+
+        {/* Template Selector */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-5 h-5 text-amber-500" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Gunakan Template Kegiatan
+            </h2>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Pilih template yang tersedia untuk mengisi otomatis beberapa field
+            dasar laporan. Anda tetap dapat menyesuaikan data setelah template
+            diterapkan.
+          </p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Pilih Template
+              </label>
+              <select
+                value={selectedTemplateId}
+                onChange={handleTemplateSelect}
+                disabled={isLoadingTemplates || templates.length === 0}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed">
+                <option value="">
+                  {isLoadingTemplates
+                    ? "Memuat template..."
+                    : "Pilih template kegiatan"}
+                </option>
+                {templates.map((template) => (
+                  <option
+                    key={template.template_id}
+                    value={template.template_id}>
+                    {template.nama_template}
+                    {template.kategori_nama
+                      ? ` — ${template.kategori_nama}`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+              {templateError && (
+                <p className="mt-2 text-sm text-red-500">{templateError}</p>
+              )}
+              {!isLoadingTemplates &&
+                templates.length === 0 &&
+                !templateError && (
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Belum ada template kegiatan yang tersedia untuk Anda.
+                  </p>
+                )}
+            </div>
+
+            <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
+              {isLoadingTemplates ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Memuat detail template...
+                </div>
+              ) : selectedTemplate ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-gray-700 dark:text-gray-200">
+                      {selectedTemplate.nama_template}
+                    </span>
+                    {typeof selectedTemplate.jumlah_penggunaan === "number" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        <CheckCircle className="h-3 w-3" />
+                        Digunakan {selectedTemplate.jumlah_penggunaan} kali
+                      </span>
+                    )}
+                  </div>
+                  {selectedTemplate.kategori_nama && (
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Kategori: {selectedTemplate.kategori_nama}
+                    </p>
+                  )}
+                  {selectedTemplate.deskripsi_template && (
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {selectedTemplate.deskripsi_template}
+                    </p>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {selectedTemplate.target_output_default && (
+                      <div className="rounded-md bg-white/60 dark:bg-gray-800/60 p-2">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
+                          Target Output
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-200">
+                          {selectedTemplate.target_output_default}
+                        </p>
+                      </div>
+                    )}
+                    {selectedTemplate.lokasi_default && (
+                      <div className="rounded-md bg-white/60 dark:bg-gray-800/60 p-2">
+                        <p className="text-xs uppercase text-gray-500 dark:text-gray-400">
+                          Lokasi Default
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-200">
+                          {selectedTemplate.lokasi_default}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {selectedTemplate.durasi_estimasi_menit && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Estimasi durasi: {selectedTemplate.durasi_estimasi_menit}{" "}
+                      menit
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Template Pilihan
+                  </label>
+                  Pilih salah satu template untuk melihat ringkasannya.
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleTemplateReset}
+              disabled={!selectedTemplateId}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
+              <X className="h-4 w-4" />
+              Reset Template
+            </button>
+          </div>
         </div>
 
         {/* Info Alert */}

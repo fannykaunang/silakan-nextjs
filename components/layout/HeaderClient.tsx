@@ -92,18 +92,18 @@ export default function Header({
   } = useCsrfToken();
   const [isLoading, setIsLoading] = useState(false);
 
-  // ✅ Debug CSRF token - hanya log setelah loading selesai
-  useEffect(() => {
-    if (!isTokenLoading) {
-      console.log(
-        "🔐 CSRF Token Status:",
-        isTokenReady ? "✅ Ready" : "❌ Not Ready"
-      );
-      if (tokenError) {
-        console.error("❌ CSRF Token Error:", tokenError);
-      }
-    }
-  }, [isTokenReady, isTokenLoading, tokenError]);
+  // // ✅ Debug CSRF token - hanya log setelah loading selesai
+  // useEffect(() => {
+  //   if (!isTokenLoading) {
+  //     console.log(
+  //       "🔐 CSRF Token Status:",
+  //       isTokenReady ? "✅ Ready" : "❌ Not Ready"
+  //     );
+  //     if (tokenError) {
+  //       console.error("❌ CSRF Token Error:", tokenError);
+  //     }
+  //   }
+  //}, [isTokenReady, isTokenLoading, tokenError]);
 
   const fetchUserPhoto = async () => {
     try {

@@ -82,7 +82,7 @@ export function useCsrfToken() {
         throw new Error("Token not found in cookie");
       }
 
-      console.log("✅ CSRF token ready from cookie");
+      //console.log("✅ CSRF token ready from cookie");
       setCsrfToken(tokenFromCookie);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Unknown error";

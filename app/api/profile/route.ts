@@ -1,6 +1,7 @@
 // app/api/profile/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { requireAuth } from "@/lib/helpers/auth-helper";
 
 // Type untuk data pegawai
 interface PegawaiData {
@@ -103,10 +104,8 @@ async function updatePegawaiData(
 // GET - Ambil data profil
 export async function GET(request: NextRequest) {
   try {
-    const store = await cookies();
-    const authCookie = store.get("auth");
-
-    const user = await getUserFromCookie();
+    const user = await requireAuth();
+    //const user = await getUserFromCookie();
 
     if (!user) {
       return NextResponse.json(
@@ -145,8 +144,14 @@ export async function GET(request: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching profile:", error);
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized - Please login" },
+        { status: 401 }
+      );
+    }
     return NextResponse.json(
       {
         error: "Internal Server Error",

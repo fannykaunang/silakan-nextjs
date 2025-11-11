@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import {
   requireAdmin,
+  requireAuth,
   getClientInfo,
   getUserFromCookie,
 } from "@/lib/helpers/auth-helper";
@@ -16,6 +17,7 @@ import { createLog } from "@/lib/models/log.model";
 // GET: Fetch semua kategori
 export async function GET(req: Request) {
   try {
+    const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const is_active = searchParams.get("is_active");
 
@@ -40,6 +42,12 @@ export async function GET(req: Request) {
     );
   } catch (error: any) {
     console.error("❌ Error fetching kategori:", error);
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized - Please login" },
+        { status: 401 }
+      );
+    }
 
     return NextResponse.json(
       {

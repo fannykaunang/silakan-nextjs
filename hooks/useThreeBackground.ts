@@ -118,8 +118,6 @@ export function useThreeBackground(options: ThreeBackgroundOptions = {}) {
     const baseConfig = options.config || PRESET_CONFIGS.merauke[theme];
     const config = { ...baseConfig };
 
-    console.log("🎨 Three.js Background Theme:", theme);
-
     // Scene setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
@@ -231,8 +229,6 @@ export function useThreeBackground(options: ThreeBackgroundOptions = {}) {
               ),
             });
           }
-
-          console.log(`✅ ${logoCount} floating logos added (${theme} theme)`);
         },
         undefined,
         (error) => {

@@ -1,6 +1,6 @@
 // app/api/reminder/route.ts
 
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
 
 import {
@@ -75,7 +75,7 @@ function normalizeDate(value?: string | null) {
   return trimmed.length ? trimmed : null;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireAuth();
     const url = new URL(request.url);

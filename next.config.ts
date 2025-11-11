@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: "standalone", // penting: supaya server.js bisa jalan tanpa node_modules penuh
   reactStrictMode: true,
+  poweredByHeader: false,
 };
 
 export default nextConfig;

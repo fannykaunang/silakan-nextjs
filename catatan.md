@@ -58,3 +58,5 @@ berikut rincian halamannya :
 
 # 11-11-2025
 1. saat buat laporan, tambahkan template utk mempermudah pegawai
+2. ubah fetch notifikasi pakai SSE/WebSocket
+3. saat buat reminder, buat juga notifikasinya

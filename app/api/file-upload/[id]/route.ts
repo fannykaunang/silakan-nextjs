@@ -1,5 +1,4 @@
 // File: app/api/file-upload/[id]/route.ts
-// FIXED VERSION - Compatible dengan requireAuth() yang throw error
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/helpers/auth-helper";
