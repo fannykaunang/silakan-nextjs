@@ -135,7 +135,7 @@ export async function PUT(
     if (!canEdit) {
       return NextResponse.json(
         {
-          error:
+          message:
             "Laporan tidak dapat diedit. Status harus Draft, Diajukan, atau Revisi.",
           status: oldData.status_laporan,
         },

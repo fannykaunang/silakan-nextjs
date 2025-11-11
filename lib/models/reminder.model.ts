@@ -301,7 +301,7 @@ function formatDateTimeForSql(date: Date) {
 
 export async function listActiveRemindersForPegawai(pegawaiId: number) {
   return executeQuery<ReminderListItem>(
-    `SELECT r.*, p.pegawai_nama
+    `SELECT r.*, p.pegawai_nama, p.pegawai_telp AS no_hp
      FROM reminder r
      LEFT JOIN pegawai_cache p ON p.pegawai_id = r.pegawai_id
      WHERE r.is_active = 1 AND r.pegawai_id = ?

@@ -147,6 +147,13 @@ export default function LaporanListClient() {
           ? meta.manageablePegawaiIds
           : []
       );
+
+      setSupervisedPegawaiIds(
+        Array.isArray(meta.supervisedPegawaiIds)
+          ? meta.supervisedPegawaiIds
+          : []
+      );
+
       setSupervisedPegawaiIds(
         Array.isArray(meta.supervisedPegawaiIds)
           ? meta.supervisedPegawaiIds
@@ -414,21 +421,18 @@ export default function LaporanListClient() {
 
   const isRestrictedAtasan = isAtasan && !isAdmin;
   const canManageByAtasan = (laporan: LaporanData) => {
-    const isSupervisorContext =
-      isAtasan || (isAdmin && supervisedPegawaiIds.length > 0);
-
-    if (!isSupervisorContext) {
+    // Jika bukan atasan dan bukan admin, return false
+    if (!isAtasan && !isAdmin) {
       return false;
     }
 
-    if (
-      supervisedPegawaiIds.length > 0 &&
-      !supervisedPegawaiIds.includes(laporan.pegawai_id)
-    ) {
+    // Jika supervisedPegawaiIds kosong, return false
+    if (!supervisedPegawaiIds || supervisedPegawaiIds.length === 0) {
       return false;
     }
 
-    return true;
+    // Check apakah laporan dari bawahan user
+    return supervisedPegawaiIds.includes(laporan.pegawai_id);
   };
 
   // Pagination
@@ -739,8 +743,7 @@ export default function LaporanListClient() {
                       {/* Actions */}
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
-                          {/* View/Edit */}
-
+                          {/* View/Edit - Untuk non-atasan terbatas atau semua kecuali atasan terbatas */}
                           {!isRestrictedAtasan && (
                             <>
                               <button
@@ -773,7 +776,7 @@ export default function LaporanListClient() {
                             </>
                           )}
 
-                          {/* Print */}
+                          {/* ✅ FIX: Button Verifikasi - Muncul jika user adalah atasan dari pegawai ini */}
                           {canManageByAtasan(laporan) &&
                             canVerify(laporan.status_laporan) && (
                               <button
@@ -783,6 +786,8 @@ export default function LaporanListClient() {
                                 <CheckCircle className="w-5 h-5" />
                               </button>
                             )}
+
+                          {/* Print */}
                           <button
                             onClick={() => handlePrint(laporan)}
                             className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"

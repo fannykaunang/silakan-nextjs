@@ -29,6 +29,7 @@ export interface ReminderRow extends RowDataPacket {
 
 export interface ReminderListItem extends ReminderRow {
   pegawai_nama: string | null;
+  no_hp?: string | null;
 }
 
 export interface ReminderStats {

@@ -435,13 +435,19 @@ export default function DetailEditClient() {
         }
       }
 
+      const normalizedFormData = {
+        ...formData,
+        waktu_mulai: normalizeTimeFormat(formData.waktu_mulai),
+        waktu_selesai: normalizeTimeFormat(formData.waktu_selesai),
+      };
+
       // Update laporan
       const response = await fetch(`/api/laporan-kegiatan/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(normalizedFormData),
       });
 
       const result = await response.json();
@@ -529,6 +535,8 @@ export default function DetailEditClient() {
         },
         body: JSON.stringify({
           ...formData,
+          waktu_mulai: normalizeTimeFormat(formData.waktu_mulai),
+          waktu_selesai: normalizeTimeFormat(formData.waktu_selesai),
           status_laporan: "Diajukan",
         }),
       });
@@ -643,6 +651,15 @@ export default function DetailEditClient() {
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
+  const normalizeTimeFormat = (time: string): string => {
+    if (!time) return time;
+    const parts = time.split(":");
+    if (parts.length >= 2) {
+      return `${parts[0]}:${parts[1]}`; // Ambil hanya HH:MM
+    }
+    return time;
   };
 
   // ============================================================================

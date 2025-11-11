@@ -586,7 +586,8 @@ export default function ReminderClient() {
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-blue-100 md:text-base">
               Kelola pengingat kegiatan harian, mingguan, dan khusus untuk
-              memastikan aktivitas berjalan sesuai jadwal.
+              memastikan aktivitas berjalan sesuai jadwal. Otomatis dikirim ke
+              nomor WhatsApp Anda.
             </p>
           </div>
           <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm backdrop-blur">

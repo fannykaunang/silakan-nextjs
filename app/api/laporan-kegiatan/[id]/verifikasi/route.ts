@@ -14,6 +14,12 @@ import {
 } from "@/lib/models/rekap.model";
 import type { RekapHarian } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
+import {
+  sendWhatsAppMessage,
+  formatReminderMessage,
+} from "@/lib/helpers/whatsapp-helper";
+import { getPegawaiById } from "@/lib/models/pegawai.model";
+import { createNotifikasi } from "@/lib/models/notifikasi.model";
 
 const ALLOWED_STATUSES = ["Diverifikasi", "Revisi", "Ditolak"] as const;
 
@@ -40,6 +46,55 @@ function buildStatusMessage(status: AllowedStatus) {
       return "Laporan berhasil ditolak";
     default:
       return "Laporan berhasil diproses";
+  }
+}
+
+/**
+ * Kirim notifikasi WhatsApp untuk reminder
+ */
+async function sendReminderWhatsApp(
+  reminder: any,
+  scheduledAt: Date
+): Promise<void> {
+  try {
+    const noHp = reminder.pegawai_telp;
+
+    if (!noHp) {
+      console.log(
+        `Reminder ${reminder.reminder_id}: Tidak ada nomor WhatsApp untuk pegawai ${reminder.pegawai_nama}`
+      );
+      return;
+    }
+
+    const message = formatReminderMessage({
+      title: reminder.judul_reminder,
+      message: reminder.pesan_reminder,
+      tipe: reminder.tipe_reminder,
+      scheduledAt: scheduledAt.toISOString(),
+      pegawaiName: reminder.pegawai_nama ?? undefined,
+    });
+
+    const result = await sendWhatsAppMessage({
+      phone: noHp,
+      message: message,
+      duration: 3600,
+    });
+
+    if (result.success) {
+      console.log(
+        `✅ WhatsApp sent for reminder ${reminder.reminder_id} to ${noHp}`
+      );
+    } else {
+      console.error(
+        `❌ Failed to send WhatsApp for reminder ${reminder.reminder_id}:`,
+        result.error
+      );
+    }
+  } catch (error) {
+    console.error(
+      `Error sending WhatsApp for reminder ${reminder.reminder_id}:`,
+      error
+    );
   }
 }
 
@@ -101,9 +156,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: isAdmin
-            ? "Halaman verifikasi hanya untuk atasan pegawai"
-            : "Anda bukan atasan dari pegawai tersebut",
+          message: "Anda bukan atasan dari pegawai tersebut",
         },
         { status: 403 }
       );
@@ -271,6 +324,85 @@ export async function POST(
         completeFlag
       );
     }
+
+    // --- WhatsApp Integration ---
+    // Kirim notifikasi WhatsApp setelah semua proses DB berhasil
+    try {
+      // 1. Ambil data pegawai pembuat laporan untuk dapatkan nomor HP
+      const pegawaiAuthor = await getPegawaiById(laporan.pegawai_id);
+
+      // 2. Periksa apakah data pegawai DAN nomor telepon ADA
+      //    Ini adalah kunci untuk mengatasi error TypeScript.
+      if (pegawaiAuthor && pegawaiAuthor.pegawai_telp) {
+        // 3. Jika ada, buat pesan yang akan dikirim
+        const waMessage = `Halo, ${
+          pegawaiAuthor.pegawai_nama
+        }!\n\nLaporan kegiatan Anda dengan detail:\n- Kegiatan: ${
+          laporan.nama_kegiatan
+        }\n- Tanggal: ${new Date(laporan.tanggal_kegiatan).toLocaleString(
+          "id-ID",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit", // TAMBAHKAN INI
+            minute: "2-digit", // TAMBAHKAN INI
+            hour12: false, // TAMBAHKAN INI (gunakan format 24 jam, contoh: 14:30)
+          }
+        )}
+        )}\n\nTelah diverifikasi oleh ${
+          user.nama
+        } dengan status: *${status.toUpperCase()}*.\n\n${
+          catatan ? `Catatan: ${catatan}` : ""
+        }\n${rating ? `Rating: ${rating}/5` : ""}`;
+
+        // 4. Panggil fungsi helper untuk mengirim pesan
+        //    Di dalam blok 'if' ini, TypeScript TAHU bahwa 'pegawaiAuthor.pegawai_telp' pasti sebuah 'string'.
+        // Kirim WhatsApp dan simpan hasilnya
+        const waResult = await sendWhatsAppMessage({
+          phone: pegawaiAuthor.pegawai_telp,
+          message: waMessage,
+        });
+
+        if (waResult.success) {
+          try {
+            await createNotifikasi({
+              pegawai_id: laporan.pegawai_id, // Notifikasi untuk pembuat laporan
+              judul: "Laporan Diverifikasi",
+              pesan: waMessage, // Gunakan pesan yang sama
+              tipe_notifikasi: "verifikasi",
+              laporan_id: laporanId,
+              link_tujuan: `/laporan-kegiatan/${laporanId}`, // Link ke detail laporan (sesuaikan dengan route Anda)
+              action_required: false,
+            });
+            console.log(
+              `✅ Notification created for pegawai ID ${laporan.pegawai_id}`
+            );
+          } catch (notifError: any) {
+            // Jangan gagalkan proses, tapi log errornya
+            console.error(
+              "❌ Failed to create notification after WhatsApp success:",
+              notifError.message
+            );
+          }
+        }
+
+        console.log(
+          `✅ WhatsApp notification sent to ${pegawaiAuthor.pegawai_telp} for report ID ${laporanId}`
+        );
+      } else {
+        // 5. (Opsional, tapi sangat direkomendasikan) Log jika data tidak lengkap
+        console.warn(
+          `⚠️ Tidak dapat mengirim WhatsApp. Pegawai ID ${laporan.pegawai_id} tidak ditemukan atau tidak memiliki nomor telepon.`
+        );
+      }
+    } catch (waError: any) {
+      // Jangan gagalkan proses utama jika WhatsApp error, cukup log di console
+      console.error("❌ Gagal mengirim notifikasi WhatsApp:", waError.message);
+    }
+    // --- End
+    // --- End of WhatsApp Integration --
 
     const updatedLaporan = await getLaporanById(laporanId);
     const updatedRekap = await getRekapHarian(

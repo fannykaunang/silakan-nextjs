@@ -120,13 +120,13 @@ export default function SidebarClient({
   ];
 
   // Tambahkan laporan statistik untuk level supervisor ke atas
-  if (userLevel >= 2) {
-    reportItems.push({
-      href: "/laporan/statistik",
-      label: "Statistik",
-      icon: TrendingUp,
-    });
-  }
+  //if (userLevel >= 2) {
+  reportItems.push({
+    href: "/rekapitulasi/harian",
+    label: "Rekapitulasi Harian",
+    icon: TrendingUp,
+  });
+  //}
 
   // --- D. Bagian Manajemen Data (Level >= 1) ---
   const managementItems: MenuItemLink[] = [];

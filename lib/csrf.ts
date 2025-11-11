@@ -77,7 +77,7 @@ export async function generateCsrfToken(): Promise<string> {
 
   if (existingToken && existingToken.length === CSRF_TOKEN_LENGTH * 2) {
     // Token masih ada dan valid, return yang existing
-    console.log("✅ Using existing CSRF token");
+    //console.log("✅ Using existing CSRF token");
     return existingToken;
   }
 

@@ -7,6 +7,10 @@ import {
   listActiveRemindersForPegawai,
   markReminderSent,
 } from "@/lib/models/reminder.model";
+import {
+  sendWhatsAppMessage,
+  formatReminderMessage,
+} from "@/lib/helpers/whatsapp-helper";
 
 import type { ReminderDay, ReminderListItem } from "@/lib/types";
 
@@ -86,6 +90,67 @@ function buildDate(
   return new Date(year, month, validDay, hour, minute, second, 0);
 }
 
+/**
+ * Cek apakah dua tanggal ada di hari yang sama
+ */
+function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
+
+/**
+ * Cek apakah reminder sudah dikirim hari ini
+ * Untuk mencegah pengiriman berulang di hari yang sama
+ */
+function wasAlreadySentToday(reminder: ReminderListItem, now: Date): boolean {
+  if (!reminder.terakhir_dikirim) {
+    return false;
+  }
+
+  const lastSent = new Date(reminder.terakhir_dikirim);
+  if (Number.isNaN(lastSent.getTime())) {
+    return false;
+  }
+
+  // Untuk reminder Harian: Cek apakah sudah kirim hari ini
+  if (reminder.tipe_reminder === "Harian") {
+    return isSameDay(lastSent, now);
+  }
+
+  // Untuk reminder Mingguan: Cek apakah sudah kirim di hari yang sama minggu ini
+  if (reminder.tipe_reminder === "Mingguan") {
+    // Jika last sent di hari yang sama (day of week) dan dalam 7 hari terakhir
+    if (lastSent.getDay() === now.getDay()) {
+      const diffDays = Math.floor(
+        (now.getTime() - lastSent.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return diffDays < 7;
+    }
+    return false;
+  }
+
+  // Untuk reminder Bulanan: Cek apakah sudah kirim di bulan ini
+  if (reminder.tipe_reminder === "Bulanan") {
+    return (
+      lastSent.getFullYear() === now.getFullYear() &&
+      lastSent.getMonth() === now.getMonth()
+    );
+  }
+
+  // Untuk reminder Sekali: Jika sudah pernah kirim, return true
+  if (reminder.tipe_reminder === "Sekali") {
+    return true; // Sudah tidak aktif by markReminderSent, tapi double check
+  }
+
+  return false;
+}
+
+/**
+ * Dapatkan waktu scheduled berikutnya untuk reminder
+ */
 function getNextOccurrence(
   reminder: ReminderListItem,
   afterDate: Date
@@ -195,6 +260,55 @@ function writeEvent(
   );
 }
 
+/**
+ * Kirim notifikasi WhatsApp untuk reminder
+ */
+async function sendReminderWhatsApp(
+  reminder: any,
+  scheduledAt: Date
+): Promise<void> {
+  try {
+    const noHp = reminder.no_hp;
+
+    if (!noHp) {
+      console.log(
+        `Reminder ${reminder.reminder_id}: Tidak ada nomor WhatsApp untuk pegawai ${reminder.pegawai_nama}`
+      );
+      return;
+    }
+
+    const message = formatReminderMessage({
+      title: reminder.judul_reminder,
+      message: reminder.pesan_reminder,
+      tipe: reminder.tipe_reminder,
+      scheduledAt: scheduledAt.toISOString(),
+      pegawaiName: reminder.pegawai_nama ?? undefined,
+    });
+
+    const result = await sendWhatsAppMessage({
+      phone: noHp,
+      message: message,
+      duration: 3600,
+    });
+
+    if (result.success) {
+      console.log(
+        `✅ WhatsApp sent for reminder ${reminder.reminder_id} to ${noHp}`
+      );
+    } else {
+      console.error(
+        `❌ Failed to send WhatsApp for reminder ${reminder.reminder_id}:`,
+        result.error
+      );
+    }
+  } catch (error) {
+    console.error(
+      `Error sending WhatsApp for reminder ${reminder.reminder_id}:`,
+      error
+    );
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const user = await requireAuth();
@@ -225,6 +339,15 @@ export async function GET(request: Request) {
               if (!nextOccurrence) continue;
               if (nextOccurrence > now) continue;
 
+              // ✅ CEK: Apakah reminder sudah dikirim hari ini?
+              if (wasAlreadySentToday(reminder, now)) {
+                console.log(
+                  `⏭️ Reminder ${reminder.reminder_id} (${reminder.judul_reminder}) sudah dikirim hari ini, skip.`
+                );
+                continue;
+              }
+
+              // Kirim SSE event ke browser
               writeEvent(controller, "reminder", {
                 reminderId: reminder.reminder_id,
                 title: reminder.judul_reminder,
@@ -233,10 +356,23 @@ export async function GET(request: Request) {
                 scheduled_at: nextOccurrence.toISOString(),
               });
 
+              // Kirim notifikasi WhatsApp (non-blocking)
+              sendReminderWhatsApp(reminder, nextOccurrence).catch((error) => {
+                console.error(
+                  `WhatsApp notification failed for reminder ${reminder.reminder_id}:`,
+                  error
+                );
+              });
+
+              // Mark as sent dengan waktu sekarang (bukan nextOccurrence)
               await markReminderSent(
                 reminder.reminder_id,
-                nextOccurrence,
+                now, // ← Gunakan waktu sekarang, bukan scheduled time
                 reminder.tipe_reminder === "Sekali"
+              );
+
+              console.log(
+                `📨 Reminder ${reminder.reminder_id} (${reminder.judul_reminder}) berhasil dikirim`
               );
             }
           } catch (error) {
