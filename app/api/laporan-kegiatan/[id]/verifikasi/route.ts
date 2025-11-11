@@ -260,9 +260,9 @@ export async function POST(
     }
 
     const payload = await req.json();
-    const status = (payload?.status_laporan ?? "") as AllowedStatus;
+    const status_verifikasi = (payload?.status_laporan ?? "") as AllowedStatus;
 
-    if (!ALLOWED_STATUSES.includes(status)) {
+    if (!ALLOWED_STATUSES.includes(status_verifikasi)) {
       return NextResponse.json(
         { success: false, message: "Status verifikasi tidak valid" },
         { status: 400 }
@@ -309,7 +309,7 @@ export async function POST(
     const normalizedBefore = normalizeRekap(rekapBefore);
 
     await verifikasiLaporan(laporanId, {
-      status_laporan: status,
+      status_laporan: status_verifikasi,
       verifikasi_oleh: user.pegawai_id,
       catatan_verifikasi: catatan,
       rating_kualitas: rating,
@@ -369,7 +369,12 @@ export async function POST(
           try {
             await createNotifikasi({
               pegawai_id: laporan.pegawai_id, // Notifikasi untuk pembuat laporan
-              judul: "Laporan Diverifikasi",
+              judul:
+                status_verifikasi === "Diverifikasi"
+                  ? "Laporan Diverifikasi"
+                  : status_verifikasi === "Revisi"
+                  ? "Laporan Revisi"
+                  : "Laporan Ditolak",
               pesan: waMessage, // Gunakan pesan yang sama
               tipe_notifikasi: "verifikasi",
               laporan_id: laporanId,
@@ -439,7 +444,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: buildStatusMessage(status),
+      message: buildStatusMessage(status_verifikasi),
       data: {
         laporan: updatedLaporan,
         rekapHarian: normalizedAfter,
