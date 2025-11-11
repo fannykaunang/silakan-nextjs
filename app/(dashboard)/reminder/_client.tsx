@@ -31,6 +31,7 @@ import {
   showError,
   showLoading,
   showSuccess,
+  showToast,
 } from "@/lib/utils/sweetalert";
 
 type PegawaiOption = { pegawai_id: number; pegawai_nama: string | null };
@@ -259,6 +260,95 @@ export default function ReminderClient() {
   useEffect(() => {
     fetchReminders(currentPage);
   }, [fetchReminders, currentPage, refreshKey]);
+
+  useEffect(() => {
+    if (!meta.currentPegawaiId) {
+      return;
+    }
+
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleReminderEvent = (event: MessageEvent) => {
+      try {
+        const payload = JSON.parse(event.data) as {
+          reminderId: number;
+          title: string;
+          message?: string | null;
+          tipe: string;
+          scheduled_at?: string;
+        };
+
+        const scheduledTime = payload.scheduled_at
+          ? new Date(payload.scheduled_at)
+          : null;
+
+        const formattedTime =
+          scheduledTime && !Number.isNaN(scheduledTime.getTime())
+            ? scheduledTime.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : null;
+
+        const toastTitle = [
+          payload.title,
+          formattedTime ? `(${formattedTime} WIB)` : null,
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        const toastMessage = payload.message
+          ? [toastTitle, payload.message].filter(Boolean).join(" • ")
+          : toastTitle || "Pengingat baru";
+
+        showToast("info", toastMessage);
+      } catch (error) {
+        console.error("Failed to parse reminder notification:", error);
+      }
+    };
+
+    const handleErrorEvent = (event: MessageEvent) => {
+      try {
+        const payload = JSON.parse(event.data) as { message?: string };
+        if (payload?.message) {
+          console.warn("SSE reminder warning:", payload.message);
+        }
+      } catch (error) {
+        console.error("Failed to parse reminder SSE error payload:", error);
+      }
+    };
+
+    const connect = () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      eventSource = new EventSource("/api/reminder/events");
+      eventSource.addEventListener("reminder", handleReminderEvent);
+      eventSource.addEventListener("notify-error", handleErrorEvent);
+      eventSource.onerror = () => {
+        eventSource?.close();
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+        }
+        reconnectTimer = setTimeout(() => {
+          connect();
+        }, 5000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+      eventSource?.removeEventListener("reminder", handleReminderEvent);
+      eventSource?.removeEventListener("notify-error", handleErrorEvent);
+      eventSource?.close();
+    };
+  }, [meta.currentPegawaiId]);
 
   const canManageReminder = useCallback(
     (reminder: ReminderListItem) => {

@@ -294,3 +294,38 @@ export async function fetchPegawaiOptionsForReminder(
     pegawai_nama: row.pegawai_nama,
   }));
 }
+
+function formatDateTimeForSql(date: Date) {
+  return date.toISOString().slice(0, 19).replace("T", " ");
+}
+
+export async function listActiveRemindersForPegawai(pegawaiId: number) {
+  return executeQuery<ReminderListItem>(
+    `SELECT r.*, p.pegawai_nama
+     FROM reminder r
+     LEFT JOIN pegawai_cache p ON p.pegawai_id = r.pegawai_id
+     WHERE r.is_active = 1 AND r.pegawai_id = ?
+     ORDER BY r.waktu_reminder ASC`,
+    [pegawaiId]
+  );
+}
+
+export async function markReminderSent(
+  reminderId: number,
+  sentAt: Date,
+  deactivateAfterSend: boolean = false
+) {
+  const fields = ["terakhir_dikirim = ?"];
+  const params: (string | number)[] = [formatDateTimeForSql(sentAt)];
+
+  if (deactivateAfterSend) {
+    fields.push("is_active = 0");
+  }
+
+  params.push(reminderId);
+
+  return executeUpdate(
+    `UPDATE reminder SET ${fields.join(", ")} WHERE reminder_id = ?`,
+    params
+  );
+}
