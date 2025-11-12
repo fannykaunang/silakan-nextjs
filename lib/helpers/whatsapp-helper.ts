@@ -1,5 +1,5 @@
 // lib/helpers/whatsapp-helper.ts
-// VERSION WITH BASIC AUTH
+// VERSION WITH BASIC AUTH + LAPORAN KEGIATAN
 
 const WHATSAPP_API_URL = "http://103.177.95.67:7482/send/message";
 
@@ -164,6 +164,96 @@ export function formatReminderMessage(params: {
   if (params.pegawaiName) {
     lines.push("");
     lines.push(`👤 Untuk: ${params.pegawaiName}`);
+  }
+
+  lines.push("");
+  lines.push("_Pesan otomatis dari Sistem SILAKAN_");
+
+  return lines.join("\n");
+}
+
+/**
+ * Format pesan laporan kegiatan untuk WhatsApp (untuk atasan)
+ */
+export function formatLaporanKegiatanMessage(params: {
+  pegawaiName: string;
+  namaKegiatan: string;
+  kategori?: string;
+  tanggalKegiatan: string;
+  waktuMulai?: string;
+  waktuSelesai?: string;
+  lokasi?: string;
+  deskripsi?: string;
+  laporanId?: number;
+}): string {
+  const lines: string[] = [];
+
+  lines.push("📋 *LAPORAN KEGIATAN BARU*");
+  lines.push("");
+  lines.push(
+    `Anda memiliki laporan kegiatan baru yang perlu direview dari bawahan Anda.`
+  );
+  lines.push("");
+
+  lines.push("👤 *Pegawai*");
+  lines.push(params.pegawaiName);
+  lines.push("");
+
+  lines.push("📝 *Kegiatan*");
+  lines.push(params.namaKegiatan);
+
+  if (params.kategori) {
+    lines.push(`Kategori: ${params.kategori}`);
+  }
+  lines.push("");
+
+  // Format tanggal
+  const tanggal = new Date(params.tanggalKegiatan);
+  if (!Number.isNaN(tanggal.getTime())) {
+    const formattedDate = tanggal.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+    lines.push("📅 *Tanggal Kegiatan*");
+    lines.push(formattedDate);
+    lines.push("");
+  }
+
+  // Waktu
+  if (params.waktuMulai && params.waktuSelesai) {
+    lines.push("⏰ *Waktu Pelaksanaan*");
+    lines.push(`${params.waktuMulai} - ${params.waktuSelesai} WIB`);
+    lines.push("");
+  }
+
+  // Lokasi
+  if (params.lokasi) {
+    lines.push("📍 *Lokasi*");
+    lines.push(params.lokasi);
+    lines.push("");
+  }
+
+  // Deskripsi (dipotong jika terlalu panjang)
+  if (params.deskripsi) {
+    lines.push("📄 *Deskripsi Singkat*");
+    const shortDesc =
+      params.deskripsi.length > 150
+        ? params.deskripsi.substring(0, 150) + "..."
+        : params.deskripsi;
+    lines.push(shortDesc);
+    lines.push("");
+  }
+
+  lines.push("🔔 *Tindakan Diperlukan*");
+  lines.push(
+    "Silakan login ke sistem SILAKAN untuk mereview dan menyetujui laporan ini."
+  );
+
+  if (params.laporanId) {
+    lines.push("");
+    lines.push(`_ID Laporan: #${params.laporanId}_`);
   }
 
   lines.push("");

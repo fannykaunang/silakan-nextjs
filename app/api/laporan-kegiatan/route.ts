@@ -18,6 +18,13 @@ import {
   calculateDayDifference,
   getTodayDateString,
 } from "@/lib/helpers/laporan-settings";
+import { createNotifikasi } from "@/lib/models/notifikasi.model";
+import { getAtasanLangsungAktif } from "@/lib/models/atasan-pegawai.model";
+import {
+  sendWhatsAppMessage,
+  formatLaporanKegiatanMessage,
+} from "@/lib/helpers/whatsapp-helper";
+import { getPegawaiById } from "@/lib/models/pegawai.model";
 
 // GET - Mengambil semua laporan
 export async function GET(req: Request) {
@@ -100,6 +107,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
+    const pegawaiId = user.pegawai_id;
+
+    if (!pegawaiId) {
+      return NextResponse.json(
+        { success: false, message: "Pegawai tidak ditemukan" },
+        { status: 400 }
+      );
+    }
 
     // Get request body
     const body = await req.json();
@@ -235,10 +250,6 @@ export async function POST(req: Request) {
         );
       }
     }
-
-    // Check if creating laporan for today
-    //const today = getTodayFormatted();
-    //const isToday = body.tanggal_kegiatan === today;
 
     const tanggalKegiatan = `${body.tanggal_kegiatan}`.trim(); // ekspektasi "YYYY-MM-DD"
     const attendanceCheck = await checkAttendanceToday(

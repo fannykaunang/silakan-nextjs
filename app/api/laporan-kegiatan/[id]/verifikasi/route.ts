@@ -49,55 +49,6 @@ function buildStatusMessage(status: AllowedStatus) {
   }
 }
 
-/**
- * Kirim notifikasi WhatsApp untuk reminder
- */
-async function sendReminderWhatsApp(
-  reminder: any,
-  scheduledAt: Date
-): Promise<void> {
-  try {
-    const noHp = reminder.pegawai_telp;
-
-    if (!noHp) {
-      console.log(
-        `Reminder ${reminder.reminder_id}: Tidak ada nomor WhatsApp untuk pegawai ${reminder.pegawai_nama}`
-      );
-      return;
-    }
-
-    const message = formatReminderMessage({
-      title: reminder.judul_reminder,
-      message: reminder.pesan_reminder,
-      tipe: reminder.tipe_reminder,
-      scheduledAt: scheduledAt.toISOString(),
-      pegawaiName: reminder.pegawai_nama ?? undefined,
-    });
-
-    const result = await sendWhatsAppMessage({
-      phone: noHp,
-      message: message,
-      duration: 3600,
-    });
-
-    if (result.success) {
-      console.log(
-        `✅ WhatsApp sent for reminder ${reminder.reminder_id} to ${noHp}`
-      );
-    } else {
-      console.error(
-        `❌ Failed to send WhatsApp for reminder ${reminder.reminder_id}:`,
-        result.error
-      );
-    }
-  } catch (error) {
-    console.error(
-      `Error sending WhatsApp for reminder ${reminder.reminder_id}:`,
-      error
-    );
-  }
-}
-
 export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> }

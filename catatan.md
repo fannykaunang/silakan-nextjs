@@ -64,4 +64,4 @@ berikut rincian halamannya :
 # 12-11-2025
 1. tiap ada proses laporan oleh atasan, kirim notifikasi dan whatsapp ke nomor pegawai ybs.
 2. pada file app/api/laporan-kegiatan/[id]/verifikasi/route.ts ketika berhasil kirim ke whatsapp, kirim juga ke tabel notifikasi
-3. setiap pegawai buat laporan, kirim notifikasi dan whatsapp ke atasan. lihat contoh di file app/api/laporan-kegiatan/[id]/verifikasi/route.ts
+3. setiap pegawai buat laporan, kirim notifikasi dan whatsapp ke atasan. lihat contoh di file app/api/laporan-kegiatan/[id]/verifikasi/route.ts. lihat chat di z.ai https://chat.z.ai/c/ba9615dc-f990-45fe-b47d-6f0b4ae6951e

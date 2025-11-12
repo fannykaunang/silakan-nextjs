@@ -13,6 +13,92 @@ import {
   UpdateAtasanPegawaiInput,
 } from "@/lib/types";
 
+export interface AtasanPegawaiInfo extends RowDataPacket {
+  atasan_pegawai_id: number;
+  pegawai_id: number;
+  atasan_id: number;
+  atasan_nama: string | null;
+  atasan_no_hp: string | null;
+  jenis_atasan: "Langsung" | "Tidak Langsung";
+  tanggal_mulai: string;
+  tanggal_selesai: string | null;
+  is_active: number;
+}
+
+export async function getAtasanLangsungAktif(
+  pegawaiId: number
+): Promise<AtasanPegawaiInfo | null> {
+  const query = `
+    SELECT 
+      ap.atasan_pegawai_id,
+      ap.pegawai_id,
+      ap.atasan_id,
+      pc.pegawai_nama as atasan_nama,
+      pc.no_hp as atasan_no_hp,
+      ap.jenis_atasan,
+      ap.tanggal_mulai,
+      ap.tanggal_selesai,
+      ap.is_active
+    FROM atasan_pegawai ap
+    LEFT JOIN pegawai_cache pc ON pc.pegawai_id = ap.atasan_id
+    WHERE ap.pegawai_id = ?
+      AND ap.jenis_atasan = 'Langsung'
+      AND ap.is_active = 1
+      AND (ap.tanggal_selesai IS NULL OR ap.tanggal_selesai >= CURDATE())
+    ORDER BY ap.tanggal_mulai DESC
+    LIMIT 1
+  `;
+
+  try {
+    const results = await executeQuery<AtasanPegawaiInfo>(query, [pegawaiId]);
+    return results.length > 0 ? results[0] : null;
+  } catch (error) {
+    console.error("Error getting atasan langsung aktif:", error);
+    throw error;
+  }
+}
+
+/**
+ * Mendapatkan semua atasan (langsung dan tidak langsung) yang aktif dari pegawai tertentu
+ * @param pegawaiId ID pegawai yang ingin dicari atasannya
+ * @returns Array data atasan
+ */
+export async function getAllAtasanAktif(
+  pegawaiId: number
+): Promise<AtasanPegawaiInfo[]> {
+  const query = `
+    SELECT 
+      ap.atasan_pegawai_id,
+      ap.pegawai_id,
+      ap.atasan_id,
+      pc.pegawai_nama as atasan_nama,
+      pc.no_hp as atasan_no_hp,
+      ap.jenis_atasan,
+      ap.tanggal_mulai,
+      ap.tanggal_selesai,
+      ap.is_active
+    FROM atasan_pegawai ap
+    LEFT JOIN pegawai_cache pc ON pc.pegawai_id = ap.atasan_id
+    WHERE ap.pegawai_id = ?
+      AND ap.is_active = 1
+      AND (ap.tanggal_selesai IS NULL OR ap.tanggal_selesai >= CURDATE())
+    ORDER BY 
+      CASE ap.jenis_atasan 
+        WHEN 'Langsung' THEN 1 
+        ELSE 2 
+      END,
+      ap.tanggal_mulai DESC
+  `;
+
+  try {
+    const results = await executeQuery<AtasanPegawaiInfo>(query, [pegawaiId]);
+    return results;
+  } catch (error) {
+    console.error("Error getting all atasan aktif:", error);
+    throw error;
+  }
+}
+
 export class AtasanPegawaiModel {
   /**
    * Get all atasan pegawai with pegawai and atasan names
