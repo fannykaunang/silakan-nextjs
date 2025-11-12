@@ -53,6 +53,16 @@ export async function GET(
     const isOwner = laporan.pegawai_id === user.pegawai_id;
     let isAtasan = false;
 
+    let canVerify = false;
+    if (user.pegawai_id && user.pegawai_id !== laporan.pegawai_id) {
+      const today = new Date().toISOString().split("T")[0];
+      canVerify = await AtasanPegawaiModel.isSupervisorOf(
+        user.pegawai_id,
+        laporan.pegawai_id,
+        today
+      );
+    }
+
     if (!isAdmin && user.pegawai_id) {
       const today = new Date().toISOString().split("T")[0];
       const subordinateIds = await AtasanPegawaiModel.getActiveSubordinateIds(
@@ -74,6 +84,7 @@ export async function GET(
       success: true,
       data: laporan,
       canEdit: isAdmin || isOwner,
+      canVerify,
     });
   } catch (error: any) {
     console.error("Error fetching laporan:", error);

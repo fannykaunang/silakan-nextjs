@@ -21,6 +21,7 @@ import {
   Trash2,
   Download,
   Eye,
+  ShieldCheck,
 } from "lucide-react";
 import { formatTanggal } from "@/lib/utils/formattanggal";
 
@@ -101,6 +102,7 @@ export default function DetailEditClient() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
+  const [canVerify, setCanVerify] = useState(false);
   const [laporan, setLaporan] = useState<LaporanDetail | null>(null);
   const [kategoris, setKategoris] = useState<Kategori[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
@@ -151,7 +153,11 @@ export default function DetailEditClient() {
       if (result.success) {
         setLaporan(result.data);
         setCanEdit(result.canEdit);
+        setCanVerify(result.canVerify || false);
+
         console.log("data: ", result.data);
+        console.log("canVerify: ", result.canVerify); // Debug log
+
         // Set form data
         setFormData({
           kategori_id: result.data.kategori_id,
@@ -227,6 +233,10 @@ export default function DetailEditClient() {
   // ============================================================================
   // HANDLER FUNCTIONS
   // ============================================================================
+
+  const handleNavigateToVerifikasi = () => {
+    router.push(`/laporan-kegiatan/verifikasi/${id}`);
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -714,6 +724,17 @@ export default function DetailEditClient() {
               </p>
             </div>
             <div className="flex gap-2">
+              {!isEditMode &&
+                canVerify &&
+                laporan.status_laporan === "Diajukan" && (
+                  <button
+                    type="button"
+                    onClick={handleNavigateToVerifikasi}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm">
+                    <ShieldCheck className="w-4 h-4" />
+                    Verifikasi
+                  </button>
+                )}
               {!isEditMode && canEdit && laporan.status_laporan === "Draft" && (
                 <button
                   type="button"

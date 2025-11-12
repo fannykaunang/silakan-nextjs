@@ -1,7 +1,8 @@
 // lib/helpers/whatsapp-helper.ts
 // VERSION WITH BASIC AUTH + LAPORAN KEGIATAN
 
-const WHATSAPP_API_URL = "http://103.177.95.67:7482/send/message";
+const WHATSAPP_API_URL =
+  process.env.WHATSAPP_API_URL || "http://103.177.95.67:7482/send/message";
 
 // ⚠️ PENTING: Ganti dengan username dan password Anda
 // REKOMENDASI: Simpan di environment variable untuk keamanan
@@ -61,7 +62,7 @@ export async function sendWhatsAppMessage(
       message: params.message,
       reply_message_id: params.reply_message_id || undefined,
       is_forwarded: params.is_forwarded ?? false,
-      duration: params.duration ?? 3600,
+      duration: params.duration ?? 7200,
     };
 
     console.log(`📤 Sending WhatsApp to: ${formattedPhone}`);

@@ -20,11 +20,8 @@ import {
 } from "@/lib/helpers/laporan-settings";
 import { createNotifikasi } from "@/lib/models/notifikasi.model";
 import { getAtasanLangsungAktif } from "@/lib/models/atasan-pegawai.model";
-import {
-  sendWhatsAppMessage,
-  formatLaporanKegiatanMessage,
-} from "@/lib/helpers/whatsapp-helper";
 import { getPegawaiById } from "@/lib/models/pegawai.model";
+import { sendWhatsAppInBackground } from "@/lib/helpers/background-tasks";
 
 // GET - Mengambil semua laporan
 export async function GET(req: Request) {
@@ -119,7 +116,7 @@ export async function POST(req: Request) {
     // Get request body
     const body = await req.json();
 
-    // ===== VALIDASI INPUT (tetap sama) =====
+    // ===== VALIDASI INPUT =====
     if (!body.tanggal_kegiatan) {
       return NextResponse.json(
         { error: "Tanggal kegiatan wajib diisi" },
@@ -315,7 +312,7 @@ export async function POST(req: Request) {
       data_sesudah: { laporan_id: laporanId, ...laporanData },
     });
 
-    // ===== NOTIFIKASI & WHATSAPP KE ATASAN (BARU) =====
+    // ===== NOTIFIKASI & WHATSAPP KE ATASAN (BACKGROUND TASK) =====
     if (targetStatus === "Diajukan") {
       try {
         console.log(`📤 Mengirim notifikasi untuk laporan ID: ${laporanId}`);
@@ -338,7 +335,7 @@ export async function POST(req: Request) {
               `👤 Atasan ditemukan: ${atasan.atasan_nama} (ID: ${atasan.atasan_id})`
             );
 
-            // 1. Buat notifikasi untuk atasan
+            // 1. Buat notifikasi untuk atasan (SINKRON)
             const notifikasiData = {
               pegawai_id: atasan.atasan_id,
               judul: "Laporan Kegiatan Baru Perlu Direview",
@@ -354,34 +351,60 @@ export async function POST(req: Request) {
               `✅ Notifikasi berhasil dibuat untuk atasan ID: ${atasan.atasan_id}`
             );
 
-            // 2. Kirim WhatsApp jika atasan memiliki nomor HP
+            // 2. Kirim WhatsApp di background (NON-BLOCKING)
             if (atasan.atasan_no_hp) {
-              const whatsappMessage = formatLaporanKegiatanMessage({
-                pegawaiName: pegawaiData.pegawai_nama,
-                namaKegiatan: body.nama_kegiatan,
-                kategori: body.kategori_nama || undefined,
-                tanggalKegiatan: body.tanggal_kegiatan,
-                waktuMulai: body.waktu_mulai,
-                waktuSelesai: body.waktu_selesai,
-                lokasi: body.lokasi_kegiatan || undefined,
-                deskripsi: body.deskripsi_kegiatan,
-                laporanId: laporanId,
+              // Format tanggal
+              const formattedDate = new Date(
+                body.tanggal_kegiatan
+              ).toLocaleDateString("id-ID", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               });
 
-              const whatsappResult = await sendWhatsAppMessage({
-                phone: atasan.atasan_no_hp,
-                message: whatsappMessage,
-              });
+              // Buat pesan WhatsApp
+              const whatsappMessage = `📋 *LAPORAN KEGIATAN BARU*
 
-              if (whatsappResult.success) {
-                console.log(
-                  `✅ WhatsApp berhasil dikirim ke atasan: ${atasan.atasan_nama} (${atasan.atasan_no_hp})`
-                );
-              } else {
-                console.error(
-                  `❌ Gagal mengirim WhatsApp ke atasan: ${whatsappResult.error}`
-                );
-              }
+Anda memiliki laporan kegiatan baru yang perlu direview dari bawahan Anda.
+
+👤 *Pegawai*
+${pegawaiData.pegawai_nama}
+
+📝 *Kegiatan*
+${body.nama_kegiatan}
+${body.kategori_nama ? `Kategori: ${body.kategori_nama}` : ""}
+
+📅 *Tanggal Kegiatan*
+${formattedDate}
+
+⏰ *Waktu Pelaksanaan*
+${body.waktu_mulai} - ${body.waktu_selesai} WIT
+
+${body.lokasi_kegiatan ? `📍 *Lokasi*\n${body.lokasi_kegiatan}\n\n` : ""}${
+                body.deskripsi_kegiatan.length > 150
+                  ? `📄 *Deskripsi Singkat*\n${body.deskripsi_kegiatan.substring(
+                      0,
+                      150
+                    )}...\n\n`
+                  : `📄 *Deskripsi*\n${body.deskripsi_kegiatan}\n\n`
+              }🔔 *Tindakan Diperlukan*
+Silakan login ke sistem SILAKAN untuk mereview dan menyetujui laporan ini.
+
+_ID Laporan: #${laporanId}_
+
+_Pesan otomatis dari Sistem SILAKAN_`;
+
+              // Kirim WhatsApp di background (tidak menunggu hasil)
+              sendWhatsAppInBackground(
+                atasan.atasan_no_hp,
+                whatsappMessage,
+                atasan.atasan_id
+              );
+
+              console.log(
+                `📋 WhatsApp job queued for atasan: ${atasan.atasan_nama} (${atasan.atasan_no_hp})`
+              );
             } else {
               console.log(
                 `⚠️ Atasan ${atasan.atasan_nama} tidak memiliki nomor HP`
@@ -399,6 +422,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // Return response segera tanpa menunggu WhatsApp
     return NextResponse.json({
       success: true,
       message: "Laporan kegiatan berhasil dibuat",

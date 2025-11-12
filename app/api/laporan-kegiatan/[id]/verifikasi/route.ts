@@ -14,12 +14,8 @@ import {
 } from "@/lib/models/rekap.model";
 import type { RekapHarian } from "@/lib/models/rekap.model";
 import { createLogWithData } from "@/lib/models/log.model";
-import {
-  sendWhatsAppMessage,
-  formatReminderMessage,
-} from "@/lib/helpers/whatsapp-helper";
 import { getPegawaiById } from "@/lib/models/pegawai.model";
-import { createNotifikasi } from "@/lib/models/notifikasi.model";
+import { sendWhatsAppWithNotificationInBackground } from "@/lib/helpers/background-tasks";
 
 const ALLOWED_STATUSES = ["Diverifikasi", "Revisi", "Ditolak"] as const;
 
@@ -46,6 +42,34 @@ function buildStatusMessage(status: AllowedStatus) {
       return "Laporan berhasil ditolak";
     default:
       return "Laporan berhasil diproses";
+  }
+}
+
+function getTipeNotifikasi(
+  status: AllowedStatus
+): "Verifikasi" | "Penolakan" | "Komentar" {
+  switch (status) {
+    case "Diverifikasi":
+      return "Verifikasi";
+    case "Ditolak":
+      return "Penolakan";
+    case "Revisi":
+      return "Komentar";
+    default:
+      return "Komentar";
+  }
+}
+
+function getNotificationTitle(status: AllowedStatus): string {
+  switch (status) {
+    case "Diverifikasi":
+      return "Laporan Diverifikasi";
+    case "Revisi":
+      return "Laporan Perlu Revisi";
+    case "Ditolak":
+      return "Laporan Ditolak";
+    default:
+      return "Status Laporan Diperbarui";
   }
 }
 
@@ -259,6 +283,7 @@ export async function POST(
     );
     const normalizedBefore = normalizeRekap(rekapBefore);
 
+    // Verifikasi laporan
     await verifikasiLaporan(laporanId, {
       status_laporan: status_verifikasi,
       verifikasi_oleh: user.pegawai_id,
@@ -266,6 +291,7 @@ export async function POST(
       rating_kualitas: rating,
     });
 
+    // Update rekap
     await updateAllRekaps(laporan.pegawai_id, laporan.tanggal_kegiatan);
 
     if (completeFlag !== undefined) {
@@ -276,90 +302,73 @@ export async function POST(
       );
     }
 
-    // --- WhatsApp Integration ---
-    // Kirim notifikasi WhatsApp setelah semua proses DB berhasil
+    // ===== BACKGROUND WHATSAPP & NOTIFIKASI (NON-BLOCKING) =====
     try {
-      // 1. Ambil data pegawai pembuat laporan untuk dapatkan nomor HP
+      // Ambil data pegawai pembuat laporan
       const pegawaiAuthor = await getPegawaiById(laporan.pegawai_id);
 
-      // 2. Periksa apakah data pegawai DAN nomor telepon ADA
-      //    Ini adalah kunci untuk mengatasi error TypeScript.
       if (pegawaiAuthor && pegawaiAuthor.pegawai_telp) {
-        // 3. Jika ada, buat pesan yang akan dikirim
-        const waMessage = `Halo, ${
-          pegawaiAuthor.pegawai_nama
-        }!\n\nLaporan kegiatan Anda dengan detail:\n- Kegiatan: ${
-          laporan.nama_kegiatan
-        }\n- Tanggal: ${new Date(laporan.tanggal_kegiatan).toLocaleString(
-          "id-ID",
-          {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit", // TAMBAHKAN INI
-            minute: "2-digit", // TAMBAHKAN INI
-            hour12: false, // TAMBAHKAN INI (gunakan format 24 jam, contoh: 14:30)
-          }
-        )}
-        )}\n\nTelah diverifikasi oleh ${
-          user.nama
-        } dengan status: *${status_verifikasi.toUpperCase()}*.\n\n${
-          catatan ? `Catatan: ${catatan}` : ""
-        }\n${rating ? `Rating: ${rating}/5` : ""}`;
-
-        // 4. Panggil fungsi helper untuk mengirim pesan
-        //    Di dalam blok 'if' ini, TypeScript TAHU bahwa 'pegawaiAuthor.pegawai_telp' pasti sebuah 'string'.
-        // Kirim WhatsApp dan simpan hasilnya
-        const waResult = await sendWhatsAppMessage({
-          phone: pegawaiAuthor.pegawai_telp,
-          message: waMessage,
+        // Format tanggal
+        const formattedDate = new Date(
+          laporan.tanggal_kegiatan
+        ).toLocaleDateString("id-ID", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         });
 
-        if (waResult.success) {
-          try {
-            await createNotifikasi({
-              pegawai_id: laporan.pegawai_id, // Notifikasi untuk pembuat laporan
-              judul:
-                status_verifikasi === "Diverifikasi"
-                  ? "Laporan Diverifikasi"
-                  : status_verifikasi === "Revisi"
-                  ? "Laporan Revisi"
-                  : "Laporan Ditolak",
-              pesan: waMessage, // Gunakan pesan yang sama
-              tipe_notifikasi: "verifikasi",
-              laporan_id: laporanId,
-              link_tujuan: `/laporan-kegiatan/${laporanId}`, // Link ke detail laporan (sesuaikan dengan route Anda)
-              action_required: false,
-            });
-            console.log(
-              `✅ Notification created for pegawai ID ${laporan.pegawai_id}`
-            );
-          } catch (notifError: any) {
-            // Jangan gagalkan proses, tapi log errornya
-            console.error(
-              "❌ Failed to create notification after WhatsApp success:",
-              notifError.message
-            );
-          }
-        }
+        // Buat pesan WhatsApp
+        const waMessage = `🔔 *NOTIFIKASI VERIFIKASI LAPORAN*
+
+Halo, ${pegawaiAuthor.pegawai_nama}!
+
+Laporan kegiatan Anda telah diverifikasi dengan detail:
+
+📝 *Kegiatan:* ${laporan.nama_kegiatan}
+📅 *Tanggal:* ${formattedDate}
+✅ *Status:* ${status_verifikasi.toUpperCase()}
+👤 *Diverifikasi oleh:* ${user.nama}
+${rating ? `⭐ *Rating:* ${rating}/5` : ""}
+${catatan ? `\n💬 *Catatan:*\n${catatan}` : ""}
+
+${
+  status_verifikasi === "Revisi"
+    ? "⚠️ Silakan lakukan revisi sesuai catatan di atas."
+    : ""
+}
+
+_Pesan otomatis dari Sistem SILAKAN_`;
+
+        // Kirim WhatsApp & buat notifikasi di background (NON-BLOCKING)
+        sendWhatsAppWithNotificationInBackground({
+          phone: pegawaiAuthor.pegawai_telp,
+          message: waMessage,
+          pegawaiId: laporan.pegawai_id,
+          metadata: {
+            laporanId: laporanId,
+            tipeNotifikasi: getTipeNotifikasi(status_verifikasi),
+            judul: getNotificationTitle(status_verifikasi),
+            linkTujuan: `/laporan-kegiatan/${laporanId}`,
+            actionRequired: status_verifikasi === "Revisi",
+          },
+        });
 
         console.log(
-          `✅ WhatsApp notification sent to ${pegawaiAuthor.pegawai_telp} for report ID ${laporanId}`
+          `📋 WhatsApp & notification queued for pegawai ID ${laporan.pegawai_id} (${pegawaiAuthor.pegawai_telp})`
         );
       } else {
-        // 5. (Opsional, tapi sangat direkomendasikan) Log jika data tidak lengkap
         console.warn(
-          `⚠️ Tidak dapat mengirim WhatsApp. Pegawai ID ${laporan.pegawai_id} tidak ditemukan atau tidak memiliki nomor telepon.`
+          `⚠️ Pegawai ID ${laporan.pegawai_id} tidak memiliki nomor telepon atau data tidak ditemukan`
         );
       }
-    } catch (waError: any) {
-      // Jangan gagalkan proses utama jika WhatsApp error, cukup log di console
-      console.error("❌ Gagal mengirim notifikasi WhatsApp:", waError.message);
+    } catch (bgError: any) {
+      // Jangan gagalkan proses utama, cukup log
+      console.error("⚠️ Error preparing background task:", bgError.message);
     }
-    // --- End
-    // --- End of WhatsApp Integration --
+    // ===== END BACKGROUND TASK =====
 
+    // Ambil data terbaru
     const updatedLaporan = await getLaporanById(laporanId);
     const updatedRekap = await getRekapHarian(
       laporan.pegawai_id,
@@ -367,6 +376,7 @@ export async function POST(
     );
     const normalizedAfter = normalizeRekap(updatedRekap);
 
+    // Log aktivitas
     try {
       const clientInfo = getClientInfoWithEndpoint(
         req,
@@ -393,6 +403,7 @@ export async function POST(
       console.error("Failed to log laporan verification:", logError);
     }
 
+    // Return response segera tanpa menunggu WhatsApp
     return NextResponse.json({
       success: true,
       message: buildStatusMessage(status_verifikasi),
