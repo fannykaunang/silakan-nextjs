@@ -1,4 +1,4 @@
-// app/(dashboard)/rekapitulasi/harian/_client.tsx
+// app/(dashboard)/statistik/harian/_client.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -28,6 +28,7 @@ type MetricsData = {
   jumlah_pending: number;
   jumlah_ditolak: number;
   avg_produktivitas: number;
+  rata_rata_rating: number;
   total_durasi: number;
 };
 
@@ -138,21 +139,21 @@ export default function RekapHarianClient({ userEmail }: Props) {
         if (selectedSkpd) params.append("skpdid", selectedSkpd);
         if (selectedPegawai) params.append("pegawai_id", selectedPegawai);
 
-        const url = `/api/rekapitulasi/harian${
+        const url = `/api/statistik/harian${
           params.toString() ? `?${params.toString()}` : ""
         }`;
 
         const response = await fetch(url);
 
         if (!response.ok) {
-          throw new Error("Gagal memuat data rekapitulasi harian");
+          throw new Error("Gagal memuat data statistik harian");
         }
 
         const payload: RekapHarianResponse = await response.json();
 
         if (!payload.success || !payload.data) {
           throw new Error(
-            payload.message || "Data rekapitulasi harian tidak tersedia"
+            payload.message || "Data statistik harian tidak tersedia"
           );
         }
 
@@ -163,7 +164,7 @@ export default function RekapHarianClient({ userEmail }: Props) {
         setError(
           err instanceof Error
             ? err.message
-            : "Terjadi kesalahan saat memuat data rekapitulasi harian"
+            : "Terjadi kesalahan saat memuat data statistik harian"
         );
       } finally {
         setIsLoading(false);
@@ -183,10 +184,10 @@ export default function RekapHarianClient({ userEmail }: Props) {
       {/* Header Section */}
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-200">
-          Rekapitulasi Harian 📊
+          Statistik Harian 📊
         </h2>
         <p className="text-gray-700 dark:text-gray-300 mt-1">
-          Ringkasan data rekapitulasi kegiatan harian
+          Ringkasan data statistik kegiatan harian
         </p>
       </div>
 
@@ -275,19 +276,19 @@ export default function RekapHarianClient({ userEmail }: Props) {
           isLoading={isLoading}
         />
         <StatCard
-          title="Ditolak"
-          value={formatNumber(metrics?.jumlah_ditolak ?? 0)}
-          icon={XCircle}
-          color="bg-gradient-to-br from-red-500 to-red-600"
-          description="Total kegiatan yang ditolak"
+          title="AVG Produktivitas"
+          value={`${(metrics?.avg_produktivitas ?? 0).toFixed(2)}%`}
+          icon={TrendingUp}
+          color="bg-gradient-to-br from-blue-500 to-blue-600"
+          description="Produktivitas rata-rata"
           isLoading={isLoading}
         />
         <StatCard
-          title="Rata-rata Produktivitas"
-          value={`${(metrics?.avg_produktivitas ?? 0).toFixed(1)}%`}
+          title="AVG Rating"
+          value={`${(metrics?.rata_rata_rating ?? 0).toFixed(2)}%`}
           icon={TrendingUp}
-          color="bg-gradient-to-br from-blue-500 to-blue-600"
-          description="Persentase produktivitas rata-rata"
+          color="bg-gradient-to-br from-teal-500 to-teal-600"
+          description="Persentase Rating rata-rata"
           isLoading={isLoading}
         />
         <StatCard

@@ -30,11 +30,11 @@ export async function getAtasanLangsungAktif(
 ): Promise<AtasanPegawaiInfo | null> {
   const query = `
     SELECT 
-      ap.atasan_pegawai_id,
+      ap.id as atasan_pegawai_id,
       ap.pegawai_id,
       ap.atasan_id,
       pc.pegawai_nama as atasan_nama,
-      pc.no_hp as atasan_no_hp,
+      pc.pegawai_telp as atasan_no_hp,
       ap.jenis_atasan,
       ap.tanggal_mulai,
       ap.tanggal_selesai,
@@ -68,11 +68,11 @@ export async function getAllAtasanAktif(
 ): Promise<AtasanPegawaiInfo[]> {
   const query = `
     SELECT 
-      ap.atasan_pegawai_id,
+      ap.id as atasan_pegawai_id,
       ap.pegawai_id,
       ap.atasan_id,
       pc.pegawai_nama as atasan_nama,
-      pc.no_hp as atasan_no_hp,
+      pc.pegawai_telp as atasan_no_hp,
       ap.jenis_atasan,
       ap.tanggal_mulai,
       ap.tanggal_selesai,

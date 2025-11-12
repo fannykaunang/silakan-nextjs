@@ -25,6 +25,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { StarRating } from "@/components/ui/star-rating";
 
 interface LaporanData {
   laporan_id: number;
@@ -369,26 +370,26 @@ export default function LaporanListClient() {
     return `${mins}m`;
   };
 
-  const renderStars = (rating: number | null) => {
-    if (!rating) {
-      return <span className="text-gray-400 text-xs">Belum dinilai</span>;
-    }
+  // const renderStars = (rating: number | null) => {
+  //   if (!rating) {
+  //     return <span className="text-gray-400 text-xs">Belum dinilai</span>;
+  //   }
 
-    return (
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${
-              star <= rating
-                ? "text-yellow-400 fill-yellow-400"
-                : "text-gray-300 dark:text-gray-600"
-            }`}
-          />
-        ))}
-      </div>
-    );
-  };
+  //   return (
+  //     <div className="flex items-center gap-0.5">
+  //       {[1, 2, 3, 4, 5].map((star) => (
+  //         <Star
+  //           key={star}
+  //           className={`w-4 h-4 ${
+  //             star <= rating
+  //               ? "text-yellow-400 fill-yellow-400"
+  //               : "text-gray-300 dark:text-gray-600"
+  //           }`}
+  //         />
+  //       ))}
+  //     </div>
+  //   );
+  // };
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -737,7 +738,7 @@ export default function LaporanListClient() {
 
                       {/* Rating */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {renderStars(laporan.rating_kualitas)}
+                        <StarRating rating={laporan.rating_kualitas} />
                       </td>
 
                       {/* Actions */}

@@ -304,7 +304,7 @@ export async function POST(
         )}
         )}\n\nTelah diverifikasi oleh ${
           user.nama
-        } dengan status: *${status.toUpperCase()}*.\n\n${
+        } dengan status: *${status_verifikasi.toUpperCase()}*.\n\n${
           catatan ? `Catatan: ${catatan}` : ""
         }\n${rating ? `Rating: ${rating}/5` : ""}`;
 
@@ -378,7 +378,7 @@ export async function POST(
         pegawai_id: user.pegawai_id,
         aksi: "Update",
         modul: "Laporan",
-        detail_aksi: `Memverifikasi laporan ${laporan.nama_kegiatan} menjadi ${status}`,
+        detail_aksi: `Memverifikasi laporan ${laporan.nama_kegiatan} menjadi ${status_verifikasi}`,
         data_sebelum: {
           laporan,
           rekap_harian: normalizedBefore,

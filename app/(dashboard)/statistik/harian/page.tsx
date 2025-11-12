@@ -1,11 +1,11 @@
-// app/(dashboard)/rekapitulasi/harian/page.tsx
+// app/(dashboard)/statistik/harian/page.tsx
 import { getUserFromCookie } from "@/lib/helpers/auth-helper";
 import { redirect } from "next/navigation";
 import RekapHarianClient from "./_client";
 
 export const metadata = {
-  title: "Rekapitulasi Harian - SILAKAN",
-  description: "Halaman rekapitulasi kegiatan harian",
+  title: "Statistik Harian - SILAKAN",
+  description: "Halaman statistik kegiatan harian",
 };
 
 export default async function RekapHarianPage() {

@@ -119,7 +119,7 @@ export async function POST(req: Request) {
     // Get request body
     const body = await req.json();
 
-    // Validasi input
+    // ===== VALIDASI INPUT (tetap sama) =====
     if (!body.tanggal_kegiatan) {
       return NextResponse.json(
         { error: "Tanggal kegiatan wajib diisi" },
@@ -251,7 +251,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const tanggalKegiatan = `${body.tanggal_kegiatan}`.trim(); // ekspektasi "YYYY-MM-DD"
+    const tanggalKegiatan = `${body.tanggal_kegiatan}`.trim();
     const attendanceCheck = await checkAttendanceToday(
       user.pin,
       tanggalKegiatan
@@ -268,9 +268,8 @@ export async function POST(req: Request) {
         { status: 403 }
       );
     }
-    //}
 
-    // Prepare laporan data
+    // ===== PREPARE LAPORAN DATA =====
     const laporanData: CreateLaporanData = {
       pegawai_id: user.pegawai_id!,
       tanggal_kegiatan: body.tanggal_kegiatan,
@@ -315,6 +314,90 @@ export async function POST(req: Request) {
       data_sebelum: null,
       data_sesudah: { laporan_id: laporanId, ...laporanData },
     });
+
+    // ===== NOTIFIKASI & WHATSAPP KE ATASAN (BARU) =====
+    if (targetStatus === "Diajukan") {
+      try {
+        console.log(`📤 Mengirim notifikasi untuk laporan ID: ${laporanId}`);
+
+        // Ambil data pegawai pembuat laporan
+        const pegawaiData = await getPegawaiById(user.pegawai_id!);
+
+        if (!pegawaiData) {
+          console.error("❌ Data pegawai tidak ditemukan");
+        } else {
+          // Ambil atasan langsung yang aktif
+          const atasan = await getAtasanLangsungAktif(user.pegawai_id!);
+
+          if (!atasan || !atasan.atasan_id) {
+            console.log(
+              `⚠️ Tidak ada atasan langsung aktif untuk pegawai ID: ${user.pegawai_id}`
+            );
+          } else {
+            console.log(
+              `👤 Atasan ditemukan: ${atasan.atasan_nama} (ID: ${atasan.atasan_id})`
+            );
+
+            // 1. Buat notifikasi untuk atasan
+            const notifikasiData = {
+              pegawai_id: atasan.atasan_id,
+              judul: "Laporan Kegiatan Baru Perlu Direview",
+              pesan: `${pegawaiData.pegawai_nama} telah mengajukan laporan kegiatan: ${body.nama_kegiatan}`,
+              tipe_notifikasi: "Info" as const,
+              laporan_id: laporanId,
+              link_tujuan: `/laporan-kegiatan/${laporanId}`,
+              action_required: true,
+            };
+
+            await createNotifikasi(notifikasiData);
+            console.log(
+              `✅ Notifikasi berhasil dibuat untuk atasan ID: ${atasan.atasan_id}`
+            );
+
+            // 2. Kirim WhatsApp jika atasan memiliki nomor HP
+            if (atasan.atasan_no_hp) {
+              const whatsappMessage = formatLaporanKegiatanMessage({
+                pegawaiName: pegawaiData.pegawai_nama,
+                namaKegiatan: body.nama_kegiatan,
+                kategori: body.kategori_nama || undefined,
+                tanggalKegiatan: body.tanggal_kegiatan,
+                waktuMulai: body.waktu_mulai,
+                waktuSelesai: body.waktu_selesai,
+                lokasi: body.lokasi_kegiatan || undefined,
+                deskripsi: body.deskripsi_kegiatan,
+                laporanId: laporanId,
+              });
+
+              const whatsappResult = await sendWhatsAppMessage({
+                phone: atasan.atasan_no_hp,
+                message: whatsappMessage,
+              });
+
+              if (whatsappResult.success) {
+                console.log(
+                  `✅ WhatsApp berhasil dikirim ke atasan: ${atasan.atasan_nama} (${atasan.atasan_no_hp})`
+                );
+              } else {
+                console.error(
+                  `❌ Gagal mengirim WhatsApp ke atasan: ${whatsappResult.error}`
+                );
+              }
+            } else {
+              console.log(
+                `⚠️ Atasan ${atasan.atasan_nama} tidak memiliki nomor HP`
+              );
+            }
+          }
+        }
+      } catch (notifError: any) {
+        // Log error tapi jangan gagalkan request utama
+        console.error(
+          "❌ Error mengirim notifikasi/WhatsApp ke atasan:",
+          notifError
+        );
+        // Tidak throw error karena laporan sudah berhasil dibuat
+      }
+    }
 
     return NextResponse.json({
       success: true,

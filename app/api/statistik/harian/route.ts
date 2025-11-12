@@ -1,4 +1,4 @@
-// app/api/rekapitulasi/harian/route.ts
+// app/api/statistik/harian/route.ts
 import { NextResponse } from "next/server";
 import { executeQuery } from "@/lib/helpers/db-helpers";
 import { RowDataPacket } from "mysql2";
@@ -9,6 +9,7 @@ type RekapRow = RowDataPacket & {
   jumlah_pending: number;
   jumlah_ditolak: number;
   avg_produktivitas: number;
+  rata_rata_rating: number;
   total_durasi: number;
 };
 
@@ -93,6 +94,7 @@ export async function GET(req: Request) {
         COALESCE(SUM(rh.jumlah_pending), 0) AS jumlah_pending,
         COALESCE(SUM(rh.jumlah_ditolak), 0) AS jumlah_ditolak,
         COALESCE(AVG(rh.produktivitas_persen), 0) AS avg_produktivitas,
+        COALESCE(AVG(rh.rata_rata_rating), 0) AS rata_rata_rating,
         COALESCE(SUM(rh.total_durasi_menit), 0) AS total_durasi
       FROM rekap_harian rh
       LEFT JOIN pegawai_cache pc ON rh.pegawai_id = pc.pegawai_id
@@ -175,6 +177,15 @@ export async function GET(req: Request) {
       ? 0
       : parseFloat(avgProduktivitasNum.toFixed(2));
 
+    const ratarataRating = metricsResult?.rata_rata_rating ?? 0;
+    const ratarataRatingNum =
+      typeof ratarataRating === "string"
+        ? parseFloat(ratarataRating)
+        : Number(ratarataRating);
+    const ratarataRatingRounded = isNaN(ratarataRatingNum)
+      ? 0
+      : parseFloat(ratarataRatingNum.toFixed(2));
+
     return NextResponse.json({
       success: true,
       data: {
@@ -183,6 +194,7 @@ export async function GET(req: Request) {
           jumlah_pending: metricsResult?.jumlah_pending ?? 0,
           jumlah_ditolak: metricsResult?.jumlah_ditolak ?? 0,
           avg_produktivitas: avgProduktivitasRounded,
+          rata_rata_rating: ratarataRatingRounded,
           total_durasi: metricsResult?.total_durasi ?? 0,
         },
         timeSeries: formattedTimeSeries,
@@ -194,11 +206,11 @@ export async function GET(req: Request) {
       },
     });
   } catch (error) {
-    console.error("Failed to load rekapitulasi harian:", error);
+    console.error("Failed to load statistik harian:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Gagal memuat data rekapitulasi harian",
+        message: "Gagal memuat data statistik harian",
       },
       { status: 500 }
     );

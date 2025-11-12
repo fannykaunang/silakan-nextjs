@@ -122,8 +122,8 @@ export default function SidebarClient({
   // Tambahkan laporan statistik untuk level supervisor ke atas
   //if (userLevel >= 2) {
   reportItems.push({
-    href: "/rekapitulasi/harian",
-    label: "Rekapitulasi Harian",
+    href: "/statistik/harian",
+    label: "Statistik Harian",
     icon: TrendingUp,
   });
   //}
