@@ -359,9 +359,31 @@ export default function TambahLaporanClient() {
     const files = e.target.files;
     if (!files) return;
 
-    const newFiles: UploadedFile[] = [];
+    const validFiles: UploadedFile[] = [];
+    const filesArray = Array.from(files);
+    let processedCount = 0;
 
-    Array.from(files).forEach((file) => {
+    filesArray.forEach((file) => {
+      // Validasi tipe file - hanya PDF dan gambar
+      const isValidType =
+        file.type.startsWith("image/") || file.type === "application/pdf";
+
+      if (!isValidType) {
+        Swal.fire({
+          icon: "warning",
+          title: "Tipe File Tidak Valid",
+          text: `File ${file.name} bukan PDF atau gambar`,
+          background: document.documentElement.classList.contains("dark")
+            ? "#1f2937"
+            : "#fff",
+          color: document.documentElement.classList.contains("dark")
+            ? "#fff"
+            : "#000",
+        });
+        processedCount++;
+        return;
+      }
+
       // Check file size (max 5MB per file)
       if (file.size > 5 * 1024 * 1024) {
         Swal.fire({
@@ -375,6 +397,7 @@ export default function TambahLaporanClient() {
             ? "#fff"
             : "#000",
         });
+        processedCount++;
         return;
       }
 
@@ -382,20 +405,24 @@ export default function TambahLaporanClient() {
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          newFiles.push({
+          validFiles.push({
             file,
             preview: reader.result as string,
           });
+          processedCount++;
 
-          if (newFiles.length === files.length) {
-            setUploadedFiles((prev) => [...prev, ...newFiles]);
+          if (processedCount === filesArray.length) {
+            setUploadedFiles((prev) => [...prev, ...validFiles]);
           }
         };
         reader.readAsDataURL(file);
       } else {
-        newFiles.push({ file });
-        if (newFiles.length === files.length) {
-          setUploadedFiles((prev) => [...prev, ...newFiles]);
+        // PDF files
+        validFiles.push({ file });
+        processedCount++;
+
+        if (processedCount === filesArray.length) {
+          setUploadedFiles((prev) => [...prev, ...validFiles]);
         }
       }
     });
@@ -504,6 +531,45 @@ export default function TambahLaporanClient() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Fungsi untuk upload files ke server
+  const uploadFiles = async (laporanId: number): Promise<boolean> => {
+    try {
+      const formData = new FormData();
+      formData.append("laporan_id", laporanId.toString());
+
+      uploadedFiles.forEach((item) => {
+        formData.append("files", item.file);
+      });
+
+      const response = await fetch("/api/file-upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Gagal mengupload file");
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error("Error uploading files:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Upload File",
+        text: error.message || "Terjadi kesalahan saat mengupload file",
+        background: document.documentElement.classList.contains("dark")
+          ? "#1f2937"
+          : "#fff",
+        color: document.documentElement.classList.contains("dark")
+          ? "#fff"
+          : "#000",
+      });
+      return false;
+    }
+  };
+
   const handleSubmit = async (status: "Draft" | "Diajukan") => {
     if (!validateForm()) {
       Swal.fire({
@@ -567,11 +633,25 @@ export default function TambahLaporanClient() {
         throw new Error(result.error || "Gagal menyimpan laporan");
       }
 
-      // TODO: Upload files if any
-      // const laporanId = result.laporan_id;
-      // if (uploadedFiles.length > 0) {
-      //   await uploadFiles(laporanId);
-      // }
+      // Upload files if any
+      const laporanId = result.data?.laporan_id || result.laporan_id;
+      if (uploadedFiles.length > 0) {
+        const uploadSuccess = await uploadFiles(laporanId);
+        if (!uploadSuccess) {
+          // File upload gagal, tapi laporan sudah tersimpan
+          await Swal.fire({
+            icon: "warning",
+            title: "Peringatan",
+            text: `Laporan berhasil disimpan, tetapi ${uploadedFiles.length} file gagal diupload. Anda dapat mengedit laporan untuk mengupload ulang file.`,
+            background: document.documentElement.classList.contains("dark")
+              ? "#1f2937"
+              : "#fff",
+            color: document.documentElement.classList.contains("dark")
+              ? "#fff"
+              : "#000",
+          });
+        }
+      }
 
       if (selectedTemplateId) {
         try {
@@ -1219,8 +1299,8 @@ export default function TambahLaporanClient() {
                           className="w-12 h-12 object-cover rounded"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded flex items-center justify-center">
-                          <FileText className="w-6 h-6 text-gray-500" />
+                        <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-red-600 dark:text-red-400" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">

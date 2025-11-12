@@ -68,3 +68,6 @@ berikut rincian halamannya :
 4. cek ulang pesan whatsapp sama notifikasi
 5. tambah tabel pesan_whatsapp yang sudah dikirim
 6. perbaiki semua tampilan agar sama semua
+
+# 13-11-2025
+1. kalau atasan mau verifikasi laporan, trus lupa isi rating, sayangnya masih tetap lolos. tambahkan validasi rating
