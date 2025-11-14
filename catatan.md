@@ -71,3 +71,7 @@ berikut rincian halamannya :
 
 # 13-11-2025
 1. kalau atasan mau verifikasi laporan, trus lupa isi rating, sayangnya masih tetap lolos. tambahkan validasi rating
+2. ganti bg tabel reminder
+
+# 14-11-2025
+1. halaman http://localhost:3000/statistik/bulanan masih error

@@ -33,6 +33,7 @@ import {
   showSuccess,
   showToast,
 } from "@/lib/utils/sweetalert";
+import Link from "next/link";
 
 type PegawaiOption = { pegawai_id: number; pegawai_nama: string | null };
 
@@ -577,28 +578,18 @@ export default function ReminderClient() {
   const isSekali = formData.tipe_reminder === "Sekali";
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 p-6 text-white shadow-lg">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold md:text-3xl">
-              Manajemen Reminder Kegiatan
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-blue-100 md:text-base">
-              Kelola pengingat kegiatan harian, mingguan, dan khusus untuk
-              memastikan aktivitas berjalan sesuai jadwal. Otomatis dikirim ke
-              nomor WhatsApp Anda.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm backdrop-blur">
-            <AlarmClock className="h-5 w-5" />
-            <div>
-              <p className="font-semibold">Pengingat Terkelola</p>
-              <p className="text-xs text-blue-100">
-                {formatNumber(stats.total)} reminder tercatat dalam sistem
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Manajemen Reminder Kegiatan
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Kelola pengingat kegiatan harian, mingguan, dan khusus untuk
+            memastikan aktivitas berjalan sesuai jadwal. Otomatis dikirim ke
+            nomor WhatsApp Anda.
+          </p>
         </div>
       </div>
 
@@ -608,11 +599,11 @@ export default function ReminderClient() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 mb-6">
         {statCards.map((card) => (
           <div
             key={card.title}
-            className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -633,7 +624,7 @@ export default function ReminderClient() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-xl border border-gray-100 bg-white p-6 mb-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
@@ -709,8 +700,8 @@ export default function ReminderClient() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-gray-800">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-          <thead className="bg-gray-50 dark:bg-gray-900/50">
+        <table className="w-full">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 No
@@ -792,7 +783,11 @@ export default function ReminderClient() {
                     </td>
                     {meta.isAdmin && (
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        {reminder.pegawai_nama ?? "-"}
+                        <Link
+                          href={`/pegawai/${reminder.pegawai_id}`}
+                          className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
+                          {reminder.pegawai_nama ?? "-"}
+                        </Link>
                       </td>
                     )}
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
@@ -801,7 +796,7 @@ export default function ReminderClient() {
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-700 dark:text-gray-200">
-                          {formatTime(reminder.waktu_reminder)} WIB
+                          {formatTime(reminder.waktu_reminder)} WIT
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {scheduleLabel}

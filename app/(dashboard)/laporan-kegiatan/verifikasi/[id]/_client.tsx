@@ -164,6 +164,7 @@ export default function LaporanVerifikasiClient() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ratingError, setRatingError] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -273,6 +274,12 @@ export default function LaporanVerifikasiClient() {
     });
 
     if (!confirmation.isConfirmed) {
+      return;
+    }
+
+    // Validasi rating wajib diisi
+    if (rating === "" || rating === null || rating === undefined) {
+      setRatingError(true);
       return;
     }
 
@@ -584,8 +591,16 @@ export default function LaporanVerifikasiClient() {
                   max={5}
                   step={0.5}
                   value={rating}
-                  onChange={(event) => setRating(event.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(event) => {
+                    setRating(event.target.value);
+                    setRatingError(false);
+                  }}
+                  placeholder="Masukkan rating"
+                  className={`w-full rounded-xl border ${
+                    ratingError
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                  } bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-4 py-2 focus:outline-none focus:ring-2`}
                 />
               </div>
 
