@@ -20,6 +20,7 @@ import {
   FileBarChart,
   Calendar,
   TrendingUp,
+  TrendingUpDown,
   Building2,
 } from "lucide-react";
 
@@ -125,6 +126,11 @@ export default function SidebarClient({
     href: "/statistik/harian",
     label: "Statistik Harian",
     icon: TrendingUp,
+  });
+  reportItems.push({
+    href: "/statistik/bulanan",
+    label: "Statistik Bulanan",
+    icon: TrendingUpDown,
   });
   //}
 

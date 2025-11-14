@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react";
 import {
   showSuccess,
   showError,
-  showConfirm,
   showLoading,
   closeLoading,
   showToast,
@@ -19,8 +18,6 @@ import {
   Search,
   AlertCircle,
   FileText,
-  CheckCircle,
-  XCircle,
   Clock,
   MapPin,
   Target,
@@ -333,7 +330,7 @@ export default function TemplateKegiatanClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-8">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">

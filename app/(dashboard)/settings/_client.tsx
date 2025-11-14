@@ -220,7 +220,7 @@ export default function SettingsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 p-6 text-white shadow-lg">
+      <div className="rounded-2xl bg-linear-to-r from-blue-500 via-indigo-500 to-purple-600 p-6 text-white shadow-lg">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold md:text-3xl">

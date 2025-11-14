@@ -4,7 +4,7 @@ import { getUserFromCookie } from "@/lib/helpers/auth-helper";
 import RekapBulananClient from "./_client";
 
 export const metadata = {
-  title: "Statistik Bulanan - Dashboard",
+  title: "Statistik Bulanan - SILAKAN",
   description: "Halaman statistik laporan kegiatan bulanan",
 };
 

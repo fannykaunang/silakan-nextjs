@@ -23,9 +23,6 @@ import {
   RotateCcw,
   LucideIcon,
 } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-
-type Props = { userEmail?: string };
 
 type MetricsData = {
   total_kegiatan: number;
@@ -112,12 +109,21 @@ const StatCard = ({
     <div className="flex items-center justify-between gap-4">
       <div className="flex-1">
         <p className="text-sm dark:text-gray-300 font-medium">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">
-          {isLoading ? "-" : value}
-        </h3>
-        <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
-          {description}
-        </p>
+        {isLoading ? (
+          <div className="mt-2 space-y-2">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-24"></div>
+            <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded animate-pulse w-32"></div>
+          </div>
+        ) : (
+          <>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">
+              {value}
+            </h3>
+            <p className="text-sm mt-2 text-gray-500 dark:text-gray-400">
+              {description}
+            </p>
+          </>
+        )}
       </div>
       <div
         className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
@@ -127,8 +133,7 @@ const StatCard = ({
   </div>
 );
 
-export default function RekapBulananClient({ userEmail }: Props) {
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+export default function RekapBulananClient() {
   const [data, setData] = useState<RekapBulananData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,19 +143,6 @@ export default function RekapBulananClient({ userEmail }: Props) {
   const [selectedPegawai, setSelectedPegawai] = useState<string>("");
   const [selectedBulan, setSelectedBulan] = useState<string>("");
   const [selectedTahun, setSelectedTahun] = useState<string>("");
-
-  useEffect(() => {
-    if (!userEmail) {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          setUser(null);
-        }
-      }
-    }
-  }, [userEmail]);
 
   useEffect(() => {
     const fetchRekapBulanan = async () => {
@@ -199,13 +191,56 @@ export default function RekapBulananClient({ userEmail }: Props) {
     fetchRekapBulanan();
   }, [selectedSkpd, selectedPegawai, selectedBulan, selectedTahun]);
 
-  const displayEmail = userEmail || user?.email || "email@domain.com";
   const metrics = data?.metrics;
   const timeSeries = data?.timeSeries ?? [];
   const isAdmin = data?.isAdmin ?? false;
 
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700 dark:text-gray-300">
+            Memuat Data...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State (when no data)
+  if (error && !data) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
+          <svg
+            className="w-12 h-12 text-red-600 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <p className="text-red-600 dark:text-red-400 text-lg font-semibold">
+            {error}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <DashboardLayout userEmail={displayEmail}>
+    <>
       {/* Header Section */}
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-200">
@@ -237,7 +272,8 @@ export default function RekapBulananClient({ userEmail }: Props) {
                   setSelectedSkpd(e.target.value);
                   setSelectedPegawai(""); // Reset pegawai filter
                 }}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100">
+                disabled={isLoading}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
                 <option value="">Semua SKPD</option>
                 {data.filters.skpdList.map((skpd, index) => (
                   <option
@@ -284,7 +320,7 @@ export default function RekapBulananClient({ userEmail }: Props) {
                 id="bulan-filter"
                 value={selectedBulan}
                 onChange={(e) => setSelectedBulan(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}>
                 <option value="">Semua Bulan</option>
                 {data.filters.bulanList.map((bulan, index) => (
@@ -308,7 +344,7 @@ export default function RekapBulananClient({ userEmail }: Props) {
                 id="tahun-filter"
                 value={selectedTahun}
                 onChange={(e) => setSelectedTahun(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}>
                 <option value="">Semua Tahun</option>
                 {data.filters.tahunList.map((tahun, index) => (
@@ -350,7 +386,9 @@ export default function RekapBulananClient({ userEmail }: Props) {
         />
         <StatCard
           title="Rata-rata Per Hari"
-          value={`${(metrics?.rata_rata_kegiatan_per_hari ?? 0).toFixed(2)}`}
+          value={`${Number(metrics?.rata_rata_kegiatan_per_hari ?? 0).toFixed(
+            2
+          )}`}
           icon={Calendar}
           color="bg-gradient-to-br from-indigo-500 to-indigo-600"
           description="Kegiatan rata-rata per hari"
@@ -390,7 +428,7 @@ export default function RekapBulananClient({ userEmail }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatCard
           title="Persentase Verifikasi"
-          value={`${(metrics?.persentase_verifikasi ?? 0).toFixed(2)}%`}
+          value={`${Number(metrics?.persentase_verifikasi ?? 0).toFixed(2)}%`}
           icon={TrendingUp}
           color="bg-gradient-to-br from-teal-500 to-teal-600"
           description="Persentase kegiatan terverifikasi"
@@ -398,7 +436,7 @@ export default function RekapBulananClient({ userEmail }: Props) {
         />
         <StatCard
           title="Rata-rata Rating"
-          value={`${(metrics?.rata_rata_rating ?? 0).toFixed(2)}`}
+          value={`${Number(metrics?.rata_rata_rating ?? 0).toFixed(2)}`}
           icon={Star}
           color="bg-gradient-to-br from-orange-500 to-orange-600"
           description="Rating rata-rata kegiatan"
@@ -426,33 +464,44 @@ export default function RekapBulananClient({ userEmail }: Props) {
             </p>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={timeSeries}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="bulan_nama"
-              stroke="#94a3b8"
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis stroke="#94a3b8" />
-            <Tooltip
-              formatter={(value: number) => [
-                `${value} kegiatan`,
-                "Total Kegiatan",
-              ]}
-            />
-            <Line
-              type="monotone"
-              dataKey="total_kegiatan"
-              stroke="#3b82f6"
-              strokeWidth={3}
-              dot={{ fill: "#3b82f6", r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <div className="h-[350px] flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                Memuat grafik...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={timeSeries}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="bulan_nama"
+                stroke="#94a3b8"
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip
+                formatter={(value: number) => [
+                  `${value} kegiatan`,
+                  "Total Kegiatan",
+                ]}
+              />
+              <Line
+                type="monotone"
+                dataKey="total_kegiatan"
+                stroke="#3b82f6"
+                strokeWidth={3}
+                dot={{ fill: "#3b82f6", r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }
