@@ -15,13 +15,9 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  XCircle,
   FileCheck,
   LucideIcon,
 } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-
-type Props = { userEmail?: string };
 
 type MetricsData = {
   jumlah_diverifikasi: number;
@@ -106,8 +102,7 @@ const StatCard = ({
   </div>
 );
 
-export default function RekapHarianClient({ userEmail }: Props) {
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+export default function RekapHarianClient() {
   const [data, setData] = useState<RekapHarianData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,19 +110,6 @@ export default function RekapHarianClient({ userEmail }: Props) {
   // Filter states
   const [selectedSkpd, setSelectedSkpd] = useState<string>("");
   const [selectedPegawai, setSelectedPegawai] = useState<string>("");
-
-  useEffect(() => {
-    if (!userEmail) {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          setUser(null);
-        }
-      }
-    }
-  }, [userEmail]);
 
   useEffect(() => {
     const fetchRekapHarian = async () => {
@@ -174,188 +156,227 @@ export default function RekapHarianClient({ userEmail }: Props) {
     fetchRekapHarian();
   }, [selectedSkpd, selectedPegawai]);
 
-  const displayEmail = userEmail || user?.email || "email@domain.com";
   const metrics = data?.metrics;
   const timeSeries = data?.timeSeries ?? [];
   const isAdmin = data?.isAdmin ?? false;
 
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700 dark:text-gray-300">
+            Memuat Data...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State (when no data)
+  if (error && !data) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
+          <svg
+            className="w-12 h-12 text-red-600 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <p className="text-red-600 dark:text-red-400 text-lg font-semibold">
+            {error}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <DashboardLayout userEmail={displayEmail}>
-      {/* Header Section */}
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-200">
-          Statistik Harian 📊
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300 mt-1">
-          Ringkasan data statistik kegiatan harian
-        </p>
-      </div>
-
-      {/* Admin Filters */}
-      {isAdmin && data && (
-        <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Filter Data
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* SKPD Filter */}
-            <div>
-              <label
-                htmlFor="skpd-filter"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                SKPD
-              </label>
-              <select
-                id="skpd-filter"
-                value={selectedSkpd}
-                onChange={(e) => {
-                  setSelectedSkpd(e.target.value);
-                  setSelectedPegawai(""); // Reset pegawai filter
-                }}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100">
-                <option value="">Semua SKPD</option>
-                {data.filters.skpdList.map((skpd, index) => (
-                  <option
-                    key={`skpd-${skpd.skpdid}-${index}`}
-                    value={skpd.skpdid}>
-                    {skpd.skpd}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Pegawai Filter */}
-            <div>
-              <label
-                htmlFor="pegawai-filter"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Pegawai
-              </label>
-              <select
-                id="pegawai-filter"
-                value={selectedPegawai}
-                onChange={(e) => setSelectedPegawai(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
-                disabled={isLoading}>
-                <option value="">Semua Pegawai</option>
-                {data.filters.pegawaiList.map((pegawai, index) => (
-                  <option
-                    key={`pegawai-${pegawai.pegawai_id}-${index}`}
-                    value={pegawai.pegawai_id}>
-                    {pegawai.pegawai_nama}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-200">
+            Statistik Harian
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300 mt-1">
+            Ringkasan data statistik kegiatan harian
+          </p>
         </div>
-      )}
 
-      {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <StatCard
-          title="Diverifikasi"
-          value={formatNumber(metrics?.jumlah_diverifikasi ?? 0)}
-          icon={CheckCircle}
-          color="bg-gradient-to-br from-green-500 to-green-600"
-          description="Total kegiatan yang diverifikasi"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="Pending"
-          value={formatNumber(metrics?.jumlah_pending ?? 0)}
-          icon={Clock}
-          color="bg-gradient-to-br from-yellow-500 to-yellow-600"
-          description="Total kegiatan yang pending"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="AVG Produktivitas"
-          value={`${(metrics?.avg_produktivitas ?? 0).toFixed(2)}%`}
-          icon={TrendingUp}
-          color="bg-gradient-to-br from-blue-500 to-blue-600"
-          description="Produktivitas rata-rata"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="AVG Rating"
-          value={`${(metrics?.rata_rata_rating ?? 0).toFixed(2)}%`}
-          icon={TrendingUp}
-          color="bg-gradient-to-br from-teal-500 to-teal-600"
-          description="Persentase Rating rata-rata"
-          isLoading={isLoading}
-        />
-        <StatCard
-          title="Total Durasi"
-          value={formatDuration(metrics?.total_durasi ?? 0)}
-          icon={FileCheck}
-          color="bg-gradient-to-br from-purple-500 to-purple-600"
-          description="Total durasi kegiatan"
-          isLoading={isLoading}
-        />
-      </div>
-
-      {/* Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Tren Jumlah Kegiatan (30 Hari Terakhir)
+        {/* Admin Filters */}
+        {isAdmin && data && (
+          <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Filter Data
             </h3>
-            <p className="text-sm dark:text-gray-400">
-              Grafik jumlah kegiatan berdasarkan tanggal
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* SKPD Filter */}
+              <div>
+                <label
+                  htmlFor="skpd-filter"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  SKPD
+                </label>
+                <select
+                  id="skpd-filter"
+                  value={selectedSkpd}
+                  onChange={(e) => {
+                    setSelectedSkpd(e.target.value);
+                    setSelectedPegawai(""); // Reset pegawai filter
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100">
+                  <option value="">Semua SKPD</option>
+                  {data.filters.skpdList.map((skpd, index) => (
+                    <option
+                      key={`skpd-${skpd.skpdid}-${index}`}
+                      value={skpd.skpdid}>
+                      {skpd.skpd}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Pegawai Filter */}
+              <div>
+                <label
+                  htmlFor="pegawai-filter"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Pegawai
+                </label>
+                <select
+                  id="pegawai-filter"
+                  value={selectedPegawai}
+                  onChange={(e) => setSelectedPegawai(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+                  disabled={isLoading}>
+                  <option value="">Semua Pegawai</option>
+                  {data.filters.pegawaiList.map((pegawai, index) => (
+                    <option
+                      key={`pegawai-${pegawai.pegawai_id}-${index}`}
+                      value={pegawai.pegawai_id}>
+                      {pegawai.pegawai_nama}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
+        )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <StatCard
+            title="Diverifikasi"
+            value={formatNumber(metrics?.jumlah_diverifikasi ?? 0)}
+            icon={CheckCircle}
+            color="bg-gradient-to-br from-green-500 to-green-600"
+            description="Total kegiatan yang diverifikasi"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Pending"
+            value={formatNumber(metrics?.jumlah_pending ?? 0)}
+            icon={Clock}
+            color="bg-gradient-to-br from-yellow-500 to-yellow-600"
+            description="Total kegiatan yang pending"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="AVG Produktivitas"
+            value={`${(metrics?.avg_produktivitas ?? 0).toFixed(2)}%`}
+            icon={TrendingUp}
+            color="bg-gradient-to-br from-blue-500 to-blue-600"
+            description="Produktivitas rata-rata"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="AVG Rating"
+            value={`${(metrics?.rata_rata_rating ?? 0).toFixed(2)}%`}
+            icon={TrendingUp}
+            color="bg-gradient-to-br from-teal-500 to-teal-600"
+            description="Persentase Rating rata-rata"
+            isLoading={isLoading}
+          />
+          <StatCard
+            title="Total Durasi"
+            value={formatDuration(metrics?.total_durasi ?? 0)}
+            icon={FileCheck}
+            color="bg-gradient-to-br from-purple-500 to-purple-600"
+            description="Total durasi kegiatan"
+            isLoading={isLoading}
+          />
         </div>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={timeSeries}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="tanggal"
-              stroke="#94a3b8"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("id-ID", {
-                  day: "2-digit",
-                  month: "short",
-                });
-              }}
-            />
-            <YAxis stroke="#94a3b8" />
-            <Tooltip
-              labelFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("id-ID", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                });
-              }}
-              formatter={(value: number) => [
-                `${value} kegiatan`,
-                "Jumlah Kegiatan",
-              ]}
-            />
-            <Line
-              type="monotone"
-              dataKey="jumlah_kegiatan"
-              stroke="#3b82f6"
-              strokeWidth={3}
-              dot={{ fill: "#3b82f6", r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+
+        {/* Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Tren Jumlah Kegiatan (30 Hari Terakhir)
+              </h3>
+              <p className="text-sm dark:text-gray-400">
+                Grafik jumlah kegiatan berdasarkan tanggal
+              </p>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={timeSeries}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="tanggal"
+                stroke="#94a3b8"
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("id-ID", {
+                    day: "2-digit",
+                    month: "short",
+                  });
+                }}
+              />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip
+                labelFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("id-ID", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  });
+                }}
+                formatter={(value: number) => [
+                  `${value} kegiatan`,
+                  "Jumlah Kegiatan",
+                ]}
+              />
+              <Line
+                type="monotone"
+                dataKey="jumlah_kegiatan"
+                stroke="#3b82f6"
+                strokeWidth={3}
+                dot={{ fill: "#3b82f6", r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

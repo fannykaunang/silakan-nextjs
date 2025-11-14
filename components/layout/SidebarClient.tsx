@@ -10,8 +10,6 @@ import {
   Settings,
   Menu,
   X,
-  Activity,
-  AlarmClock,
   Tag,
   Bell,
   FileText,
@@ -22,6 +20,9 @@ import {
   TrendingUp,
   TrendingUpDown,
   Building2,
+  Printer,
+  AlarmClock,
+  Activity,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -119,6 +120,12 @@ export default function SidebarClient({
       icon: FileBarChart,
     },
   ];
+
+  reportItems.push({
+    href: "/laporan-kegiatan/cetak",
+    label: "Cetak Laporan Bulanan",
+    icon: Printer,
+  });
 
   // Tambahkan laporan statistik untuk level supervisor ke atas
   //if (userLevel >= 2) {

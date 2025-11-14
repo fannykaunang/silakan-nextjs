@@ -182,6 +182,34 @@ export async function getAllLaporan(
   return await executeQuery<LaporanWithDetails>(query, params);
 }
 
+export async function getLaporanByPegawaiAndMonth(
+  pegawaiId: number,
+  tahun: number,
+  bulan: number
+): Promise<LaporanWithDetails[]> {
+  const query = `
+    SELECT
+      lk.*,
+      pc.pegawai_nama,
+      pc.pegawai_nip,
+      pc.skpd,
+      kk.nama_kategori
+    FROM laporan_kegiatan lk
+    INNER JOIN pegawai_cache pc ON lk.pegawai_id = pc.pegawai_id
+    INNER JOIN kategori_kegiatan kk ON lk.kategori_id = kk.kategori_id
+    WHERE lk.pegawai_id = ?
+      AND YEAR(lk.tanggal_kegiatan) = ?
+      AND MONTH(lk.tanggal_kegiatan) = ?
+    ORDER BY lk.tanggal_kegiatan ASC, lk.waktu_mulai ASC, lk.created_at ASC
+  `;
+
+  return await executeQuery<LaporanWithDetails>(query, [
+    pegawaiId,
+    tahun,
+    bulan,
+  ]);
+}
+
 // ===== UPDATED: getLaporanById dengan files =====
 export async function getLaporanById(
   laporanId: number

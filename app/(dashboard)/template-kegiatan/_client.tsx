@@ -152,9 +152,11 @@ export default function TemplateKegiatanClient() {
           (k: KategoriData) => k.is_active === 1
         );
         setKategoris(activeKategoris);
+        setError(null);
       }
     } catch (err) {
       console.error("Error fetching kategoris:", err);
+      setError("Terjadi kesalahan saat memuat data");
     }
   };
 
@@ -318,12 +320,42 @@ export default function TemplateKegiatanClient() {
 
   if (loading && templates.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-700 dark:text-gray-300">
             Memuat data...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State (when no data)
+  if (error) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
+          <svg
+            className="w-12 h-12 text-red-600 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <p className="text-red-600 dark:text-red-400 text-lg font-semibold">
+            {error}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Coba Lagi
+          </button>
         </div>
       </div>
     );

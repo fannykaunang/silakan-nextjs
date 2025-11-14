@@ -15,5 +15,5 @@ export default async function RekapHarianPage() {
     redirect("/login");
   }
 
-  return <RekapHarianClient userEmail={user.email} />;
+  return <RekapHarianClient />;
 }
