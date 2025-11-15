@@ -8,7 +8,6 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Users,
   Link as LinkIcon,
   Upload,
   X,
@@ -18,7 +17,6 @@ import {
   CheckCircle,
   Loader2,
   Target,
-  Flag,
   AlertTriangle,
   Lightbulb,
 } from "lucide-react";

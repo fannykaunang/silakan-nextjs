@@ -44,20 +44,57 @@ type MenuSection = {
   items: MenuItemLink[];
 };
 
+const resolveActiveHref = (
+  pathname: string,
+  items: MenuItemLink[]
+): string | null => {
+  if (!pathname) {
+    return null;
+  }
+
+  let matchedHref: string | null = null;
+  let longestNormalizedLength = -1;
+
+  const normalizedPath = pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
+
+  items.forEach((menuItem) => {
+    const href = menuItem.href;
+    if (!href) {
+      return;
+    }
+
+    const normalizedHref = href.endsWith("/") ? href.slice(0, -1) : href;
+
+    const isExactMatch = normalizedPath === normalizedHref;
+    const isNestedMatch =
+      normalizedHref !== "" && normalizedPath.startsWith(`${normalizedHref}/`);
+
+    if (isExactMatch || isNestedMatch) {
+      if (normalizedHref.length > longestNormalizedLength) {
+        matchedHref = href;
+        longestNormalizedLength = normalizedHref.length;
+      }
+    }
+  });
+
+  return matchedHref;
+};
+
 // Komponen Pembantu untuk Item Menu
 function NavItem({
   item,
-  pathname,
+  activeHref,
   sidebarOpen,
 }: {
   item: MenuItemLink;
-  pathname: string;
+  activeHref: string | null;
   sidebarOpen: boolean;
 }) {
   const { startLoading, stopLoading } = useLoading();
   // Pengecekan aktif untuk link saat ini atau sub-path-nya
-  const active =
-    pathname === item.href || pathname?.startsWith(item.href + "/");
+  const active = activeHref === item.href;
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Always trigger loading when a link is clicked
@@ -96,7 +133,7 @@ export default function SidebarClient({
   setSidebarOpen,
   userLevel,
 }: SidebarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
   // 1. Definisikan semua item link yang relevan berdasarkan level pengguna
 
@@ -144,16 +181,16 @@ export default function SidebarClient({
   // --- D. Bagian Manajemen Data (Level >= 1) ---
   const managementItems: MenuItemLink[] = [];
 
-  if (userLevel >= 1) {
-    managementItems.push(
-      { href: "/pegawai", label: "Data Pegawai", icon: Users },
-      {
-        href: "/template-kegiatan",
-        label: "Template Kegiatan",
-        icon: FileText,
-      }
-    );
+  managementItems.push(
+    { href: "/pegawai", label: "Data Pegawai", icon: Users },
+    {
+      href: "/template-kegiatan",
+      label: "Template Kegiatan",
+      icon: FileText,
+    }
+  );
 
+  if (userLevel >= 1) {
     if (userLevel === 3) {
       managementItems.push({
         href: "/jabatan",
@@ -201,6 +238,18 @@ export default function SidebarClient({
       { href: "/settings", label: "Pengaturan Sistem", icon: Settings }
     );
   }
+
+  const allMenuItems: MenuItemLink[] = [
+    ...dashboardItems,
+    ...activityItems,
+    ...reportItems,
+    ...managementItems,
+    ...configItems,
+    ...notificationItems,
+    ...systemItems,
+  ];
+
+  const activeHref = resolveActiveHref(pathname, allMenuItems);
 
   // 2. Gabungkan item-item yang sudah difilter ke dalam array seksi
   const menuSections: MenuSection[] = [
@@ -272,7 +321,7 @@ export default function SidebarClient({
                     <NavItem
                       key={it.href}
                       item={it}
-                      pathname={pathname || ""}
+                      activeHref={activeHref}
                       sidebarOpen={sidebarOpen}
                     />
                   ))}

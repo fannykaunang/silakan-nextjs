@@ -1,7 +1,7 @@
 // app/(dashboard)/dashboard/_client.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,

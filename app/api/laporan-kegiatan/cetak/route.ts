@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/helpers/auth-helper";
 import { getPegawaiById } from "@/lib/models/pegawai.model";
-import { getLaporanByPegawaiAndMonth } from "@/lib/models/laporan.model";
+import {
+  getFilesByLaporanIds,
+  getLaporanByPegawaiAndMonth,
+} from "@/lib/models/laporan.model";
 import { getTodayDateString } from "@/lib/helpers/laporan-settings";
 import { AtasanPegawaiModel } from "@/lib/models/atasan-pegawai.model";
 
@@ -106,6 +109,9 @@ export async function GET(req: Request) {
       bulan
     );
 
+    const laporanIds = laporanList.map((laporan) => laporan.laporan_id);
+    const lampiranList = await getFilesByLaporanIds(laporanIds);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -117,6 +123,20 @@ export async function GET(req: Request) {
           skpd: targetPegawai.skpd ?? null,
         },
         laporan: laporanList,
+        lampiran: lampiranList.map((lampiran) => ({
+          file_id: lampiran.file_id,
+          laporan_id: lampiran.laporan_id,
+          nama_file_asli: lampiran.nama_file_asli,
+          nama_file_sistem: lampiran.nama_file_sistem,
+          path_file: lampiran.path_file,
+          tipe_file: lampiran.tipe_file,
+          ukuran_file: lampiran.ukuran_file,
+          uploaded_by: lampiran.uploaded_by,
+          deskripsi_file: lampiran.deskripsi_file,
+          created_at: lampiran.created_at,
+          nama_kegiatan: lampiran.nama_kegiatan,
+          tanggal_kegiatan: lampiran.tanggal_kegiatan,
+        })),
       },
       meta: {
         tahun,

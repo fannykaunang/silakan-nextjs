@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react";
 import {
   showSuccess,
   showError,
-  showConfirm,
   showLoading,
   closeLoading,
   showToast,

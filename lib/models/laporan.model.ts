@@ -66,6 +66,12 @@ export interface FileUpload extends RowDataPacket {
 export interface FileUploadWithUploader extends FileUpload {
   uploader_nama: string;
 }
+
+export interface FileUploadWithContext extends FileUploadWithUploader {
+  nama_kegiatan: string;
+  tanggal_kegiatan: string;
+}
+
 // ====================================================
 
 // ===== UPDATED: Tambahkan files property =====
@@ -540,11 +546,36 @@ export async function getFilesByLaporan(
   laporanId: number
 ): Promise<FileUpload[]> {
   const query = `
-    SELECT * FROM file_upload 
-    WHERE laporan_id = ? 
+    SELECT * FROM file_upload
+    WHERE laporan_id = ?
     ORDER BY created_at DESC
   `;
   return await executeQuery<FileUpload>(query, [laporanId]);
+}
+
+export async function getFilesByLaporanIds(
+  laporanIds: number[]
+): Promise<FileUploadWithContext[]> {
+  if (!laporanIds.length) {
+    return [];
+  }
+
+  const placeholders = laporanIds.map(() => "?").join(", ");
+
+  const query = `
+    SELECT
+      fu.*, 
+      pc.pegawai_nama AS uploader_nama,
+      lk.nama_kegiatan,
+      lk.tanggal_kegiatan
+    FROM file_upload fu
+    INNER JOIN pegawai_cache pc ON fu.uploaded_by = pc.pegawai_id
+    INNER JOIN laporan_kegiatan lk ON fu.laporan_id = lk.laporan_id
+    WHERE fu.laporan_id IN (${placeholders})
+    ORDER BY lk.tanggal_kegiatan ASC, fu.created_at ASC, fu.file_id ASC
+  `;
+
+  return await executeQuery<FileUploadWithContext>(query, laporanIds);
 }
 
 // Create file upload record

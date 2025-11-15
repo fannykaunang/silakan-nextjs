@@ -310,6 +310,17 @@ export async function listActiveRemindersForPegawai(pegawaiId: number) {
   );
 }
 
+export async function listAllActiveReminders() {
+  return executeQuery<ReminderListItem>(
+    `SELECT r.*, p.pegawai_nama, p.pegawai_telp AS no_hp
+     FROM reminder r
+     LEFT JOIN pegawai_cache p ON p.pegawai_id = r.pegawai_id
+     WHERE r.is_active = 1
+     ORDER BY r.waktu_reminder ASC`,
+    []
+  );
+}
+
 export async function markReminderSent(
   reminderId: number,
   sentAt: Date,

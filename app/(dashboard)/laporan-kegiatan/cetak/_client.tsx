@@ -1,13 +1,7 @@
 // app/(dashboard)/laporan-kegiatan/cetak/_client.tsx
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Printer } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -27,6 +21,21 @@ interface LaporanItem {
   nama_kategori: string;
   waktu_mulai: string;
   waktu_selesai: string;
+}
+
+interface LampiranItem {
+  file_id: number;
+  laporan_id: number;
+  nama_file_asli: string;
+  nama_file_sistem: string;
+  path_file: string;
+  tipe_file: string | null;
+  ukuran_file: number | null;
+  uploaded_by: number;
+  deskripsi_file: string | null;
+  created_at: string;
+  nama_kegiatan: string;
+  tanggal_kegiatan: string;
 }
 
 interface SignatureState {
@@ -55,6 +64,11 @@ interface PegawaiApiItem {
 interface PegawaiApiResponse {
   success: boolean;
   data?: PegawaiApiItem[];
+  meta?: {
+    total?: number;
+    role?: "admin" | "subadmin" | "atasan" | "pegawai" | string | null;
+    currentPegawaiId?: number | null;
+  };
   message?: string;
   error?: string;
 }
@@ -64,6 +78,7 @@ interface CetakApiResponse {
   data?: {
     pegawai?: PegawaiApiItem;
     laporan?: LaporanItem[];
+    lampiran?: LampiranItem[];
   };
   error?: string;
   message?: string;
@@ -95,7 +110,6 @@ function formatActivity(item: LaporanItem): string {
     if (description.toLowerCase().includes(name.toLowerCase())) {
       return description;
     }
-
     return `${name} – ${description}`;
   }
 
@@ -103,23 +117,17 @@ function formatActivity(item: LaporanItem): string {
 }
 
 function parseDateValue(value: string | Date | null | undefined): Date | null {
-  if (!value) {
-    return null;
-  }
+  if (!value) return null;
 
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value;
   }
 
   const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
+  if (!trimmed) return null;
 
   const direct = new Date(trimmed);
-  if (!Number.isNaN(direct.getTime())) {
-    return direct;
-  }
+  if (!Number.isNaN(direct.getTime())) return direct;
 
   const normalizedSpaces = trimmed.replace(/\s+/g, "T");
   if (normalizedSpaces !== trimmed) {
@@ -145,7 +153,6 @@ function formatFullDate(date: string | Date | null | undefined): string {
     if (typeof date === "string" && date.trim()) {
       return date;
     }
-
     return "-";
   }
 
@@ -158,11 +165,47 @@ function formatFullDate(date: string | Date | null | undefined): string {
 
 function getDayName(date: string | Date | null | undefined): string {
   const parsed = parseDateValue(date);
+  if (!parsed) return "-";
+  return parsed.toLocaleDateString("id-ID", { weekday: "long" }).toUpperCase();
+}
+
+function formatDateTime(value: string | Date | null | undefined): string {
+  const parsed = parseDateValue(value);
   if (!parsed) {
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
     return "-";
   }
 
-  return parsed.toLocaleDateString("id-ID", { weekday: "long" }).toUpperCase();
+  return parsed.toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatFileSize(bytes: number | null | undefined): string {
+  if (!bytes || Number.isNaN(bytes) || bytes <= 0) return "-";
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let size = bytes;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  const normalized = Number.isInteger(size) ? size : Number(size.toFixed(1));
+  return `${normalized} ${units[unitIndex]}`;
+}
+
+function formatFileType(value: string | null | undefined): string {
+  if (!value) return "-";
+  return value.split("/").pop()?.toUpperCase() || value.toUpperCase();
 }
 
 export default function CetakLaporanBulananClient() {
@@ -172,15 +215,18 @@ export default function CetakLaporanBulananClient() {
   const [selectedYear, setSelectedYear] = useState<number>(defaultYear);
   const [pegawaiInfo, setPegawaiInfo] = useState<PegawaiOption | null>(null);
   const [laporanList, setLaporanList] = useState<LaporanItem[]>([]);
+  const [lampiranList, setLampiranList] = useState<LampiranItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+
   const [reportTitle, setReportTitle] = useState(
     "LAPORAN KEGIATAN TIM ABSENSI"
   );
   const [reportSubtitle, setReportSubtitle] = useState(
     "BIDANG PENGEMBANGAN LAYANAN"
   );
-  const subtitleDirtyRef = useRef(false);
+  const subtitleDirtyRef = useRef<boolean>(false);
+
   const [signature, setSignature] = useState<SignatureState>({
     pembuatTitle: "PEMBUAT LAPORAN",
     pembuatName: "",
@@ -195,12 +241,17 @@ export default function CetakLaporanBulananClient() {
     approverJabatan: "",
     approverNip: "",
   });
+
   const printTableRef = useRef<HTMLDivElement | null>(null);
 
+  // =========================== FETCH PEGAWAI ===========================
   useEffect(() => {
     const fetchPegawai = async () => {
       try {
-        const response = await fetch("/api/pegawai", { cache: "no-store" });
+        const response = await fetch("/api/laporan-kegiatan/cetak/pegawai", {
+          cache: "no-store",
+        });
+
         const raw: unknown = await response.json().catch(() => null);
         const result = raw as PegawaiApiResponse | null;
 
@@ -222,9 +273,23 @@ export default function CetakLaporanBulananClient() {
 
         setPegawaiList(mapped);
 
-        if (mapped.length > 0) {
-          setSelectedPegawaiId(String(mapped[0].id));
-        }
+        const preferredId =
+          typeof result.meta?.currentPegawaiId === "number" &&
+          mapped.some((option) => option.id === result.meta?.currentPegawaiId)
+            ? String(result.meta.currentPegawaiId)
+            : mapped.length > 0
+            ? String(mapped[0].id)
+            : "";
+
+        setSelectedPegawaiId((previous) => {
+          if (
+            previous &&
+            mapped.some((option) => String(option.id) === String(previous))
+          ) {
+            return previous;
+          }
+          return preferredId;
+        });
       } catch (error) {
         console.error("Error fetching pegawai list:", error);
         const message =
@@ -248,10 +313,12 @@ export default function CetakLaporanBulananClient() {
     fetchPegawai();
   }, []);
 
+  // =========================== FETCH LAPORAN ===========================
   const fetchLaporan = useCallback(async () => {
     if (!selectedPegawaiId) {
       setPegawaiInfo(null);
       setLaporanList([]);
+      setLampiranList([]);
       setHasFetched(false);
       return;
     }
@@ -280,6 +347,7 @@ export default function CetakLaporanBulananClient() {
 
       const pegawaiPayload = result.data?.pegawai;
       const laporanPayload = result.data?.laporan ?? [];
+      const lampiranPayload = result.data?.lampiran ?? [];
 
       const mappedPegawai: PegawaiOption | null = pegawaiPayload
         ? {
@@ -293,6 +361,7 @@ export default function CetakLaporanBulananClient() {
 
       setPegawaiInfo(mappedPegawai);
       setLaporanList(laporanPayload);
+      setLampiranList(lampiranPayload);
 
       setSignature((prev) => ({
         ...prev,
@@ -301,15 +370,14 @@ export default function CetakLaporanBulananClient() {
         pembuatNip: mappedPegawai?.nip ?? "",
       }));
 
-      if (!subtitleDirtyRef.current) {
-        if (mappedPegawai?.skpd) {
-          setReportSubtitle(mappedPegawai.skpd.toUpperCase());
-        }
+      if (!subtitleDirtyRef.current && mappedPegawai?.skpd) {
+        setReportSubtitle(mappedPegawai.skpd.toUpperCase());
       }
     } catch (error) {
       console.error("Error fetching laporan bulanan:", error);
       setPegawaiInfo(null);
       setLaporanList([]);
+      setLampiranList([]);
 
       const message =
         error instanceof Error
@@ -336,6 +404,7 @@ export default function CetakLaporanBulananClient() {
     fetchLaporan();
   }, [fetchLaporan]);
 
+  // =========================== MEMOIZED DATA ===========================
   const groupedRows = useMemo(() => {
     const grouped = new Map<
       string,
@@ -376,14 +445,8 @@ export default function CetakLaporanBulananClient() {
         if (typeof parsedA === "number" && typeof parsedB === "number") {
           return parsedA - parsedB;
         }
-
-        if (typeof parsedA === "number") {
-          return -1;
-        }
-
-        if (typeof parsedB === "number") {
-          return 1;
-        }
+        if (typeof parsedA === "number") return -1;
+        if (typeof parsedB === "number") return 1;
 
         return a.tanggal.localeCompare(b.tanggal);
       })
@@ -403,6 +466,7 @@ export default function CetakLaporanBulananClient() {
     });
   }, [selectedMonth, selectedYear]);
 
+  // =========================== HANDLERS ===========================
   const handlePrint = useCallback(async () => {
     if (!printTableRef.current) {
       await Swal.fire({
@@ -444,8 +508,10 @@ export default function CetakLaporanBulananClient() {
     setReportSubtitle(value);
   };
 
+  // =========================== RENDER ===========================
   return (
     <div className="space-y-6 pb-20">
+      {/* Panel kontrol (tidak ikut tercetak) */}
       <div className="print:hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
           Cetak Laporan Kegiatan Bulanan
@@ -465,6 +531,9 @@ export default function CetakLaporanBulananClient() {
                 setSelectedPegawaiId(event.target.value);
                 subtitleDirtyRef.current = false;
               }}>
+              {pegawaiList.length === 0 && (
+                <option value="">Memuat data pegawai...</option>
+              )}
               {pegawaiList.map((pegawai) => (
                 <option key={pegawai.id} value={pegawai.id}>
                   {pegawai.nama}
@@ -526,6 +595,7 @@ export default function CetakLaporanBulananClient() {
           </label>
         </div>
 
+        {/* Kolom tanda tangan */}
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
           <fieldset className="space-y-3 rounded-lg border border-dashed border-gray-300 p-4 dark:border-gray-700">
             <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
@@ -661,7 +731,7 @@ export default function CetakLaporanBulananClient() {
             disabled={loading}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-900 ${
               loading
-                ? "bg-blue-400 cursor-wait"
+                ? "cursor-wait bg-blue-400"
                 : "bg-blue-600 hover:bg-blue-700"
             }`}>
             <Loader2
@@ -684,6 +754,7 @@ export default function CetakLaporanBulananClient() {
         </div>
       </div>
 
+      {/* AREA CETAK */}
       <div
         id={PRINT_CONTAINER_ID}
         ref={printTableRef}
@@ -712,76 +783,167 @@ export default function CetakLaporanBulananClient() {
           </p>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-lg border border-black">
-          <table className="min-w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-100 text-gray-900">
-                <th className="border-b border-r border-black px-3 py-2 text-center font-semibold">
-                  NO
-                </th>
-                <th className="border-b border-r border-black px-3 py-2 text-center font-semibold">
-                  HARI
-                </th>
-                <th className="border-b border-r border-black px-3 py-2 text-center font-semibold">
-                  TANGGAL
-                </th>
-                <th className="border-b border-black px-3 py-2 text-left font-semibold">
-                  URAIAN KEGIATAN
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedRows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="border-t border-black px-4 py-10 text-center text-sm italic text-gray-500 dark:text-gray-400 empty-state">
-                    {hasFetched
-                      ? "Belum ada kegiatan pada periode ini"
-                      : "Silakan pilih pegawai dan periode kemudian muat data"}
-                  </td>
+        <div className="mt-6 space-y-6">
+          {/* TABEL UTAMA */}
+          <div className="overflow-hidden rounded-lg border border-black">
+            <table className="min-w-full border-collapse text-sm text-gray-900 dark:text-gray-100">
+              <thead>
+                <tr className="bg-gray-100 text-gray-900 dark:text-gray-700">
+                  <th className="border-b border-r border-black px-3 py-2 text-center font-semibold">
+                    NO
+                  </th>
+                  <th className="border-b border-r border-black px-3 py-2 text-center font-semibold">
+                    HARI
+                  </th>
+                  <th className="border-b border-r border-black px-3 py-2 text-center font-semibold">
+                    TANGGAL
+                  </th>
+                  <th className="border-b border-black px-3 py-2 text-left font-semibold">
+                    URAIAN KEGIATAN
+                  </th>
                 </tr>
-              ) : (
-                groupedRows.map((row, index) => (
-                  <tr key={row.tanggal} className="align-top">
-                    <td className="border-t border-r border-black px-3 py-3 text-center dark:text-gray-700">
-                      {index + 1}
-                    </td>
-                    <td className="border-t border-r border-black px-3 py-3 text-center font-semibold dark:text-gray-700">
-                      {row.hari}
-                    </td>
-                    <td className="border-t border-r border-black px-3 py-3 text-center font-semibold dark:text-gray-700">
-                      {formatFullDate(row.parsedDate ?? row.tanggal)}
-                    </td>
-                    <td className="border-t border-black px-3 py-3 text-sm dark:text-gray-700">
-                      <ul className="space-y-2">
-                        {row.activities.map((activity, activityIndex) => (
-                          <li
-                            key={`${row.tanggal}-${activityIndex}`}
-                            className="flex items-start gap-3">
-                            <span
-                              aria-hidden="true"
-                              className="mt-1 text-lg leading-none text-current">
-                              •
-                            </span>
-                            <span className="text-justify">{activity}</span>
-                          </li>
-                        ))}
-                      </ul>
+              </thead>
+              <tbody>
+                {groupedRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="border-t border-black px-4 py-10 text-center text-sm italic text-gray-500 dark:text-gray-400 empty-state">
+                      {hasFetched
+                        ? "Belum ada kegiatan pada periode ini"
+                        : "Silakan pilih pegawai dan periode kemudian muat data"}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  groupedRows.map((row, index) => (
+                    <tr key={row.tanggal} className="align-top">
+                      <td className="border-t border-r border-black px-3 py-3 text-center dark:text-gray-700">
+                        {index + 1}
+                      </td>
+                      <td className="border-t border-r border-black px-3 py-3 text-center font-semibold dark:text-gray-700">
+                        {row.hari}
+                      </td>
+                      <td className="border-t border-r border-black px-3 py-3 text-center dark:text-gray-700">
+                        {formatFullDate(row.parsedDate ?? row.tanggal)}
+                      </td>
+                      <td className="border-t border-black px-3 py-3 text-sm dark:text-gray-700">
+                        <ul className="space-y-2">
+                          {row.activities.map((activity, activityIndex) => (
+                            <li
+                              key={`${row.tanggal}-${activityIndex}`}
+                              className="flex items-start gap-3">
+                              <span
+                                aria-hidden="true"
+                                className="mt-1 text-lg leading-none text-current">
+                                •
+                              </span>
+                              <span className="text-justify">{activity}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* TABEL LAMPIRAN */}
+          <div className="overflow-hidden rounded-lg border border-black">
+            <table className="min-w-full border-collapse text-sm text-gray-900 dark:text-gray-100">
+              <thead>
+                <tr className="bg-gray-100 text-gray-900 dark:text-gray-700">
+                  <th className="border-b border-black px-3 py-2 text-center font-semibold">
+                    LAMPIRAN BUKTI (FILE)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {lampiranList.length === 0 ? (
+                  <tr>
+                    <td className="border-t border-black px-4 py-6 text-center text-sm italic text-gray-500 dark:text-gray-400">
+                      {hasFetched
+                        ? "Tidak ada lampiran bukti kegiatan pada periode ini"
+                        : "Lampiran akan ditampilkan setelah data laporan dimuat"}
+                    </td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td className="border-t border-black px-4 py-6">
+                      <div className="flex flex-wrap items-start justify-start gap-6">
+                        {lampiranList.map((lampiran) => {
+                          const isImageType = lampiran.tipe_file
+                            ?.toLowerCase()
+                            .startsWith("image/");
+                          const sanitizedPath =
+                            lampiran.path_file?.trim() || "";
+                          const showImagePreview = Boolean(
+                            isImageType && sanitizedPath
+                          );
+
+                          return (
+                            <div
+                              key={`${lampiran.file_id}-${lampiran.laporan_id}`}
+                              className="flex w-48 flex-col items-center gap-3 text-center">
+                              {showImagePreview ? (
+                                <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded border border-gray-200 bg-white p-2 shadow-sm dark:border-gray-700">
+                                  <img
+                                    src={sanitizedPath}
+                                    alt={
+                                      lampiran.nama_file_asli ||
+                                      "Lampiran bukti kegiatan"
+                                    }
+                                    className="max-h-36 w-full object-contain"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex h-40 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded border border-gray-200 bg-gray-50 p-3 text-xs text-gray-600 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                  <span className="text-sm font-semibold uppercase tracking-wide">
+                                    {formatFileType(lampiran.tipe_file)}
+                                  </span>
+                                  <span className="wrap-break-word text-[11px] leading-relaxed">
+                                    {sanitizedPath ||
+                                      "Lokasi file tidak tersedia"}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-600">
+                                {lampiran.nama_kegiatan || "-"}
+                              </div>
+                              <div className="w-full space-y-1 text-[11px] leading-relaxed text-gray-600 dark:text-gray-500">
+                                <div className="hidden">
+                                  Diunggah:{" "}
+                                  {formatDateTime(lampiran.created_at)}
+                                </div>
+                                {!showImagePreview && (
+                                  <div className="pt-1 text-left">
+                                    Lokasi:{" "}
+                                    <span className="wrap-break-word">
+                                      {sanitizedPath || "-"}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
+        {/* TANDA TANGAN */}
         <div className="mt-10 grid gap-6 text-sm text-gray-900 md:grid-cols-3">
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-semibold uppercase tracking-wide">
               {signature.pembuatTitle || "PEMBUAT LAPORAN"}
             </span>
-            <div className="h-20" aria-hidden="true"></div>
+            <div className="h-20" aria-hidden="true" />
             <span className="font-semibold underline decoration-1 underline-offset-4">
               {signature.pembuatName ||
                 "(........................................)"}
@@ -802,7 +964,7 @@ export default function CetakLaporanBulananClient() {
             <span className="font-semibold uppercase tracking-wide">
               {signature.pemeriksaTitle || "PEMERIKSA"}
             </span>
-            <div className="h-20" aria-hidden="true"></div>
+            <div className="h-20" aria-hidden="true" />
             <span className="font-semibold underline decoration-1 underline-offset-4">
               {signature.pemeriksaName ||
                 "(........................................)"}
@@ -823,7 +985,7 @@ export default function CetakLaporanBulananClient() {
             <span className="font-semibold uppercase tracking-wide">
               {signature.approverTitle || "MENYETUJUI"}
             </span>
-            <div className="h-20" aria-hidden="true"></div>
+            <div className="h-20" aria-hidden="true" />
             <span className="font-semibold underline decoration-1 underline-offset-4">
               {signature.approverName ||
                 "(........................................)"}
@@ -842,6 +1004,7 @@ export default function CetakLaporanBulananClient() {
         </div>
       </div>
 
+      {/* STYLE PRINT */}
       <style jsx global>{`
         @media print {
           @page {
@@ -871,7 +1034,8 @@ export default function CetakLaporanBulananClient() {
             inset: 0;
             margin-left: 0;
             margin-right: 0;
-            padding: 20;
+            padding-left: 10;
+            padding-right: 10;
             width: 100%;
           }
         }
