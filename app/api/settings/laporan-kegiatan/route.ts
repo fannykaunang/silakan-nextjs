@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/helpers/auth-helper";
-import { fetchAllSettings } from "@/lib/models/settings.model";
+import { fetchAllSettings } from "@/lib/models/settings-laporan-kegiatan.model";
 
 export async function GET() {
   try {

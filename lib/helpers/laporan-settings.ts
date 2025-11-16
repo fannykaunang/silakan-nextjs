@@ -1,5 +1,5 @@
 // lib/helpers/laporan-settings.ts
-import { fetchSettingsByKeys } from "@/lib/models/settings.model";
+import { fetchSettingsByKeys } from "@/lib/models/settings-laporan-kegiatan.model";
 import type { Setting } from "@/lib/types";
 
 const LAPORAN_SETTING_KEYS = [

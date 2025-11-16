@@ -1,9 +1,9 @@
-// app/(dashboard)/settings/page.tsx
+// app/(dashboard)/settings/laporan-kegiatan/page.tsx
 import { Metadata } from "next";
 import SettingsClient from "./_client";
 
 export const metadata: Metadata = {
-  title: "Settings | SILAKAN",
+  title: "Pengaturan Laporan Kegiatan | SILAKAN",
   description: "Kelola template kegiatan untuk mempercepat pelaporan",
 };
 

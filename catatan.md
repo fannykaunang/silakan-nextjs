@@ -82,3 +82,6 @@ berikut rincian halamannya :
 
 # 16-11-2025
 1. cek lagi tampilan http://localhost:3000/laporan-kegiatan/cetak saat dicetak
+
+# 17-11-2025
+1. minta buatkan halaman _client.tsx pada file app/(dashboard)/settings/app/page.tsx, percakapan ada di https://claude.ai/chat/2072e3ae-e1f4-4d9a-aa01-39e2b553acfd

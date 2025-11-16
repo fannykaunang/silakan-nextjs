@@ -6,7 +6,7 @@ export async function fetchAllSettings(): Promise<Setting[]> {
   return await executeQuery<Setting>(
     `SELECT setting_id, setting_key, setting_value, setting_type, deskripsi,
             kategori_setting, is_editable, created_at, updated_at
-       FROM settings
+       FROM settings_laporan_kegiatan
       ORDER BY COALESCE(kategori_setting, ''), setting_key`
   );
 }
@@ -46,7 +46,7 @@ export async function fetchSettingsByKeys(
   const rows = await executeQuery<Setting>(
     `SELECT setting_id, setting_key, setting_value, setting_type, deskripsi,
             kategori_setting, is_editable, created_at, updated_at
-       FROM settings
+       FROM settings_laporan_kegiatan
       WHERE setting_key IN (${placeholders})`,
     keys
   );

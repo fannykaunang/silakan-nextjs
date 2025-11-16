@@ -8,7 +8,7 @@ import {
 import {
   getSettingById,
   updateSettingValue,
-} from "@/lib/models/settings.model";
+} from "@/lib/models/settings-laporan-kegiatan.model";
 import { createLogWithData } from "@/lib/models/log.model";
 import type { SettingType } from "@/lib/types";
 

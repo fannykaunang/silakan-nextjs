@@ -1,4 +1,4 @@
-// app/(dashboard)/settings/_client.tsx
+// app/(dashboard)/settings/laporan-kegiatan/_client.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -94,7 +94,9 @@ export default function SettingsClient() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/settings", { cache: "no-store" });
+        const response = await fetch("/api/settings/laporan-kegiatan", {
+          cache: "no-store",
+        });
         const payload: SettingsResponse = await response.json().catch(() => ({
           success: false,
           message: "Respons tidak valid",
@@ -160,7 +162,7 @@ export default function SettingsClient() {
     setFieldErrors((prev) => ({ ...prev, [id]: null }));
 
     try {
-      const response = await fetch(`/api/settings/${id}`, {
+      const response = await fetch(`/api/settings/laporan-kegiatan/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ setting_value: value }),

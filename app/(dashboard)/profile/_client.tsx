@@ -9,12 +9,12 @@ import {
   X,
   Edit2,
   AlertCircle,
-  MapPin,
-  Phone,
   Calendar,
-  Briefcase,
   Shield,
-  Home,
+  CheckCircle,
+  XCircle,
+  FileText,
+  ClipboardList,
 } from "lucide-react";
 import { showWarning } from "@/lib/utils/sweetalert";
 
@@ -36,6 +36,17 @@ interface PegawaiData {
   photo_path: string;
 }
 
+interface RekapKehadiran {
+  pegawai_id: number;
+  pegawai_pin: string;
+  pegawai_nama: string;
+  jumlah_kehadiran: number;
+  jumlah_izin: number;
+  jumlah_sakit: number;
+  jumlah_hari_kerja: number;
+  jumlah_alpa: number;
+}
+
 type Props = {
   userPin?: string;
 };
@@ -44,6 +55,9 @@ export default function ProfileClient({ userPin }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState<PegawaiData | null>(null);
   const [editedData, setEditedData] = useState<PegawaiData | null>(null);
+  const [rekapKehadiran, setRekapKehadiran] = useState<RekapKehadiran | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,8 +93,35 @@ export default function ProfileClient({ userPin }: Props) {
     return status === 1 ? "Aktif" : "Non-aktif";
   };
 
+  // Fetch rekap kehadiran
+  const fetchRekapKehadiran = async (pin: string) => {
+    try {
+      const currentDate = new Date();
+      const bulan = currentDate.getMonth() + 1; // getMonth() returns 0-11
+      const tahun = currentDate.getFullYear();
+
+      const response = await fetch(
+        `/api/rekap-kehadiran?pin=${pin}&bulan=${bulan}&tahun=${tahun}`,
+        {
+          cache: "no-store",
+        }
+      );
+
+      const result = await response.json().catch(() => null);
+
+      if (response.ok && result?.success && result.data) {
+        setRekapKehadiran(result.data);
+      } else {
+        console.warn("Rekap kehadiran tidak tersedia");
+        setRekapKehadiran(null);
+      }
+    } catch (err) {
+      console.error("Error fetching rekap kehadiran:", err);
+      setRekapKehadiran(null);
+    }
+  };
+
   // Fetch data profil
-  // di dalam component _client.tsx kamu
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -115,6 +156,13 @@ export default function ProfileClient({ userPin }: Props) {
 
     fetchProfile();
   }, [userPin]);
+
+  // Fetch rekap kehadiran setelah userData berhasil dimuat
+  useEffect(() => {
+    if (userData?.pegawai_pin) {
+      fetchRekapKehadiran(userData.pegawai_pin);
+    }
+  }, [userData]);
 
   // update title ketika nama sudah tersedia
   useEffect(() => {
@@ -372,6 +420,56 @@ export default function ProfileClient({ userPin }: Props) {
 
         {/* Main Content - Detailed Info */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Rekap Kehadiran Card */}
+          {rekapKehadiran && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <ClipboardList className="w-5 h-5 text-blue-600" />
+                  Rekap Kehadiran Bulan Ini
+                </h3>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {new Date().toLocaleDateString("id-ID", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <StatCard
+                  title="Hari Kerja"
+                  value={rekapKehadiran.jumlah_hari_kerja}
+                  icon={Calendar}
+                  color="purple"
+                />
+                <StatCard
+                  title="Hadir"
+                  value={rekapKehadiran.jumlah_kehadiran}
+                  icon={CheckCircle}
+                  color="green"
+                />
+                <StatCard
+                  title="Izin"
+                  value={rekapKehadiran.jumlah_izin}
+                  icon={FileText}
+                  color="blue"
+                />
+                <StatCard
+                  title="Sakit"
+                  value={rekapKehadiran.jumlah_sakit}
+                  icon={AlertCircle}
+                  color="orange"
+                />
+                <StatCard
+                  title="Alpa"
+                  value={rekapKehadiran.jumlah_alpa}
+                  icon={XCircle}
+                  color="red"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Personal Information */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
@@ -556,33 +654,43 @@ export default function ProfileClient({ userPin }: Props) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          {/* Activity Card */}
-          <div className="bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
-            <h3 className="text-lg font-bold mb-4">Statistik Aktivitas</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-gray-800 bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
-                <p className="text-sm opacity-90 dark:text-gray-400">
-                  Kehadiran
-                </p>
-                <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-gray-100">
-                  95%
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
-                <p className="text-sm opacity-90 dark:text-gray-400">Tugas</p>
-                <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-gray-100">
-                  48
-                </p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
-                <p className="text-sm opacity-90 dark:text-gray-400">Proyek</p>
-                <p className="text-2xl font-bold mt-1 text-gray-900 dark:text-gray-100">
-                  12
-                </p>
-              </div>
-            </div>
-          </div>
+// StatCard Component
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  color: "purple" | "green" | "blue" | "orange" | "red";
+}
+
+function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
+  const colorClasses = {
+    purple:
+      "bg-purple-50 text-purple-600 dark:bg-purple-900/40 dark:text-purple-200",
+    green:
+      "bg-green-50 text-green-600 dark:bg-green-900/40 dark:text-green-200",
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200",
+    orange:
+      "bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-200",
+    red: "bg-red-50 text-red-600 dark:bg-red-900/40 dark:text-red-200",
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+            {value}
+          </p>
+        </div>
+        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
     </div>

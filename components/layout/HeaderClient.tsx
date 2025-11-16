@@ -409,8 +409,7 @@ export default function Header({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem
-                onSelect={() => router.push("/dashboard/profile")}>
+              <DropdownMenuItem onSelect={() => router.push("/profile")}>
                 <User className="w-4 h-4 mr-2" />
                 Lihat Profil
               </DropdownMenuItem>
@@ -419,8 +418,7 @@ export default function Header({
               {userLevel === 3 && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={() => router.push("/dashboard/settings")}>
+                  <DropdownMenuItem onSelect={() => router.push("/settings")}>
                     <SettingsIcon className="w-4 h-4 mr-2" />
                     Pengaturan
                   </DropdownMenuItem>
