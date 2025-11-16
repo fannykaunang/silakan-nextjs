@@ -107,12 +107,6 @@ const settingsUpdateSchema = z.object({
   log_retention_days: z.number().int().min(1).max(365).optional(),
 });
 
-interface SessionInfo {
-  pegawai_id: number | null;
-  level: number | null;
-  skpdid: number | null;
-}
-
 /**
  * GET /api/settings - Get app settings
  */
@@ -155,36 +149,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-const fetchSessionInfo = async (): Promise<SessionInfo | null> => {
-  try {
-    const response = await fetch("/api/login", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok || payload?.result !== 1) {
-      return null;
-    }
-
-    return {
-      pegawai_id:
-        typeof payload?.pegawai_id === "number" ? payload.pegawai_id : null,
-      level: typeof payload?.level === "number" ? payload.level : null,
-      skpdid: typeof payload?.skpdid === "number" ? payload.skpdid : null,
-    };
-  } catch (error) {
-    console.error("Error fetching session info:", error);
-    return null;
-  }
-};
-
 /**
  * PUT /api/settings - Update app settings
  */
@@ -220,7 +184,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const session = await fetchSessionInfo();
     const body = await request.json();
 
     // Validate request body
@@ -239,12 +202,16 @@ export async function PUT(request: NextRequest) {
     const data = validationResult.data as AppSettingsUpdate;
 
     // Update settings
-    if (!session || session.pegawai_id == null) {
-      // Bisa redirect ke login, atau tampilkan error
-      throw new Error("Session tidak valid atau pegawai_id tidak tersedia");
+    if (!user.pegawai_id) {
+      return NextResponse.json(
+        {
+          error: "Session tidak valid atau pegawai_id tidak tersedia",
+        },
+        { status: 401 }
+      );
     }
 
-    const success = await updateAppSettings(data, session.pegawai_id);
+    const success = await updateAppSettings(data, user.pegawai_id);
 
     if (!success) {
       return NextResponse.json(
