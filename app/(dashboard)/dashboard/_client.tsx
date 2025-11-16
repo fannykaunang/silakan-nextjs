@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useRouter } from "next/navigation";
 
 type Props = { userEmail?: string };
 
@@ -143,6 +144,7 @@ export default function DashboardClient({ userEmail }: Props) {
   const [stats, setStats] = useState<DashboardData>(defaultStats);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!userEmail) {
@@ -323,7 +325,9 @@ export default function DashboardClient({ userEmail }: Props) {
               Daftar 10 laporan kegiatan yang terakhir dibuat
             </p>
           </div>
-          <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button
+            onClick={() => router.push("/laporan-kegiatan")}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             Lihat Semua
           </button>
         </div>

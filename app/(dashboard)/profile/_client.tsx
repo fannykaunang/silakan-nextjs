@@ -1,4 +1,4 @@
-// app/profile/_client.tsx (Client Component)
+// app/(dashboard)/profile/_client.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -558,7 +558,7 @@ export default function ProfileClient({ userPin }: Props) {
           </div>
 
           {/* Activity Card */}
-          <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+          <div className="bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
             <h3 className="text-lg font-bold mb-4">Statistik Aktivitas</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-white dark:bg-gray-800 bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">

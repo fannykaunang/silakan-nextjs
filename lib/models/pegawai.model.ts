@@ -68,13 +68,6 @@ export async function upsertPegawai(data: CreatePegawaiInput): Promise<void> {
 // READ
 // ============================================
 
-// export async function getPegawaiById(id: number): Promise<Pegawai | null> {
-//   return await getOne<Pegawai>(
-//     "SELECT * FROM pegawai_cache WHERE pegawai_id = ?",
-//     [id]
-//   );
-// }
-
 export async function getPegawaiById(
   id: number
 ): Promise<PegawaiWithRelations | null> {

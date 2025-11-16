@@ -79,3 +79,6 @@ berikut rincian halamannya :
 # 15-11-2025
 1. kalo bukan admin yang login. maka, tampilkan cetak laporan hanya pegawai yang bersangkutan saja. kalau atasan pegawai yang login. maka, tampilkan laporan anak buahnya dan dirinya sendiri
 2. saat halaman cetak laporan dibuka, kenapa halaman laporan kegiatan juga active di sidebar
+
+# 16-11-2025
+1. cek lagi tampilan http://localhost:3000/laporan-kegiatan/cetak saat dicetak

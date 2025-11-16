@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Printer } from "lucide-react";
 import Swal from "sweetalert2";
+import Image from "next/image";
 
 interface PegawaiOption {
   id: number;
@@ -888,8 +889,12 @@ export default function CetakLaporanBulananClient() {
                               className="flex w-48 flex-col items-center gap-3 text-center">
                               {showImagePreview ? (
                                 <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded border border-gray-200 bg-white p-2 shadow-sm dark:border-gray-700">
-                                  <img
+                                  <Image
                                     src={sanitizedPath}
+                                    width={500}
+                                    height={500}
+                                    quality={80}
+                                    preload={true}
                                     alt={
                                       lampiran.nama_file_asli ||
                                       "Lampiran bukti kegiatan"
@@ -908,7 +913,7 @@ export default function CetakLaporanBulananClient() {
                                   </span>
                                 </div>
                               )}
-                              <div className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-gray-600">
+                              <div className="text-sm font-semibold text-[11px] uppercase tracking-wide text-gray-900 dark:text-gray-600">
                                 {lampiran.nama_kegiatan || "-"}
                               </div>
                               <div className="w-full space-y-1 text-[11px] leading-relaxed text-gray-600 dark:text-gray-500">

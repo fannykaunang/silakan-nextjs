@@ -5,10 +5,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   User,
-  Mail,
   Phone,
   Calendar,
-  MapPin,
   Briefcase,
   Building2,
   Save,
@@ -20,6 +18,9 @@ import {
   Users,
   IdCard,
   Shield,
+  ClipboardList,
+  XCircle,
+  FileText,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -42,12 +43,26 @@ interface PegawaiData {
   last_sync: string | null;
 }
 
+interface RekapKehadiran {
+  pegawai_id: number;
+  pegawai_pin: string;
+  pegawai_nama: string;
+  jumlah_kehadiran: number;
+  jumlah_izin: number;
+  jumlah_sakit: number;
+  jumlah_hari_kerja: number;
+  jumlah_alpa: number;
+}
+
 export default function PegawaiDetailClient() {
   const params = useParams();
   const router = useRouter();
   const pegawaiId = params.id as string;
 
   const [pegawai, setPegawai] = useState<PegawaiData | null>(null);
+  const [rekapKehadiran, setRekapKehadiran] = useState<RekapKehadiran | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,6 +71,13 @@ export default function PegawaiDetailClient() {
   useEffect(() => {
     fetchPegawaiDetail();
   }, [pegawaiId]);
+
+  useEffect(() => {
+    // Fetch rekap kehadiran setelah data pegawai berhasil dimuat
+    if (pegawai?.pegawai_pin) {
+      fetchRekapKehadiran(pegawai.pegawai_pin);
+    }
+  }, [pegawai]);
 
   const fetchPegawaiDetail = async () => {
     try {
@@ -85,6 +107,33 @@ export default function PegawaiDetailClient() {
       router.push("/pegawai");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRekapKehadiran = async (pin: string) => {
+    try {
+      const currentDate = new Date();
+      const bulan = currentDate.getMonth() + 1; // getMonth() returns 0-11
+      const tahun = currentDate.getFullYear();
+
+      const response = await fetch(
+        `/api/rekap-kehadiran?pin=${pin}&bulan=${bulan}&tahun=${tahun}`,
+        {
+          cache: "no-store",
+        }
+      );
+
+      const result = await response.json().catch(() => null);
+
+      if (response.ok && result?.success && result.data) {
+        setRekapKehadiran(result.data);
+      } else {
+        console.warn("Rekap kehadiran tidak tersedia");
+        setRekapKehadiran(null);
+      }
+    } catch (err) {
+      console.error("Error fetching rekap kehadiran:", err);
+      setRekapKehadiran(null);
     }
   };
 
@@ -276,6 +325,57 @@ export default function PegawaiDetailClient() {
             </div>
           )}
         </div>
+
+        {/* Rekap Kehadiran Stats */}
+        {rekapKehadiran && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-blue-600" />
+                Rekap Kehadiran Bulan Ini
+              </h2>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Periode:{" "}
+                {new Date().toLocaleDateString("id-ID", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <StatCard
+                title="Hari Kerja"
+                value={rekapKehadiran.jumlah_hari_kerja}
+                icon={Calendar}
+                accent="bg-purple-50 text-purple-600 dark:bg-purple-900/40 dark:text-purple-200"
+              />
+              <StatCard
+                title="Hadir"
+                value={rekapKehadiran.jumlah_kehadiran}
+                icon={CheckCircle}
+                accent="bg-green-50 text-green-600 dark:bg-green-900/40 dark:text-green-200"
+              />
+              <StatCard
+                title="Izin"
+                value={rekapKehadiran.jumlah_izin}
+                icon={FileText}
+                accent="bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200"
+              />
+              <StatCard
+                title="Sakit"
+                value={rekapKehadiran.jumlah_sakit}
+                icon={AlertCircle}
+                accent="bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-200"
+              />
+              <StatCard
+                title="Alpa"
+                value={rekapKehadiran.jumlah_alpa}
+                icon={XCircle}
+                accent="bg-red-50 text-red-600 dark:bg-red-900/40 dark:text-red-200"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -648,6 +748,35 @@ export default function PegawaiDetailClient() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  accent?: string;
+}
+
+function StatCard({ title, value, icon: Icon, accent }: StatCardProps) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">
+            {value}
+          </p>
+        </div>
+        <div
+          className={`p-3 rounded-lg ${
+            accent ||
+            "bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-200"
+          }`}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
     </div>
