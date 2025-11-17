@@ -1,4 +1,5 @@
-// app/(dashboard)/profile/page.tsx (Server Component)
+// app/(dashboard)/profile/page.tsx
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ProfileClient from "./_client";

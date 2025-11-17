@@ -164,15 +164,6 @@ export default function ProfileClient({ userPin }: Props) {
     }
   }, [userData]);
 
-  // update title ketika nama sudah tersedia
-  useEffect(() => {
-    if (userData?.pegawai_nama) {
-      document.title = `Profil ${userData.pegawai_nama} | SILAKAN`;
-    } else {
-      document.title = "Profil | SILAKAN";
-    }
-  }, [userData?.pegawai_nama]);
-
   // Save profil
   const handleSave = async () => {
     if (!editedData) return;

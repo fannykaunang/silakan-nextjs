@@ -144,10 +144,10 @@ export default function SidebarClient({
   ];
 
   // --- B. Bagian Kegiatan (Level >= 0) ---
-  const activityItems: MenuItemLink[] = [
-    { href: "/kegiatan", label: "Kegiatan Saya", icon: ClipboardList },
-    { href: "/jadwal", label: "Jadwal", icon: Calendar },
-  ];
+  // const activityItems: MenuItemLink[] = [
+  //   { href: "/kegiatan", label: "Kegiatan Saya", icon: ClipboardList },
+  //   { href: "/jadwal", label: "Jadwal", icon: Calendar },
+  // ];
 
   // --- C. Bagian Laporan (Level >= 0) ---
   const reportItems: MenuItemLink[] = [
@@ -246,7 +246,7 @@ export default function SidebarClient({
 
   const allMenuItems: MenuItemLink[] = [
     ...dashboardItems,
-    ...activityItems,
+    // ...activityItems,
     ...reportItems,
     ...managementItems,
     ...configItems,
@@ -259,7 +259,7 @@ export default function SidebarClient({
   // 2. Gabungkan item-item yang sudah difilter ke dalam array seksi
   const menuSections: MenuSection[] = [
     { title: "Dashboard", items: dashboardItems },
-    { title: "Kegiatan", items: activityItems },
+    // { title: "Kegiatan", items: activityItems },
     { title: "Laporan", items: reportItems },
   ];
 

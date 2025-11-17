@@ -20,6 +20,9 @@ type AppSettingsResponse = {
 const DEFAULT_APP_INFO = {
   alias: "SILAKAN",
   name: "Sistem Informasi Laporan Kegiatan",
+  versi: "1.0.0",
+  copyright: "Pemerintah Kabupaten Merauke",
+  tahun: new Date().getFullYear(),
 };
 
 export default function LoginPageClient() {
@@ -97,9 +100,15 @@ export default function LoginPageClient() {
 
         const alias = result.data.alias_aplikasi?.trim();
         const name = result.data.nama_aplikasi?.trim();
+        const versi = result.data.versi?.trim();
+        const copyright = result.data.copyright?.trim();
+        const tahun = result.data.tahun;
         setAppInfo({
           alias: alias || DEFAULT_APP_INFO.alias,
           name: name || DEFAULT_APP_INFO.name,
+          versi: versi || DEFAULT_APP_INFO.versi,
+          copyright: copyright || DEFAULT_APP_INFO.copyright,
+          tahun: tahun || DEFAULT_APP_INFO.tahun,
         });
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
@@ -226,10 +235,10 @@ export default function LoginPageClient() {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Gunakan akun{" "}
                 <Link
-                  href="https://kepegawaian.merauke.go.id/absen/login"
+                  href="https://entago.merauke.go.id/backend/auth/login"
                   target="_blank"
                   className="text-blue-600 hover:underline">
-                  e-Absens
+                  E-NTAGO
                 </Link>{" "}
                 untuk login
               </p>
@@ -250,7 +259,7 @@ export default function LoginPageClient() {
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Email e-Absens
+                  Email E-NTAGO
                 </label>
                 <input
                   type="email"
@@ -264,7 +273,7 @@ export default function LoginPageClient() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Kata Sandi e-Absens
+                  Kata Sandi E-NTAGO
                 </label>
                 <div className="relative">
                   <input
@@ -278,7 +287,7 @@ export default function LoginPageClient() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 cursor-pointer">
                     {showPassword ? (
                       <EyeOff className="w-5 h-5" />
                     ) : (
@@ -301,22 +310,24 @@ export default function LoginPageClient() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 text-white font-semibold shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:opacity-70">
+                className="w-full rounded-xl bg-linear-to-r from-blue-600 to-purple-600 py-3 text-white font-semibold shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:opacity-70 cursor-pointer disabled:cursor-not-allowed">
                 {isLoading ? "Memproses..." : "Masuk ke SILAKAN"}
               </button>
             </form>
 
             <div className="text-center text-sm text-gray-500">
-              Belum punya akun? Hubungi admin BKPSDM Kabupaten Merauke
+              Belum punya akun? Hubungi admin E-NTAGO Kabupaten Merauke
             </div>
           </div>
 
           <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 space-y-1">
             <p>
-              &copy; {currentYear} Pemerintah Kabupaten Merauke. All rights
-              reserved.
+              &copy; {appInfo.tahun} - {currentYear} {appInfo.copyright}. All
+              rights reserved.
             </p>
-            <p className="text-xs">Versi aplikasi: 1.0.0 | Server: Merauke</p>
+            <p className="text-xs">
+              Versi aplikasi: {appInfo.versi} | Server: Merauke
+            </p>
           </div>
         </div>
       </div>

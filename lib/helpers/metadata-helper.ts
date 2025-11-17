@@ -34,7 +34,7 @@ export async function generatePageMetadata(
     const settings = await getAppSettings();
 
     // Build title dengan format: [Page Title] | [App Name]
-    const appName = settings?.nama_aplikasi || "SILAKAN";
+    const appName = settings?.alias_aplikasi || "SILAKAN";
     const pageTitle = options.title ? `${options.title} | ${appName}` : appName;
 
     // Description fallback
@@ -67,6 +67,7 @@ export async function generatePageMetadata(
 
     return {
       title: pageTitle,
+      metadataBase: new URL(baseUrl),
       description,
       keywords,
 
@@ -140,6 +141,7 @@ export async function generatePageMetadata(
       "Sistem Informasi Laporan Kegiatan ASN Kabupaten Merauke";
 
     return {
+      metadataBase: new URL("https://silakan.merauke.go.id"),
       title,
       description,
       robots: {
