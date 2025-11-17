@@ -247,7 +247,6 @@ export async function getLaporanById(
 
     // Query files jika laporan ditemukan
     if (laporan) {
-      console.log("🔍 Model: Querying files for laporan_id:", laporanId);
       const filesQuery = `
         SELECT 
           fu.*,
@@ -260,7 +259,7 @@ export async function getLaporanById(
       const files = await executeQuery<FileUploadWithUploader>(filesQuery, [
         laporanId,
       ]);
-      console.log("📁 Model: Files found:", files.length);
+
       if (files.length > 0) {
         console.log(
           "📄 Model: Files:",

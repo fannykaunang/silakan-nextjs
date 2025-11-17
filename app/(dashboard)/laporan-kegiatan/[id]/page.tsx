@@ -1,13 +1,26 @@
 // app/laporan-kegiatan/[id]/page.tsx
 
 import { Suspense } from "react";
-import { Metadata } from "next";
 import DetailEditClient from "./DetailEditClient";
 import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import { getLaporanById } from "@/lib/models/laporan.model";
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const laporan = await getLaporanById(parseInt(params.id));
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const laporanId = Number(id);
+
+  if (!laporanId || Number.isNaN(laporanId)) {
+    return generatePageMetadata({
+      title: "Laporan Tidak Valid",
+      noIndex: true,
+    });
+  }
+
+  const laporan = await getLaporanById(laporanId);
 
   if (!laporan) {
     return generatePageMetadata({

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import SidebarClient from "./SidebarClient";
 import HeaderClient from "./HeaderClient";
+import FooterClient from "./FooterClient";
 
 export default function DashboardShell({
   children,
@@ -36,6 +37,7 @@ export default function DashboardShell({
         <main className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
           {children}
         </main>
+        <FooterClient />
       </div>
     </div>
   );

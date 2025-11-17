@@ -217,6 +217,11 @@ export default function SidebarClient({
       label: "Kategori Kegiatan",
       icon: Tag,
     });
+    configItems.push({
+      href: "/jabatan",
+      label: "Jabatan Pegawai",
+      icon: Building2,
+    });
   }
 
   // --- F. Bagian Notifikasi (Semua Level) ---
@@ -235,7 +240,7 @@ export default function SidebarClient({
   if (userLevel === 3) {
     systemItems.push(
       { href: "/logs", label: "Log Aktivitas", icon: Activity },
-      { href: "/settings", label: "Pengaturan Sistem", icon: Settings }
+      { href: "/settings/app", label: "Pengaturan Sistem", icon: Settings }
     );
   }
 

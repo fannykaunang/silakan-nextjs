@@ -11,7 +11,6 @@ import {
   Settings as SettingsIcon,
   LogOut,
   User,
-  Trash2,
   AlertCircle,
   Clock,
   CheckCircle,
@@ -418,7 +417,8 @@ export default function Header({
               {userLevel === 3 && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => router.push("/settings")}>
+                  <DropdownMenuItem
+                    onSelect={() => router.push("/settings/app")}>
                     <SettingsIcon className="w-4 h-4 mr-2" />
                     Pengaturan
                   </DropdownMenuItem>

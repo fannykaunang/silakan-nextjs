@@ -51,7 +51,7 @@ export async function generatePageMetadata(
 
     // Images
     const ogImage =
-      options.image || settings?.og_image || "/images/og-default.jpg";
+      options.image || settings?.og_image || "/images/og-default.png";
     const logoUrl = settings?.logo || "/images/logo-default.png";
     const faviconUrl = settings?.favicon || "/favicon.ico";
 
@@ -123,13 +123,6 @@ export async function generatePageMetadata(
           "max-image-preview": "large",
           "max-snippet": -1,
         },
-      },
-
-      // Viewport
-      viewport: {
-        width: "device-width",
-        initialScale: 1,
-        maximumScale: 1,
       },
 
       // Alternate languages

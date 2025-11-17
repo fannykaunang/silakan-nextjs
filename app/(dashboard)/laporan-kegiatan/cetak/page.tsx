@@ -1,12 +1,15 @@
 // app/(dashboard)/laporan-kegiatan/cetak/page.tsx
-import { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import CetakLaporanBulananClient from "./_client";
 
-export const metadata: Metadata = {
-  title: "Cetak Laporan Kegiatan Bulanan | SILAKAN",
-  description:
-    "Halaman untuk mencetak laporan kegiatan pegawai berdasarkan bulan",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Cetak Laporan Kegiatan Bulanan",
+    description:
+      "Halaman untuk mencetak laporan kegiatan pegawai berdasarkan bulan",
+    path: "/laporan-kegiatan/cetak",
+  });
+}
 
 export default function CetakLaporanBulananPage() {
   return <CetakLaporanBulananClient />;

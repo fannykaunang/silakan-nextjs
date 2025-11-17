@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "Halaman utama sistem informasi laporan kinerja ASN Kabupaten Merauke.";
 
     const domain = settings?.domain || "silakan.merauke.go.id";
-    const ogImage = settings?.og_image || "/images/og-default.jpg";
+    const ogImage = settings?.og_image || "/images/og-default.png";
     const logoUrl = settings?.logo || "/images/logo-default.png";
 
     return {

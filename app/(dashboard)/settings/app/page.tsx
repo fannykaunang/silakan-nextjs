@@ -1,11 +1,14 @@
-import type { Metadata } from "next";
+// app/(dashboard)/settings/app/page.tsx
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import SettingsPageClient from "./_client";
 
-export const metadata: Metadata = {
-  title: "Pengaturan Aplikasi | SILAKAN",
-  description:
-    "Kelola konfigurasi utama aplikasi SILAKAN termasuk data umum, kontak, integrasi, keamanan, dan sistem.",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Pengaturan",
+    path: "/settings/app",
+    noIndex: true,
+  });
+}
 
 export default function SettingsPage() {
   return <SettingsPageClient />;

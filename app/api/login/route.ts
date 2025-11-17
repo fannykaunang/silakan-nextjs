@@ -17,6 +17,7 @@ import {
   getClientInfo,
   getUserFromCookie,
 } from "@/lib/helpers/auth-helper";
+import { getAppSettings } from "@/lib/models/app-settings-model";
 
 import {
   getIp,
@@ -153,13 +154,32 @@ export async function POST(req: Request) {
     await resetFailedAttempts(email);
 
     const { data } = loginResult;
-    const { pin, email: userEmail, level, skpdid } = data!;
+    const { pin, email: userEmail, level: rawLevel, skpdid } = data!;
+    const numericLevel =
+      typeof rawLevel === "number" ? rawLevel : Number(rawLevel ?? 0);
+    const settings = await getAppSettings();
+    const currentMode = (settings?.mode ?? "online") as string;
+    const isMaintenanceMode = currentMode.toLowerCase() === "maintenance";
+
+    if (isMaintenanceMode && numericLevel < 3) {
+      await clearDuplicate(email);
+      return NextResponse.json(
+        {
+          result: 0,
+          response:
+            settings?.maintenance_message ||
+            "Sistem sedang dalam maintenance. Saat ini Anda tidak dapat login. Mohon menunggu sampai maintenance selesai.",
+        },
+        { status: 503 }
+      );
+    }
+
     const maskedUserEmail = userEmail.replace(/(.{3}).+(@.+)/, "$1***$2");
     console.info("Login success:", maskedUserEmail);
 
     // 7) ✅ CRITICAL: Set session cookie IMMEDIATELY (sebelum operasi DB)
     // Ini yang paling penting untuk user experience
-    await setAuthCookie({ email: userEmail, pin, level, skpdid });
+    await setAuthCookie({ email: userEmail, pin, level: numericLevel, skpdid });
 
     // 8) ✅ OPTIMASI: Jalankan operasi DB secara NON-BLOCKING
     // Fire-and-forget pattern: jangan gunakan await
@@ -218,7 +238,7 @@ export async function POST(req: Request) {
         result: 1,
         response: "Login berhasil!",
         email: maskedUserEmail,
-        level,
+        level: numericLevel,
         skpdid,
       },
       {

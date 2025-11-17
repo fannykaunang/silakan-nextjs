@@ -356,6 +356,10 @@ export default function LaporanVerifikasiClient() {
         confirmButtonColor: "#2563eb",
         background: darkMode ? "#1f2937" : "#ffffff",
         color: darkMode ? "#f9fafb" : "#111827",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push("/laporan-kegiatan");
+        }
       });
     } catch (err) {
       console.error(err);

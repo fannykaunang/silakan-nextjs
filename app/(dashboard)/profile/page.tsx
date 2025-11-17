@@ -1,7 +1,30 @@
-// app/profile/page.tsx (Server Component)
+// app/(dashboard)/profile/page.tsx (Server Component)
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ProfileClient from "./_client";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
+import { getUserWithPegawaiData } from "@/lib/helpers/auth-helper";
+
+export async function generateMetadata() {
+  const { session, pegawai } = await getUserWithPegawaiData();
+
+  if (!session?.pin) {
+    return generatePageMetadata({
+      title: "Profil Pengguna",
+      description: "Masuk untuk melihat dan mengelola profil Anda.",
+      path: "/profile",
+      noIndex: true,
+    });
+  }
+
+  const namaPegawai = pegawai?.pegawai_nama || session.nama || "Pengguna";
+
+  return generatePageMetadata({
+    title: `Profil ${namaPegawai}`,
+    description: `Lihat dan kelola informasi akun ${namaPegawai}.`,
+    path: "/profile",
+  });
+}
 
 export default async function ProfilePage() {
   const store = await cookies();

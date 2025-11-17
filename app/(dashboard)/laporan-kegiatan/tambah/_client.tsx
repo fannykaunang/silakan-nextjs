@@ -76,6 +76,25 @@ interface SessionInfo {
   skpdid: number | null;
 }
 
+const getInitialFormData = (): FormData => ({
+  tanggal_kegiatan: new Date().toISOString().split("T")[0],
+  kategori_id: "",
+  nama_kegiatan: "",
+  deskripsi_kegiatan: "",
+  target_output: "",
+  hasil_output: "",
+  waktu_mulai: "",
+  waktu_selesai: "",
+  lokasi_kegiatan: "",
+  latitude: "",
+  longitude: "",
+  peserta_kegiatan: "",
+  jumlah_peserta: "0",
+  link_referensi: "",
+  kendala: "",
+  solusi: "",
+});
+
 export default function TambahLaporanClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -87,24 +106,11 @@ export default function TambahLaporanClient() {
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
 
-  const [formData, setFormData] = useState<FormData>({
-    tanggal_kegiatan: new Date().toISOString().split("T")[0], // Today
-    kategori_id: "",
-    nama_kegiatan: "",
-    deskripsi_kegiatan: "",
-    target_output: "",
-    hasil_output: "",
-    waktu_mulai: "",
-    waktu_selesai: "",
-    lokasi_kegiatan: "",
-    latitude: "",
-    longitude: "",
-    peserta_kegiatan: "",
-    jumlah_peserta: "0",
-    link_referensi: "",
-    kendala: "",
-    solusi: "",
-  });
+  const [formData, setFormData] = useState<FormData>(() =>
+    getInitialFormData()
+  );
+  const [formDataBeforeTemplate, setFormDataBeforeTemplate] =
+    useState<FormData | null>(null);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -304,8 +310,11 @@ export default function TambahLaporanClient() {
     setSelectedTemplateId(value);
 
     if (!value) {
+      handleTemplateReset();
       return;
     }
+
+    setFormDataBeforeTemplate((prev) => prev ?? { ...formData });
 
     const template = templates.find(
       (item) => item.template_id === Number(value)
@@ -318,6 +327,14 @@ export default function TambahLaporanClient() {
 
   const handleTemplateReset = () => {
     setSelectedTemplateId("");
+
+    if (formDataBeforeTemplate) {
+      setFormData(formDataBeforeTemplate);
+    } else {
+      setFormData(getInitialFormData());
+    }
+
+    setFormDataBeforeTemplate(null);
   };
 
   const selectedTemplate = useMemo(() => {

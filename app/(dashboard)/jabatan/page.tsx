@@ -1,14 +1,17 @@
 // app/(dashboard)/jabatan/page.tsx
 
 import JabatanClient from "./_client";
-import { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/helpers/auth-helper";
 
-export const metadata: Metadata = {
-  title: "Jabatan | SILAKAN",
-  description: "Manajemen kategori kegiatan",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Jabatan",
+    description: "Kelola Jabatan pegawai",
+    path: "/jabatan",
+  });
+}
 
 export default async function JabatanPage() {
   try {

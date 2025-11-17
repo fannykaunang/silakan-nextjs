@@ -2,11 +2,15 @@
 import { redirect } from "next/navigation";
 import { getUserFromCookie } from "@/lib/helpers/auth-helper";
 import RekapBulananClient from "./_client";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 
-export const metadata = {
-  title: "Statistik Bulanan - SILAKAN",
-  description: "Halaman statistik laporan kegiatan bulanan",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Statistik Bulanan",
+    path: "/statistik/bulanan",
+    noIndex: true,
+  });
+}
 
 export default async function RekapBulananPage() {
   const user = await getUserFromCookie();
@@ -15,5 +19,5 @@ export default async function RekapBulananPage() {
     redirect("/login");
   }
 
-  return <RekapBulananClient userEmail={user.email} />;
+  return <RekapBulananClient />;
 }

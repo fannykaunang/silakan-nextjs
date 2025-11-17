@@ -1,13 +1,16 @@
 // app/(dashboard)/dashboard/logs/page.tsx
-import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import { requireAdmin } from "@/lib/helpers/auth-helper";
 import LogsClient from "./_client";
 
-export const metadata: Metadata = {
-  title: "Log Aktivitas | SILAKAN",
-  description: "Monitor aktivitas sistem",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Log Aktivitas",
+    description: "Monitor aktivitas sistem",
+    path: "/logs",
+  });
+}
 
 export default async function LogsPage() {
   try {

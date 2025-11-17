@@ -1,13 +1,16 @@
 // app/(dashboard)/dashboard/kategori-kegiatan/page.tsx
-import { Metadata } from "next";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import KategoriKegiatanClient from "./_client";
 import { requireAdmin } from "@/lib/helpers/auth-helper";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Kategori Kegiatan | SILAKAN",
-  description: "Manajemen kategori kegiatan",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Kategori Kegiatan",
+    description: "Kelola Kategori Kegiatan pegawai",
+    path: "/kategori-kegiatan",
+  });
+}
 
 export default async function KategoriKegiatanPage() {
   try {

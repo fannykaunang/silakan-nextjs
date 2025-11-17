@@ -1,12 +1,15 @@
 // app/(dashboard)/atasan-pegawai/page.tsx
 
-import { Metadata } from "next";
 import AtasanPegawaiClient from "./_client";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 
-export const metadata: Metadata = {
-  title: "Atasan Pegawai | Dashboard",
-  description: "Kelola hubungan atasan dan pegawai",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Atasan Pegawai",
+    description: "Kelola hubungan atasan dan pegawai",
+    path: "/atasan-pegawai",
+  });
+}
 
 export default function AtasanPegawaiPage() {
   return <AtasanPegawaiClient />;
