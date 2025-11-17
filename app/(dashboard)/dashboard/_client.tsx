@@ -23,7 +23,9 @@ import {
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useRouter } from "next/navigation";
 
-type Props = { userEmail?: string };
+type Props = {
+  userEmail?: string;
+};
 
 type MonthlySeriesItem = {
   month: string;
@@ -52,6 +54,11 @@ type DashboardResponse = {
   success: boolean;
   data?: DashboardData;
   message?: string;
+};
+
+type AppSettings = {
+  nama_aplikasi: string;
+  alias_aplikasi: string;
 };
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
@@ -144,8 +151,10 @@ export default function DashboardClient({ userEmail }: Props) {
   const [stats, setStats] = useState<DashboardData>(defaultStats);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const router = useRouter();
 
+  // Load user from localStorage
   useEffect(() => {
     if (!userEmail) {
       const stored = localStorage.getItem("user");
@@ -159,6 +168,30 @@ export default function DashboardClient({ userEmail }: Props) {
     }
   }, [userEmail]);
 
+  // Fetch app settings untuk ditampilkan di UI (optional)
+  useEffect(() => {
+    const fetchAppSettings = async () => {
+      try {
+        const response = await fetch("/api/settings/app");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setAppSettings({
+              nama_aplikasi: data.data.nama_aplikasi,
+              alias_aplikasi: data.data.alias_aplikasi,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch app settings:", err);
+        // Tidak perlu set error karena ini optional
+      }
+    };
+
+    fetchAppSettings();
+  }, []);
+
+  // Fetch dashboard data
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -194,6 +227,7 @@ export default function DashboardClient({ userEmail }: Props) {
 
   const displayEmail = userEmail || user?.email || "email@domain.com";
   const latestLaporan = stats.latestLaporan;
+  const appName = appSettings?.alias_aplikasi || "SILAKAN";
 
   return (
     <DashboardLayout userEmail={displayEmail}>
@@ -203,7 +237,7 @@ export default function DashboardClient({ userEmail }: Props) {
           Selamat Datang Kembali! 👋
         </h2>
         <p className="text-gray-700 dark:text-gray-300 mt-1">
-          Berikut adalah ringkasan aktivitas SILAKAN hari ini
+          Berikut adalah ringkasan aktivitas {appName} hari ini
         </p>
       </div>
 
@@ -314,7 +348,7 @@ export default function DashboardClient({ userEmail }: Props) {
         </div>
       </div>
 
-      {/* Recent Orders */}
+      {/* Recent Reports */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100">
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>

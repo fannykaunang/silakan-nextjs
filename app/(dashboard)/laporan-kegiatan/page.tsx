@@ -1,11 +1,12 @@
 // app/(dashboard)/dashboard/laporan/page.tsx
-import { Metadata } from "next";
 import LaporanListClient from "./_client";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 
-export const metadata: Metadata = {
-  title: "Daftar Laporan Kegiatan | SILAKAN",
-  description: "Kelola laporan kegiatan harian ASN",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    title: "Laporan Kegiatan",
+  });
+}
 
 export default function LaporanPage() {
   return <LaporanListClient />;

@@ -220,6 +220,12 @@ export async function getLaporanByPegawaiAndMonth(
 export async function getLaporanById(
   laporanId: number
 ): Promise<LaporanWithDetails | null> {
+  // ✅ VALIDASI INPUT - Pastikan laporanId valid
+  if (!laporanId || isNaN(laporanId) || laporanId <= 0) {
+    console.error("❌ Invalid laporanId:", laporanId);
+    return null; // Return null untuk ID tidak valid
+  }
+
   const query = `
     SELECT 
       lk.*,
@@ -236,43 +242,43 @@ export async function getLaporanById(
     WHERE lk.laporan_id = ?
   `;
 
-  const laporan = await getOne<LaporanWithDetails>(query, [laporanId]);
+  try {
+    const laporan = await getOne<LaporanWithDetails>(query, [laporanId]);
 
-  // Query files jika laporan ditemukan
-  if (laporan) {
-    console.log("🔍 Model: Querying files for laporan_id:", laporanId);
-
-    const filesQuery = `
-      SELECT 
-        fu.*,
-        pc.pegawai_nama as uploader_nama
-      FROM file_upload fu
-      INNER JOIN pegawai_cache pc ON fu.uploaded_by = pc.pegawai_id
-      WHERE fu.laporan_id = ?
-      ORDER BY fu.created_at ASC
-    `;
-
-    const files = await executeQuery<FileUploadWithUploader>(filesQuery, [
-      laporanId,
-    ]);
-    console.log("📁 Model: Files found:", files.length);
-
-    if (files.length > 0) {
-      console.log(
-        "📄 Model: Files:",
-        files.map((f) => ({
-          id: f.file_id,
-          name: f.nama_file_asli,
-          size: f.ukuran_file,
-          uploader: f.uploader_nama,
-        }))
-      );
+    // Query files jika laporan ditemukan
+    if (laporan) {
+      console.log("🔍 Model: Querying files for laporan_id:", laporanId);
+      const filesQuery = `
+        SELECT 
+          fu.*,
+          pc.pegawai_nama as uploader_nama
+        FROM file_upload fu
+        INNER JOIN pegawai_cache pc ON fu.uploaded_by = pc.pegawai_id
+        WHERE fu.laporan_id = ?
+        ORDER BY fu.created_at ASC
+      `;
+      const files = await executeQuery<FileUploadWithUploader>(filesQuery, [
+        laporanId,
+      ]);
+      console.log("📁 Model: Files found:", files.length);
+      if (files.length > 0) {
+        console.log(
+          "📄 Model: Files:",
+          files.map((f) => ({
+            id: f.file_id,
+            name: f.nama_file_asli,
+            size: f.ukuran_file,
+            uploader: f.uploader_nama,
+          }))
+        );
+      }
+      laporan.files = files;
     }
-
-    laporan.files = files;
+    return laporan;
+  } catch (error) {
+    console.error("❌ Error in getLaporanById:", error);
+    throw error; // Re-throw untuk di-handle di page
   }
-
-  return laporan;
 }
 
 export async function verifikasiLaporan(
