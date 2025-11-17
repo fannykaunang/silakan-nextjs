@@ -1,8 +1,6 @@
 // app/api/settings/app/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-//import { getIronSession } from "iron-session";
-// import { sessionOptions, SessionData } from "@/lib/session";
 import { requireAuth } from "@/lib/helpers/auth-helper";
 import {
   getAppSettings,
@@ -12,7 +10,7 @@ import {
 } from "@/lib/models/app-settings-model";
 import { z } from "zod";
 
-// Validation schema for settings update
+// Validation schema for settings update (removed auto_approve_laporan and reminder_time)
 const settingsUpdateSchema = z.object({
   // Aplikasi Info
   nama_aplikasi: z.string().min(1).max(100).optional(),
@@ -72,13 +70,8 @@ const settingsUpdateSchema = z.object({
   lockout_duration: z.number().int().min(1).max(60).optional(),
   enable_2fa: z.boolean().optional(),
 
-  // Laporan Settings
-  auto_approve_laporan: z.boolean().optional(),
+  // Laporan Settings (only max_edit_days and working_days)
   max_edit_days: z.number().int().min(0).max(30).optional(),
-  reminder_time: z
-    .string()
-    .regex(/^\d{2}:\d{2}:\d{2}$/)
-    .optional(),
   working_days: z.array(z.number().int().min(0).max(6)).nullable().optional(),
 
   // UI Settings
@@ -108,20 +101,10 @@ const settingsUpdateSchema = z.object({
 });
 
 /**
- * GET /api/settings - Get app settings
+ * GET /api/settings/app - Get app settings
  */
 export async function GET(request: NextRequest) {
   try {
-    // const session = await getIronSession<SessionData>(
-    //   request,
-    //   await request.cookies,
-    //   sessionOptions
-    // );
-
-    // if (!session.isLoggedIn) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-
     const settings = await getAppSettings();
 
     if (!settings) {
@@ -150,28 +133,10 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PUT /api/settings - Update app settings
+ * PUT /api/settings/app - Update app settings
  */
 export async function PUT(request: NextRequest) {
   try {
-    // const session = await getIronSession<SessionData>(
-    //   request,
-    //   await request.cookies,
-    //   sessionOptions
-    // );
-
-    // if (!session.isLoggedIn) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-
-    // // Check if user has admin role
-    // if (session.role !== "admin" && session.role !== "superadmin") {
-    //   return NextResponse.json(
-    //     { error: "Forbidden: Admin access required" },
-    //     { status: 403 }
-    //   );
-    // }
-
     const user = await requireAuth();
 
     if (user.level !== 3) {

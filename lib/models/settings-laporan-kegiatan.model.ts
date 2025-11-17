@@ -17,7 +17,7 @@ export async function getSettingById(
   return await getOne<Setting>(
     `SELECT setting_id, setting_key, setting_value, setting_type, deskripsi,
             kategori_setting, is_editable, created_at, updated_at
-       FROM settings
+       FROM settings_laporan_kegiatan
       WHERE setting_id = ?`,
     [settingId]
   );
@@ -28,7 +28,7 @@ export async function updateSettingValue(
   newValue: string
 ): Promise<number> {
   return await executeUpdate(
-    `UPDATE settings
+    `UPDATE settings_laporan_kegiatan
         SET setting_value = ?, updated_at = CURRENT_TIMESTAMP
       WHERE setting_id = ?`,
     [newValue, settingId]

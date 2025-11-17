@@ -1,4 +1,4 @@
-// app/(dashboard)/settings/app/page.tsx
+// app/(dashboard)/settings/app/_client.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -18,6 +18,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Server,
+  Loader2,
+  Check,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 
 interface AppSettings {
@@ -63,9 +67,7 @@ interface AppSettings {
   max_login_attempts: number;
   lockout_duration: number;
   enable_2fa: boolean;
-  auto_approve_laporan: boolean;
   max_edit_days: number;
-  reminder_time: string;
   working_days: number[] | null;
   theme_color: string;
   sidebar_collapsed: boolean;
@@ -87,18 +89,28 @@ interface AppSettings {
   updated_by: number | null;
 }
 
+interface LaporanSetting {
+  setting_id: number;
+  setting_key: string;
+  setting_value: string;
+  setting_type: "String" | "Number" | "Boolean" | "JSON";
+  deskripsi: string | null;
+  kategori_setting: string | null;
+  is_editable: 0 | 1;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 const BOOLEAN_FIELDS: (keyof Pick<
   AppSettings,
   | "eabsen_active"
   | "enable_2fa"
-  | "auto_approve_laporan"
   | "sidebar_collapsed"
   | "backup_auto"
   | "log_activity"
 >)[] = [
   "eabsen_active",
   "enable_2fa",
-  "auto_approve_laporan",
   "sidebar_collapsed",
   "backup_auto",
   "log_activity",
@@ -141,9 +153,25 @@ export default function SettingsPageClient() {
   } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // State untuk laporan settings
+  const [laporanSettings, setLaporanSettings] = useState<LaporanSetting[]>([]);
+  const [laporanLoading, setLaporanLoading] = useState(false);
+  const [laporanFormData, setLaporanFormData] = useState<Record<number, any>>(
+    {}
+  );
+  const [laporanOriginalData, setLaporanOriginalData] = useState<
+    Record<number, any>
+  >({});
+
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "reports") {
+      fetchLaporanSettings();
+    }
+  }, [activeTab]);
 
   const fetchSettings = async () => {
     try {
@@ -167,9 +195,60 @@ export default function SettingsPageClient() {
     }
   };
 
+  const fetchLaporanSettings = async () => {
+    setLaporanLoading(true);
+    try {
+      const response = await fetch("/api/settings/laporan-kegiatan");
+      const result = await response.json();
+
+      if (result.success) {
+        setLaporanSettings(result.data);
+
+        // Initialize form data
+        const initialData: Record<number, any> = {};
+        result.data.forEach((setting: LaporanSetting) => {
+          initialData[setting.setting_id] = toDisplayValue(setting);
+        });
+        setLaporanFormData(initialData);
+        setLaporanOriginalData(initialData);
+      }
+    } catch (error) {
+      console.error("Error fetching laporan settings:", error);
+    } finally {
+      setLaporanLoading(false);
+    }
+  };
+
+  const toDisplayValue = (setting: LaporanSetting): any => {
+    const rawValue = setting.setting_value ?? "";
+
+    switch (setting.setting_type) {
+      case "Boolean": {
+        const normalized = rawValue.trim().toLowerCase();
+        return ["true", "1", "yes", "ya"].includes(normalized);
+      }
+      case "JSON": {
+        try {
+          return JSON.parse(rawValue);
+        } catch (error) {
+          return rawValue;
+        }
+      }
+      case "Number":
+        return rawValue;
+      case "String":
+      default:
+        return rawValue;
+    }
+  };
+
   const handleInputChange = (field: keyof AppSettings, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
+  };
+
+  const handleLaporanChange = (settingId: number, value: any) => {
+    setLaporanFormData((prev) => ({ ...prev, [settingId]: value }));
   };
 
   const handleSave = async () => {
@@ -201,6 +280,61 @@ export default function SettingsPageClient() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveLaporanSetting = async (setting: LaporanSetting) => {
+    if (!setting.is_editable) return;
+
+    const id = setting.setting_id;
+    const value = laporanFormData[id];
+
+    try {
+      const response = await fetch(`/api/settings/laporan-kegiatan/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setting_value: value }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const updatedSetting = result.data;
+        setLaporanSettings((prev) =>
+          prev.map((item) =>
+            item.setting_id === updatedSetting.setting_id
+              ? updatedSetting
+              : item
+          )
+        );
+
+        const displayValue = toDisplayValue(updatedSetting);
+        setLaporanFormData((prev) => ({ ...prev, [id]: displayValue }));
+        setLaporanOriginalData((prev) => ({ ...prev, [id]: displayValue }));
+
+        showMessage("success", "Pengaturan laporan berhasil disimpan");
+      } else {
+        showMessage(
+          "error",
+          result.message || "Gagal menyimpan pengaturan laporan"
+        );
+      }
+    } catch (error) {
+      console.error("Error saving laporan setting:", error);
+      showMessage("error", "Terjadi kesalahan saat menyimpan");
+    }
+  };
+
+  const handleResetLaporanSetting = (settingId: number) => {
+    setLaporanFormData((prev) => ({
+      ...prev,
+      [settingId]: laporanOriginalData[settingId],
+    }));
+  };
+
+  const isLaporanDirty = (settingId: number) => {
+    const current = laporanFormData[settingId];
+    const original = laporanOriginalData[settingId];
+    return String(current ?? "") !== String(original ?? "");
   };
 
   const handleReset = () => {
@@ -312,15 +446,25 @@ export default function SettingsPageClient() {
             <OrganizationTab formData={formData} onChange={handleInputChange} />
           )}
           {activeTab === "reports" && (
-            <ReportsTab formData={formData} onChange={handleInputChange} />
+            <ReportsTab
+              formData={formData}
+              onChange={handleInputChange}
+              laporanSettings={laporanSettings}
+              laporanLoading={laporanLoading}
+              laporanFormData={laporanFormData}
+              onLaporanChange={handleLaporanChange}
+              onSaveLaporanSetting={handleSaveLaporanSetting}
+              onResetLaporanSetting={handleResetLaporanSetting}
+              isLaporanDirty={isLaporanDirty}
+            />
           )}
           {activeTab === "system" && (
             <SystemTab formData={formData} onChange={handleInputChange} />
           )}
         </div>
 
-        {/* Action Buttons */}
-        {hasChanges && (
+        {/* Action Buttons - Only for non-reports tabs */}
+        {hasChanges && activeTab !== "reports" && (
           <div className="fixed bottom-6 right-6 flex gap-3 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
             <button
               onClick={handleReset}
@@ -347,9 +491,10 @@ export default function SettingsPageClient() {
   );
 }
 
-// Tab Components will continue in next part...
-// Tab Components untuk settings-page.tsx
-// Tambahkan code ini setelah main component di settings-page-part1.tsx
+// Tab Components untuk settings (Part 2)
+// Letakkan setelah main component di part 1
+
+// Import icons yang dibutuhkan sudah ada di part 1
 
 // ===== GENERAL TAB =====
 function GeneralTab({ formData, onChange }: any) {
@@ -606,13 +751,13 @@ function IntegrationTab({ formData, onChange }: any) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        Integrasi eAbsen
+        Integrasi E-NTAGO
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            URL API eAbsen *
+            URL API E-NTAGO *
           </label>
           <input
             type="url"
@@ -995,109 +1140,6 @@ function OrganizationTab({ formData, onChange }: any) {
   );
 }
 
-// ===== REPORTS TAB =====
-function ReportsTab({ formData, onChange }: any) {
-  const weekDays = [
-    { value: 1, label: "Senin" },
-    { value: 2, label: "Selasa" },
-    { value: 3, label: "Rabu" },
-    { value: 4, label: "Kamis" },
-    { value: 5, label: "Jumat" },
-    { value: 6, label: "Sabtu" },
-    { value: 0, label: "Minggu" },
-  ];
-
-  const toggleWorkingDay = (day: number) => {
-    const current = formData.working_days || [1, 2, 3, 4, 5];
-    const updated = current.includes(day)
-      ? current.filter((d: number) => d !== day)
-      : [...current, day];
-    onChange("working_days", updated);
-  };
-
-  return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        Pengaturan Laporan
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Maksimal Hari Edit Laporan
-          </label>
-          <input
-            type="number"
-            value={formData.max_edit_days || 3}
-            onChange={(e) =>
-              onChange("max_edit_days", parseInt(e.target.value))
-            }
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            min="0"
-            max="30"
-          />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            0 = hanya bisa edit di hari yang sama
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Waktu Reminder
-          </label>
-          <input
-            type="time"
-            value={
-              formData.reminder_time
-                ? formData.reminder_time.substring(0, 5)
-                : "14:00"
-            }
-            onChange={(e) => onChange("reminder_time", e.target.value + ":00")}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={formData.auto_approve_laporan || false}
-              onChange={(e) =>
-                onChange("auto_approve_laporan", e.target.checked)
-              }
-              className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Auto Approve Laporan
-            </span>
-          </label>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Hari Kerja
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {weekDays.map((day) => (
-              <button
-                key={day.value}
-                type="button"
-                onClick={() => toggleWorkingDay(day.value)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  (formData.working_days || [1, 2, 3, 4, 5]).includes(day.value)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                }`}>
-                {day.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ===== SYSTEM TAB =====
 function SystemTab({ formData, onChange }: any) {
   return (
@@ -1216,6 +1258,275 @@ function SystemTab({ formData, onChange }: any) {
               Backup terakhir:{" "}
               {new Date(formData.last_backup).toLocaleString("id-ID")}
             </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ContactTab, IntegrationTab, SecurityTab, EmailTab, UITab, OrganizationTab, SystemTab
+// sama seperti sebelumnya (copy dari file sebelumnya)
+// ...
+
+// ===== REPORTS TAB (INTEGRATED WITH LAPORAN SETTINGS) =====
+function ReportsTab({
+  formData,
+  onChange,
+  laporanSettings,
+  laporanLoading,
+  laporanFormData,
+  onLaporanChange,
+  onSaveLaporanSetting,
+  onResetLaporanSetting,
+  isLaporanDirty,
+}: any) {
+  const weekDays = [
+    { value: 1, label: "Senin" },
+    { value: 2, label: "Selasa" },
+    { value: 3, label: "Rabu" },
+    { value: 4, label: "Kamis" },
+    { value: 5, label: "Jumat" },
+    { value: 6, label: "Sabtu" },
+    { value: 0, label: "Minggu" },
+  ];
+
+  const toggleWorkingDay = (day: number) => {
+    const current = formData.working_days || [1, 2, 3, 4, 5];
+    const updated = current.includes(day)
+      ? current.filter((d: number) => d !== day)
+      : [...current, day];
+    onChange("working_days", updated);
+  };
+
+  const formatSettingLabel = (key: string): string => {
+    return key
+      .replace(/[_-]+/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  // Group laporan settings by category
+  const groupedLaporanSettings = laporanSettings.reduce(
+    (acc: any, setting: any) => {
+      const category = setting.kategori_setting || "Lainnya";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(setting);
+      return acc;
+    },
+    {}
+  );
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          Pengaturan Laporan Kegiatan
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Kelola pengaturan terkait laporan kegiatan harian ASN
+        </p>
+      </div>
+
+      {/* Section 1: App Settings (max_edit_days & working_days) */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Pengaturan Umum Laporan
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Maksimal Hari Edit Laporan
+            </label>
+            <input
+              type="number"
+              value={formData.max_edit_days || 3}
+              onChange={(e) =>
+                onChange("max_edit_days", parseInt(e.target.value))
+              }
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              min="0"
+              max="30"
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              0 = hanya bisa edit di hari yang sama
+            </p>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              Hari Kerja
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {weekDays.map((day) => (
+                <button
+                  key={day.value}
+                  type="button"
+                  onClick={() => toggleWorkingDay(day.value)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    (formData.working_days || [1, 2, 3, 4, 5]).includes(
+                      day.value
+                    )
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  }`}>
+                  {day.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section 2: Laporan Settings from settings_laporan_kegiatan */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Pengaturan Detail Laporan
+        </h3>
+
+        {laporanLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            <span className="ml-2 text-gray-600 dark:text-gray-400">
+              Memuat pengaturan...
+            </span>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {Object.entries(groupedLaporanSettings).map(
+              ([category, settings]: [string, any]) => (
+                <div
+                  key={category}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                    {category}
+                  </h4>
+
+                  <div className="space-y-4">
+                    {settings.map((setting: any) => {
+                      const id = setting.setting_id;
+                      const value = laporanFormData[id];
+                      const editable = setting.is_editable === 1;
+                      const dirty = isLaporanDirty(id);
+
+                      return (
+                        <div
+                          key={setting.setting_id}
+                          className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  {formatSettingLabel(setting.setting_key)}
+                                </span>
+                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                                  {setting.setting_type}
+                                </span>
+                                {!editable && (
+                                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                    Hanya baca
+                                  </span>
+                                )}
+                              </div>
+                              {setting.deskripsi && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {setting.deskripsi}
+                                </p>
+                              )}
+                            </div>
+
+                            {setting.updated_at && (
+                              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                <Check className="w-4 h-4" />
+                                <span>
+                                  {new Date(setting.updated_at).toLocaleString(
+                                    "id-ID",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mb-3">
+                            {setting.setting_type === "Boolean" ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  editable && onLaporanChange(id, !value)
+                                }
+                                disabled={!editable}
+                                className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium transition ${
+                                  value
+                                    ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-200"
+                                    : "border-gray-200 bg-white text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                } ${
+                                  !editable
+                                    ? "cursor-not-allowed opacity-60"
+                                    : "hover:border-blue-300"
+                                }`}>
+                                {value ? (
+                                  <ToggleRight className="w-5 h-5" />
+                                ) : (
+                                  <ToggleLeft className="w-5 h-5" />
+                                )}
+                                <span>{value ? "Aktif" : "Nonaktif"}</span>
+                              </button>
+                            ) : (
+                              <input
+                                type={
+                                  setting.setting_type === "Number"
+                                    ? "number"
+                                    : "text"
+                                }
+                                value={value || ""}
+                                onChange={(e) =>
+                                  editable &&
+                                  onLaporanChange(id, e.target.value)
+                                }
+                                disabled={!editable}
+                                className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                              />
+                            )}
+                          </div>
+
+                          {editable && (
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => onResetLaporanSetting(id)}
+                                disabled={!dirty}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                                <RefreshCw className="w-4 h-4" />
+                                Reset
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onSaveLaporanSetting(setting)}
+                                disabled={!dirty}
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+                                <Save className="w-4 h-4" />
+                                Simpan
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>

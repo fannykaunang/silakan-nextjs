@@ -65,10 +65,9 @@ export interface AppSettings {
   lockout_duration: number;
   enable_2fa: boolean;
 
-  // Laporan Settings
-  auto_approve_laporan: boolean;
+  // Laporan Settings (hanya max_edit_days dan working_days)
+  // Settings lainnya dipindah ke tabel settings_laporan_kegiatan
   max_edit_days: number;
-  reminder_time: string;
   working_days: number[] | null;
 
   // UI Settings
@@ -193,8 +192,8 @@ export async function initializeAppSettings(): Promise<void> {
       timezone, bahasa_default, max_upload_size,
       allowed_extensions, session_timeout, password_min_length,
       max_login_attempts, lockout_duration, enable_2fa,
-      auto_approve_laporan, max_edit_days, reminder_time,
-      working_days, theme_color, sidebar_collapsed, items_per_page,
+      max_edit_days, working_days,
+      theme_color, sidebar_collapsed, items_per_page,
       date_format, time_format, backup_auto, backup_interval,
       log_activity, log_retention_days
     ) VALUES (
@@ -205,8 +204,8 @@ export async function initializeAppSettings(): Promise<void> {
       'Asia/Jayapura', 'id', 5,
       '["pdf","doc","docx","xls","xlsx","jpg","jpeg","png"]', 120, 8,
       3, 15, 0,
-      0, 3, '14:00:00',
-      '[1,2,3,4,5]', '#3b82f6', 0, 10,
+      3, '[1,2,3,4,5]',
+      '#3b82f6', 0, 10,
       'd-m-Y', '24h', 1, 7,
       1, 90
     )

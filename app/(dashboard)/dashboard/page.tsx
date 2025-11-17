@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx (Server Component)
+// app/(dashboard)/dashboard/page.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import DashboardClient from "./_client";
