@@ -20,10 +20,15 @@ type AppSettingsResponse = {
 const DEFAULT_APP_INFO = {
   alias: "SILAKAN",
   name: "Sistem Informasi Laporan Kegiatan",
-  versi: "1.0.0",
+  description:
+    "Sistem Informasi Laporan Kegiatan ASN Pemerintah Kabupaten Merauke.",
+  version: "1.0.0",
+  instansi: "Kabupaten Merauke",
   copyright: "Pemerintah Kabupaten Merauke",
   tahun: new Date().getFullYear(),
 };
+
+type AppInfoState = typeof DEFAULT_APP_INFO;
 
 export default function LoginPageClient() {
   const [email, setEmail] = useState("");
@@ -34,7 +39,7 @@ export default function LoginPageClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [csrfToken, setCsrfToken] = useState<string>("");
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [appInfo, setAppInfo] = useState(DEFAULT_APP_INFO);
+  const [appInfo, setAppInfo] = useState<AppInfoState>(DEFAULT_APP_INFO);
 
   const router = useRouter();
   const { startLoading, stopLoading } = useLoading();
@@ -100,15 +105,22 @@ export default function LoginPageClient() {
 
         const alias = result.data.alias_aplikasi?.trim();
         const name = result.data.nama_aplikasi?.trim();
-        const versi = result.data.versi?.trim();
+        const description = result.data.deskripsi?.trim();
+        const version = result.data.versi?.trim();
+        const instansi = result.data.instansi_nama?.trim();
         const copyright = result.data.copyright?.trim();
-        const tahun = result.data.tahun;
+        const tahunValue = result.data.tahun;
         setAppInfo({
           alias: alias || DEFAULT_APP_INFO.alias,
           name: name || DEFAULT_APP_INFO.name,
-          versi: versi || DEFAULT_APP_INFO.versi,
+          description: description || DEFAULT_APP_INFO.description,
+          version: version || DEFAULT_APP_INFO.version,
+          instansi: instansi || DEFAULT_APP_INFO.instansi,
           copyright: copyright || DEFAULT_APP_INFO.copyright,
-          tahun: tahun || DEFAULT_APP_INFO.tahun,
+          tahun:
+            typeof tahunValue === "number" && !Number.isNaN(tahunValue)
+              ? tahunValue
+              : DEFAULT_APP_INFO.tahun,
         });
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
@@ -326,7 +338,7 @@ export default function LoginPageClient() {
               rights reserved.
             </p>
             <p className="text-xs">
-              Versi aplikasi: {appInfo.versi} | Server: Merauke
+              Versi aplikasi: {appInfo.version} | Server: {appInfo.instansi}
             </p>
           </div>
         </div>

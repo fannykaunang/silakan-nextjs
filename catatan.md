@@ -85,3 +85,6 @@ berikut rincian halamannya :
 
 # 17-11-2025
 1. gabung saja halaman app/(dashboard)/settings/laporan-kegiatan/_client.tsx sama app/(dashboard)/settings/app/page.tsx, percakapan ada di https://claude.ai/chat/2072e3ae-e1f4-4d9a-aa01-39e2b553acfd
+
+# 18-11-2025
+1. cek ulang halaman login
