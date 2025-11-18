@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/helpers/auth-helper";
 
-const API_BASE_URL = "https://dev.api.eabsen.merauke.go.id/api";
+const API_BASE_URL = process.env.EABSEN_API_URL || "api_url_not_set";
 const API_KEY = process.env.EABSEN_API_KEY || "api_key";
 
 interface RekapKehadiranResponse {

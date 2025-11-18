@@ -1,11 +1,10 @@
 // lib/helpers/whatsapp-helper.ts
-// VERSION WITH BASIC AUTH + LAPORAN KEGIATAN
+
+import { getAppSettings } from "@/lib/models/app-settings-model";
 
 const WHATSAPP_API_URL =
   process.env.WHATSAPP_API_URL || "http://103.177.95.67:7482/send/message";
 
-// ⚠️ PENTING: Ganti dengan username dan password Anda
-// REKOMENDASI: Simpan di environment variable untuk keamanan
 const WHATSAPP_USERNAME = process.env.WHATSAPP_USERNAME || "your_username";
 const WHATSAPP_PASSWORD = process.env.WHATSAPP_PASSWORD || "your_password";
 
@@ -121,17 +120,34 @@ export async function sendWhatsAppMessage(
   }
 }
 
+let cachedAppAlias: string | null = null;
+let lastAliasFetch = 0;
+const ALIAS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+async function getAppAlias(): Promise<string> {
+  const now = Date.now();
+  if (cachedAppAlias && now - lastAliasFetch < ALIAS_CACHE_DURATION) {
+    return cachedAppAlias;
+  }
+
+  const settings = await getAppSettings();
+  cachedAppAlias = settings?.alias_aplikasi?.trim() || "IZAKOD-ASN";
+  lastAliasFetch = now;
+  return cachedAppAlias;
+}
+
 /**
  * Format pesan reminder untuk WhatsApp
  */
-export function formatReminderMessage(params: {
+export async function formatReminderMessage(params: {
   title: string;
   message?: string | null;
   tipe: string;
   scheduledAt?: string;
   pegawaiName?: string;
-}): string {
+}): Promise<string> {
   const lines: string[] = [];
+  const alias = await getAppAlias();
 
   lines.push("🔔 *PENGINGAT KEGIATAN*");
   lines.push("");
@@ -168,7 +184,7 @@ export function formatReminderMessage(params: {
   }
 
   lines.push("");
-  lines.push("_Pesan otomatis dari Sistem SILAKAN_");
+  lines.push(`_Pesan otomatis dari Sistem ${alias}_`);
 
   return lines.join("\n");
 }
@@ -176,7 +192,7 @@ export function formatReminderMessage(params: {
 /**
  * Format pesan laporan kegiatan untuk WhatsApp (untuk atasan)
  */
-export function formatLaporanKegiatanMessage(params: {
+export async function formatLaporanKegiatanMessage(params: {
   pegawaiName: string;
   namaKegiatan: string;
   kategori?: string;
@@ -186,8 +202,9 @@ export function formatLaporanKegiatanMessage(params: {
   lokasi?: string;
   deskripsi?: string;
   laporanId?: number;
-}): string {
+}): Promise<string> {
   const lines: string[] = [];
+  const alias = await getAppAlias();
 
   lines.push("📋 *LAPORAN KEGIATAN BARU*");
   lines.push("");
@@ -249,7 +266,7 @@ export function formatLaporanKegiatanMessage(params: {
 
   lines.push("🔔 *Tindakan Diperlukan*");
   lines.push(
-    "Silakan login ke sistem SILAKAN untuk mereview dan menyetujui laporan ini."
+    `Silakan login ke sistem ${alias} untuk mereview dan menyetujui laporan ini.`
   );
 
   if (params.laporanId) {
@@ -258,7 +275,7 @@ export function formatLaporanKegiatanMessage(params: {
   }
 
   lines.push("");
-  lines.push("_Pesan otomatis dari Sistem SILAKAN_");
+  lines.push(`_Pesan otomatis dari Sistem ${alias}_`);
 
   return lines.join("\n");
 }

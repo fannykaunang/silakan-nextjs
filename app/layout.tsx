@@ -1,7 +1,10 @@
+// app/layout.tsx
+
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider"; // ⬅️ import provider
+import { ThemeProvider } from "@/components/theme-provider";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,16 +16,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "SILAKAN Masuk | Pemerintah Kabupaten Merauke",
-  description:
-    "Halaman Login Sistem Informasi Laporan Kegiatan Harian ASN Kabupaten Merauke",
-  icons: {
-    icon: "/favicon.ico", // path relatif ke folder public
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png", // opsional untuk iOS
-  },
-};
+export async function generateMetadata() {
+  return generatePageMetadata();
+}
 
 export const viewport: Viewport = {
   width: "device-width",

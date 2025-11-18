@@ -27,7 +27,7 @@ type AppSettingsResponse = {
 };
 
 const DEFAULT_CONTENT = {
-  appName: "SILAKAN",
+  appName: "IZAKOD-ASN",
   description:
     "Sistem Informasi Laporan Kegiatan ASN Pemerintah Kabupaten Merauke. Satu tempat untuk memantau produktivitas, melakukan verifikasi, dan memudahkan kolaborasi lintas unit.",
   version: "1.0.0",

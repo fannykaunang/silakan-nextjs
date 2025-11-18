@@ -20,6 +20,9 @@ type ApiResponse = {
   scan_date?: string | null; // jaga-jaga kalau pakai nama ini
 };
 
+const API_BASE_URL = process.env.EABSEN_API_URL || "api_url_not_set";
+const API_KEY = process.env.EABSEN_API_KEY || "api_key_not_set";
+
 export async function checkAttendanceToday(
   pin: string,
   scanDate: string
@@ -27,24 +30,27 @@ export async function checkAttendanceToday(
   try {
     const ymd = normalizeYMD(scanDate); // penting: zero-pad agar cocok "yyyy-MM-dd"
 
-    const apiUrl = `https://dev.api.eabsen.merauke.go.id/api/checkin/morning-checkin?pin=${encodeURIComponent(
+    const apiUrl = `${API_BASE_URL}/checkin/morning-checkin?pin=${encodeURIComponent(
       pin
     )}&date=${encodeURIComponent(ymd)}`;
+
+    console.log("Checking attendance with URL:", apiUrl);
 
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
-        EabsenApiKey: process.env.EABSEN_API_KEY || "eabsen_api_key_here",
+        EabsenApiKey: API_KEY || "eabsen_api_key_here",
         "Content-Type": "application/json",
       },
       // cache: "no-store", // opsional: jika ingin selalu fresh
+      redirect: "manual",
     });
 
     if (!response.ok) {
       console.error(
         "Attendance API error:",
         response.status,
-        response.statusText
+        "Checking attendance with URL:" + apiUrl
       );
       return {
         success: false,

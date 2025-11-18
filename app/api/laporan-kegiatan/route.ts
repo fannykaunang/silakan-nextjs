@@ -22,6 +22,7 @@ import { createNotifikasi } from "@/lib/models/notifikasi.model";
 import { getAtasanLangsungAktif } from "@/lib/models/atasan-pegawai.model";
 import { getPegawaiById } from "@/lib/models/pegawai.model";
 import { sendWhatsAppInBackground } from "@/lib/helpers/background-tasks";
+import { getAppSettings } from "@/lib/models/app-settings-model";
 
 // GET - Mengambil semua laporan
 export async function GET(req: Request) {
@@ -112,6 +113,9 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    const appSettings = await getAppSettings();
+    const appAlias = appSettings?.alias_aplikasi?.trim() || "IZAKOD-ASN";
 
     // Get request body
     const body = await req.json();
@@ -389,11 +393,11 @@ ${body.lokasi_kegiatan ? `📍 *Lokasi*\n${body.lokasi_kegiatan}\n\n` : ""}${
                     )}...\n\n`
                   : `📄 *Deskripsi*\n${body.deskripsi_kegiatan}\n\n`
               }🔔 *Tindakan Diperlukan*
-Silakan login ke sistem SILAKAN untuk mereview dan menyetujui laporan ini.
+Silakan login ke sistem ${appAlias} untuk mereview dan menyetujui laporan ini.
 
 _ID Laporan: #${laporanId}_
 
-_Pesan otomatis dari Sistem SILAKAN_`;
+_Pesan otomatis dari Sistem ${appAlias}_`;
 
               // Kirim WhatsApp di background (tidak menunggu hasil)
               sendWhatsAppInBackground(

@@ -382,7 +382,8 @@ export default function SettingsPageClient() {
             </h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Kelola konfigurasi dan pengaturan sistem SILAKAN
+            Kelola konfigurasi dan pengaturan sistem{" "}
+            {formData.alias_aplikasi || ""}
           </p>
         </div>
 
@@ -669,7 +670,7 @@ function ContactTab({ formData, onChange }: any) {
             value={formData.domain || ""}
             onChange={(e) => onChange("domain", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="silakan.merauke.go.id"
+            placeholder="domain.merauke.go.id"
           />
         </div>
 
@@ -963,7 +964,7 @@ function EmailTab({ formData, onChange }: any) {
             value={formData.smtp_from_name || ""}
             onChange={(e) => onChange("smtp_from_name", e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="SILAKAN - Kabupaten Merauke"
+            placeholder={formData.alias_aplikasi || ""}
           />
         </div>
 

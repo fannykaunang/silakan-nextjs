@@ -18,11 +18,10 @@ type AppSettingsResponse = {
 };
 
 const DEFAULT_APP_INFO = {
-  alias: "SILAKAN",
-  name: "Sistem Informasi Laporan Kegiatan",
-  description:
-    "Sistem Informasi Laporan Kegiatan ASN Pemerintah Kabupaten Merauke.",
-  version: "1.0.0",
+  alias: "IZAKOD-ASN",
+  name: "Integrasi Laporan Kegiatan Online Digital ASN",
+  description: "Integrasi Laporan Kegiatan Online Digital ASN.",
+  version: "1.1.0",
   instansi: "Kabupaten Merauke",
   copyright: "Pemerintah Kabupaten Merauke",
   tahun: new Date().getFullYear(),
@@ -237,6 +236,7 @@ export default function LoginPageClient() {
                     fill
                     className="object-contain p-2"
                     priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 </div>
               </div>
@@ -323,12 +323,12 @@ export default function LoginPageClient() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full rounded-xl bg-linear-to-r from-blue-600 to-purple-600 py-3 text-white font-semibold shadow-lg shadow-blue-500/30 transition hover:shadow-xl disabled:opacity-70 cursor-pointer disabled:cursor-not-allowed">
-                {isLoading ? "Memproses..." : "Masuk ke SILAKAN"}
+                {isLoading ? "Memproses..." : `Masuk ke ${appInfo.alias}`}
               </button>
             </form>
 
             <div className="text-center text-sm text-gray-500">
-              Belum punya akun? Hubungi admin E-NTAGO Kabupaten Merauke
+              Belum punya akun? Hubungi Admin E-NTAGO Kabupaten Merauke
             </div>
           </div>
 

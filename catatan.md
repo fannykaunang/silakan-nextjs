@@ -88,3 +88,6 @@ berikut rincian halamannya :
 
 # 18-11-2025
 1. cek ulang halaman login
+
+# 19-11-2025
+1. reminder masih error di server

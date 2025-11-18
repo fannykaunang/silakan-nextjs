@@ -23,7 +23,7 @@ interface PageMetadataOptions {
  * export async function generateMetadata() {
  *   return generatePageMetadata({
  *     title: "Dashboard",
- *     description: "Halaman dashboard SILAKAN"
+ *     description: "Halaman dashboard IZAKOD-ASN"
  *   });
  * }
  */
@@ -34,17 +34,17 @@ export async function generatePageMetadata(
     const settings = await getAppSettings();
 
     // Build title dengan format: [Page Title] | [App Name]
-    const appName = settings?.alias_aplikasi || "SILAKAN";
+    const appName = settings?.alias_aplikasi || "IZAKOD-ASN";
     const pageTitle = options.title ? `${options.title} | ${appName}` : appName;
 
     // Description fallback
     const description =
       options.description ||
       settings?.deskripsi ||
-      "Sistem Informasi Laporan Kegiatan ASN";
+      "Integrasi Laporan Kegiatan Online Digital ASN";
 
     // Domain dan URLs
-    const domain = settings?.domain || "silakan.merauke.go.id";
+    const domain = settings?.domain || "izakod-asn.merauke.go.id";
     const baseUrl = `https://${domain}`;
     const pagePath = options.path || "";
     const fullUrl = `${baseUrl}${pagePath}`;
@@ -60,7 +60,7 @@ export async function generatePageMetadata(
       options.keywords ||
       (settings?.meta_keywords
         ? settings.meta_keywords.split(",").map((k) => k.trim())
-        : ["SILAKAN", "ASN", "Laporan Kegiatan", "Merauke"]);
+        : ["IZAKOD-ASN", "ASN", "Laporan Kegiatan", "Merauke"]);
 
     // Robots - jika maintenance atau noIndex, jangan index
     const shouldIndex = settings?.mode === "online" && !options.noIndex;
@@ -135,13 +135,14 @@ export async function generatePageMetadata(
     console.error("Error generating metadata:", error);
 
     // Fallback metadata jika terjadi error
-    const title = options.title ? `${options.title} | SILAKAN` : "SILAKAN";
+    const title = options.title
+      ? `${options.title} | IZAKOD-ASN`
+      : "IZAKOD-ASN";
     const description =
-      options.description ||
-      "Sistem Informasi Laporan Kegiatan ASN Kabupaten Merauke";
+      options.description || "Integrasi Laporan Kegiatan Online Digital ASN";
 
     return {
-      metadataBase: new URL("https://silakan.merauke.go.id"),
+      metadataBase: new URL("https://izakod-asn.merauke.go.id"),
       title,
       description,
       robots: {
@@ -187,7 +188,7 @@ export async function generateDocsMetadata(
   return generatePageMetadata({
     title: pageTitle,
     description: pageDescription || `Dokumentasi ${pageTitle}`,
-    keywords: ["dokumentasi", "API", "developer", "SILAKAN"],
+    keywords: ["dokumentasi", "API", "developer", "IZAKOD-ASN"],
   });
 }
 

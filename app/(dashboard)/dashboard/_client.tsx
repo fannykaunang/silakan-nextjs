@@ -227,7 +227,7 @@ export default function DashboardClient({ userEmail }: Props) {
 
   const displayEmail = userEmail || user?.email || "email@domain.com";
   const latestLaporan = stats.latestLaporan;
-  const appName = appSettings?.alias_aplikasi || "SILAKAN";
+  const appName = appSettings?.alias_aplikasi || "IZAKOD-ASN";
 
   return (
     <DashboardLayout userEmail={displayEmail}>

@@ -5,9 +5,7 @@ import LoginPageClient from "./_client";
 
 export async function generateMetadata() {
   return generatePageMetadata({
-    title: "Masuk",
-    description:
-      "Masuk ke SILAKAN untuk memantau produktivitas ASN, melakukan verifikasi laporan, dan berkolaborasi lintas unit.",
+    title: "Halaman Login",
     path: "/login",
   });
 }

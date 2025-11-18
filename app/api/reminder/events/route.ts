@@ -48,7 +48,7 @@ async function sendReminderWhatsApp(
       return;
     }
 
-    const message = formatReminderMessage({
+    const message = await formatReminderMessage({
       title: reminder.judul_reminder,
       message: reminder.pesan_reminder,
       tipe: reminder.tipe_reminder,

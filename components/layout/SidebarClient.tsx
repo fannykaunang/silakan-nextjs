@@ -1,8 +1,11 @@
 // components/layout/SidebarClient.tsx
 "use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLoading } from "@/components/providers/LoadingProvider";
+import type { AppSettings } from "@/lib/models/app-settings-model";
 import {
   Home,
   User,
@@ -14,9 +17,7 @@ import {
   Bell,
   FileText,
   Briefcase,
-  ClipboardList,
   FileBarChart,
-  Calendar,
   TrendingUp,
   TrendingUpDown,
   Building2,
@@ -31,6 +32,11 @@ type SidebarProps = {
   userLevel: number; // -1..3 (3 = Admin)
 };
 
+type AppSettingsResponse = {
+  success: boolean;
+  data?: AppSettings;
+};
+
 // Tipe untuk item menu tunggal (link)
 type MenuItemLink = {
   href: string;
@@ -43,6 +49,8 @@ type MenuSection = {
   title: string;
   items: MenuItemLink[];
 };
+
+const DEFAULT_APP_ALIAS = "IZAKOD-ASN";
 
 const resolveActiveHref = (
   pathname: string,
@@ -134,6 +142,51 @@ export default function SidebarClient({
   userLevel,
 }: SidebarProps) {
   const pathname = usePathname() ?? "";
+  const [appAlias, setAppAlias] = useState(DEFAULT_APP_ALIAS);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    async function fetchAppAlias() {
+      try {
+        const response = await fetch("/api/settings/app", {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const result: AppSettingsResponse = await response.json();
+
+        if (!isMounted || !result?.data) {
+          return;
+        }
+
+        const alias =
+          result.data.alias_aplikasi?.trim() ||
+          result.data.nama_aplikasi?.trim();
+
+        if (alias) {
+          setAppAlias(alias);
+        }
+      } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          return;
+        }
+
+        console.error("Failed to load sidebar app alias", error);
+      }
+    }
+
+    fetchAppAlias();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []);
 
   // 1. Definisikan semua item link yang relevan berdasarkan level pengguna
 
@@ -286,8 +339,8 @@ export default function SidebarClient({
       {/* Header / brand + toggle */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
         {sidebarOpen && (
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            SILAKAN
+          <h1 className="text-xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {appAlias}
           </h1>
         )}
         <button

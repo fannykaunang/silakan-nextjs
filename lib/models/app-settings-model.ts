@@ -197,7 +197,7 @@ export async function initializeAppSettings(): Promise<void> {
       date_format, time_format, backup_auto, backup_interval,
       log_activity, log_retention_days
     ) VALUES (
-      'SILAKAN', 'SILAKAN', 'Sistem Informasi Laporan Kegiatan Harian ASN', '1.0.0',
+      'IZAKOD-ASN', 'IZAKOD-ASN', 'Sistem Informasi Laporan Kegiatan Harian ASN', '1.0.0',
       'Pemerintah Kabupaten Merauke', 2025,
       'admin@merauke.go.id', '0971-321234', 'Jl. Raya Mandala No. 1, Merauke', 'silakan.merauke.go.id', 'online',
       'https://dev.api.eabsen.merauke.go.id/api', 60, 1,

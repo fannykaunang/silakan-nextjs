@@ -1,6 +1,6 @@
 // lib/helpers/eabsen-helper.ts
-const API_BASE_URL = "https://dev.api.eabsen.merauke.go.id/api";
-const API_KEY = process.env.EABSEN_API_KEY || "api_key";
+const API_BASE_URL = process.env.EABSEN_API_URL || "http://10.10.10.188/api";
+const API_KEY = process.env.EABSEN_API_KEY || "api_key_not_set";
 
 // Login response interface
 export interface EabsenLoginResponse {

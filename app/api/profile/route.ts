@@ -23,8 +23,8 @@ interface PegawaiData {
 }
 
 // API Configuration
-const API_BASE_URL = "https://dev.api.eabsen.merauke.go.id/api";
-const API_KEY = process.env.EABSEN_API_KEY || "api_key";
+const API_BASE_URL = process.env.EABSEN_API_URL || "api_url_not_set";
+const API_KEY = process.env.EABSEN_API_KEY || "api_key_not_set";
 
 // Helper function untuk get user dari cookie
 async function getUserFromCookie() {

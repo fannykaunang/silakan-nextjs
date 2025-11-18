@@ -11,8 +11,6 @@ import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 export async function generateMetadata() {
   return generatePageMetadata({
     title: "Dashboard",
-    description:
-      "Halaman utama sistem informasi laporan kinerja ASN Kabupaten Merauke",
     path: "/dashboard",
   });
 }

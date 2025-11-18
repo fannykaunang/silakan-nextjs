@@ -91,7 +91,7 @@ async function handleRequest(request: Request) {
       summary.dueReminders += 1;
 
       const formattedScheduledAt = scheduledAt.toISOString();
-      const message = formatReminderMessage({
+      const message = await formatReminderMessage({
         title: reminder.judul_reminder,
         message: reminder.pesan_reminder,
         tipe: reminder.tipe_reminder,
