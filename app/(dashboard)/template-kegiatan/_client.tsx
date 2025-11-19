@@ -1,7 +1,7 @@
 // app/(dashboard)/dashboard/template-kegiatan/_client.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   showSuccess,
   showError,
@@ -55,6 +55,11 @@ interface TemplateData {
   updated_at: string;
 }
 
+interface SessionInfo {
+  level: number | null;
+  pegawai_id: number | null;
+}
+
 export default function TemplateKegiatanClient() {
   const [templates, setTemplates] = useState<TemplateData[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<TemplateData[]>(
@@ -62,11 +67,14 @@ export default function TemplateKegiatanClient() {
   );
   const [kategoris, setKategoris] = useState<KategoriData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionError, setSessionError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterKategori, setFilterKategori] = useState<string>("all");
   const [filterPublic, setFilterPublic] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
 
   // Edit state
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -95,10 +103,43 @@ export default function TemplateKegiatanClient() {
   useEffect(() => {
     fetchKategoris();
     fetchTemplates();
+    fetchSessionInfo();
   }, []);
 
+  const isAdminUser = useMemo(() => {
+    if (sessionInfo?.level === null || sessionInfo?.level === undefined) {
+      return false;
+    }
+    return sessionInfo.level >= 3;
+  }, [sessionInfo]);
+
+  const currentPegawaiId = useMemo(() => {
+    if (
+      sessionInfo?.pegawai_id === null ||
+      sessionInfo?.pegawai_id === undefined
+    ) {
+      return null;
+    }
+
+    return Number.isNaN(Number(sessionInfo.pegawai_id))
+      ? null
+      : sessionInfo.pegawai_id;
+  }, [sessionInfo]);
+
+  const accessibleTemplates = useMemo(() => {
+    if (isAdminUser) {
+      return templates;
+    }
+
+    if (!currentPegawaiId) {
+      return [];
+    }
+
+    return templates.filter((tmpl) => tmpl.pegawai_id === currentPegawaiId);
+  }, [currentPegawaiId, isAdminUser, templates]);
+
   useEffect(() => {
-    let filtered = [...templates];
+    let filtered = [...accessibleTemplates];
 
     // Filter by search query
     if (searchQuery.trim() !== "") {
@@ -139,7 +180,68 @@ export default function TemplateKegiatanClient() {
     }
 
     setFilteredTemplates(filtered);
-  }, [searchQuery, filterKategori, filterPublic, filterStatus, templates]);
+  }, [
+    accessibleTemplates,
+    searchQuery,
+    filterKategori,
+    filterPublic,
+    filterStatus,
+  ]);
+
+  const fetchSessionInfo = async () => {
+    try {
+      setSessionLoading(true);
+      setSessionError(null);
+
+      const response = await fetch("/api/login", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result?.result !== 1) {
+        const message =
+          result?.response ||
+          result?.message ||
+          "Gagal memuat informasi sesi pengguna";
+        setSessionInfo(null);
+        setSessionError(message);
+        return;
+      }
+
+      const parsedLevel = Number(result.level);
+      const normalizedLevel = Number.isNaN(parsedLevel) ? null : parsedLevel;
+
+      const parsedPegawaiId =
+        result.pegawai_id === null || result.pegawai_id === undefined
+          ? null
+          : Number(result.pegawai_id);
+      const normalizedPegawaiId =
+        parsedPegawaiId === null || Number.isNaN(parsedPegawaiId)
+          ? null
+          : parsedPegawaiId;
+
+      setSessionInfo({
+        level: normalizedLevel,
+        pegawai_id: normalizedPegawaiId,
+      });
+      setSessionError(null);
+    } catch (err: any) {
+      console.error("Error fetching session info:", err);
+      setSessionInfo(null);
+      setSessionError(
+        err?.message || "Terjadi kesalahan saat memuat informasi sesi pengguna"
+      );
+    } finally {
+      setSessionLoading(false);
+    }
+  };
 
   const fetchKategoris = async () => {
     try {
@@ -173,7 +275,6 @@ export default function TemplateKegiatanClient() {
       }
 
       setTemplates(result.data);
-      setFilteredTemplates(result.data);
     } catch (err: any) {
       console.error("Error fetching templates:", err);
       setError(err?.message || "Terjadi kesalahan saat memuat data");
@@ -318,7 +419,8 @@ export default function TemplateKegiatanClient() {
     }
   };
 
-  if (loading && templates.length === 0) {
+  const displayError = error || sessionError;
+  if ((loading || sessionLoading) && accessibleTemplates.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="text-center">
@@ -332,7 +434,7 @@ export default function TemplateKegiatanClient() {
   }
 
   // Error State (when no data)
-  if (error) {
+  if (displayError) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
@@ -349,7 +451,7 @@ export default function TemplateKegiatanClient() {
             />
           </svg>
           <p className="text-red-600 dark:text-red-400 text-lg font-semibold">
-            {error}
+            {displayError}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -383,7 +485,7 @@ export default function TemplateKegiatanClient() {
                   Total Template
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                  {templates.length}
+                  {accessibleTemplates.length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
@@ -399,7 +501,7 @@ export default function TemplateKegiatanClient() {
                   Template Publik
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                  {templates.filter((t) => t.is_public === 1).length}
+                  {accessibleTemplates.filter((t) => t.is_public === 1).length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
@@ -415,7 +517,7 @@ export default function TemplateKegiatanClient() {
                   Template Privat
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                  {templates.filter((t) => t.is_public === 0).length}
+                  {accessibleTemplates.filter((t) => t.is_public === 0).length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
@@ -431,7 +533,10 @@ export default function TemplateKegiatanClient() {
                   Total Penggunaan
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                  {templates.reduce((sum, t) => sum + t.jumlah_penggunaan, 0)}
+                  {accessibleTemplates.reduce(
+                    (sum, t) => sum + t.jumlah_penggunaan,
+                    0
+                  )}
                 </p>
               </div>
               <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
@@ -505,11 +610,11 @@ export default function TemplateKegiatanClient() {
 
         {/* Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          {error && (
+          {displayError && (
             <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 m-6">
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                <p className="text-red-800 dark:text-red-300">{error}</p>
+                <p className="text-red-800 dark:text-red-300">{displayError}</p>
               </div>
             </div>
           )}
@@ -695,7 +800,7 @@ export default function TemplateKegiatanClient() {
                         <td className="px-6 py-4">
                           {isEditing ? (
                             <select
-                              value={editData.is_public || 0}
+                              value={editData.is_public ?? 0}
                               onChange={(e) =>
                                 setEditData({
                                   ...editData,
@@ -728,7 +833,7 @@ export default function TemplateKegiatanClient() {
                         <td className="px-6 py-4">
                           {isEditing ? (
                             <select
-                              value={editData.is_active || 1}
+                              value={editData.is_active ?? 1}
                               onChange={(e) =>
                                 setEditData({
                                   ...editData,
@@ -934,7 +1039,7 @@ export default function TemplateKegiatanClient() {
                     Akses Template
                   </label>
                   <select
-                    value={formData.is_public || 0}
+                    value={formData.is_public ?? 0}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -952,7 +1057,7 @@ export default function TemplateKegiatanClient() {
                     Status
                   </label>
                   <select
-                    value={formData.is_active || 1}
+                    value={formData.is_active ?? 1}
                     onChange={(e) =>
                       setFormData({
                         ...formData,

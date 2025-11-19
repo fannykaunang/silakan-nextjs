@@ -51,6 +51,7 @@ export async function GET() {
         email: maskedEmail,
         level: user.level ?? null,
         skpdid: user.skpdid ?? null,
+        pegawai_id: user.pegawai_id ?? null,
       },
       { status: 200 }
     );

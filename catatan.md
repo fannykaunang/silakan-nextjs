@@ -92,3 +92,6 @@ berikut rincian halamannya :
 # 19-11-2025
 1. reminder masih error di server
 2. bikin form app/(dashboard)/dashboard/template-kegiatan/_client.tsx, ref ada disini https://chatgpt.com/codex/tasks/task_e_691dca183a28832cb6202302c61d3c43
+
+# 20-11-2025
+1. kalo template kegiatan yang dibuat pegawai dijadikan public, select option di Tambah Laporan Kegiatan harus muncul untuk semua pegawai. tanya di room ini saja https://chatgpt.com/codex/tasks/task_e_691df5c5f5a4832c89976da1f676840c

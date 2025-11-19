@@ -171,6 +171,14 @@ export default function TambahLaporanClient() {
     }
   };
 
+  const normalizeNumber = (value: unknown): number | null => {
+    if (typeof value !== "number") {
+      return null;
+    }
+
+    return Number.isNaN(value) ? null : value;
+  };
+
   const canAccessTemplate = (
     template: TemplateKegiatanOption,
     session: SessionInfo | null
@@ -180,9 +188,19 @@ export default function TambahLaporanClient() {
       return false;
     }
 
-    const level = session?.level;
-    if (level !== null && level !== undefined && level >= 3) {
-      return true;
+    const sessionPegawaiId = normalizeNumber(session?.pegawai_id);
+    const templateOwnerId = normalizeNumber(template.pegawai_id);
+    const isAdmin = (() => {
+      const level = normalizeNumber(session?.level);
+      return typeof level === "number" && level >= 3;
+    })();
+
+    if (isAdmin) {
+      if (sessionPegawaiId === null || templateOwnerId === null) {
+        return false;
+      }
+
+      return templateOwnerId === sessionPegawaiId;
     }
 
     const isPublic = Number(template.is_public ?? 0) === 1;
@@ -190,42 +208,11 @@ export default function TambahLaporanClient() {
       return true;
     }
 
-    if (session?.pegawai_id && template.pegawai_id === session.pegawai_id) {
-      return true;
+    if (sessionPegawaiId === null || templateOwnerId === null) {
+      return false;
     }
 
-    if (template.unit_kerja_akses && session?.skpdid) {
-      try {
-        const parsed = JSON.parse(template.unit_kerja_akses);
-        if (Array.isArray(parsed)) {
-          return parsed.some((value) => {
-            if (typeof value === "number") {
-              return value === session.skpdid;
-            }
-
-            if (typeof value === "string") {
-              const trimmed = value.trim();
-              if (!trimmed) {
-                return false;
-              }
-
-              const numeric = Number(trimmed);
-              if (!Number.isNaN(numeric)) {
-                return numeric === session.skpdid;
-              }
-
-              return trimmed === String(session.skpdid);
-            }
-
-            return false;
-          });
-        }
-      } catch (parseError) {
-        console.warn("Failed to parse unit_kerja_akses", parseError);
-      }
-    }
-
-    return false;
+    return templateOwnerId === sessionPegawaiId;
   };
 
   const fetchTemplates = async (session: SessionInfo | null) => {
