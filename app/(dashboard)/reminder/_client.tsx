@@ -723,7 +723,7 @@ export default function ReminderClient() {
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Status
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Aksi
               </th>
             </tr>
@@ -813,8 +813,8 @@ export default function ReminderClient() {
                         {reminder.is_active === 1 ? "Aktif" : "Nonaktif"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-sm">
-                      <div className="flex justify-end gap-2">
+                    <td className="px-4 py-3 text-center text-sm">
+                      <div className="flex justify-center gap-2">
                         {canManageReminder(reminder) && (
                           <>
                             <button

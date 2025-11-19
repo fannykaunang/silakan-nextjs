@@ -91,3 +91,4 @@ berikut rincian halamannya :
 
 # 19-11-2025
 1. reminder masih error di server
+2. bikin form app/(dashboard)/dashboard/template-kegiatan/_client.tsx, ref ada disini https://chatgpt.com/codex/tasks/task_e_691dca183a28832cb6202302c61d3c43

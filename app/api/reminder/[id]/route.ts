@@ -226,7 +226,7 @@ export async function PUT(request: Request, context: RouteContext) {
       }
       data.tanggal_spesifik = tanggal;
     } else {
-      data.tanggal_spesifik = "";
+      data.tanggal_spesifik = null;
     }
 
     if (data.tipe_reminder !== "Mingguan") {

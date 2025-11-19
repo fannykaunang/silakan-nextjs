@@ -254,7 +254,7 @@ export async function POST(request: Request) {
       }
       data.tanggal_spesifik = tanggal;
     } else {
-      data.tanggal_spesifik = "";
+      data.tanggal_spesifik = null;
     }
 
     if (data.tipe_reminder !== "Mingguan") {

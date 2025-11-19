@@ -228,13 +228,31 @@ export function resolveDueReminderOccurrence(
   if (!nextOccurrence) {
     return null;
   }
-
   if (nextOccurrence > now) {
     return null;
   }
-
   if (wasReminderAlreadySent(reminder, now)) {
     return null;
+  }
+
+  // 🔥 TAMBAHKAN CEK INI sebelum return
+  if (reminder.terakhir_dikirim) {
+    const lastSent = new Date(reminder.terakhir_dikirim);
+
+    // Untuk reminder sekali, jangan kirim lagi
+    if (reminder.tipe_reminder === "Sekali") {
+      return null;
+    }
+
+    // Untuk reminder berulang, cek apakah sudah dikirim untuk occurrence ini
+    // Toleransi 5 menit untuk menghindari duplikasi
+    const diffMinutes = Math.abs(
+      (nextOccurrence.getTime() - lastSent.getTime()) / (1000 * 60)
+    );
+
+    if (diffMinutes < 5) {
+      return null; // Sudah terkirim untuk jadwal ini
+    }
   }
 
   return nextOccurrence;
