@@ -666,13 +666,13 @@ export default function ReminderClient() {
           ))}
         </div>
 
-        {/* Filter & actions */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 mb-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            {/* LEFT: search + filter */}
-            <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
-              {/* ✅ Search diperkecil di layar besar */}
-              <div className="relative w-full lg:w-100 lg:flex-none">
+        {/* Filter & actions - PERBAIKAN RESPONSIVE */}
+        <div className="rounded-xl border border-gray-100 bg-white p-4 md:p-6 mb-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
+          <div className="flex flex-col gap-3">
+            {/* Baris 1: Search + Filters */}
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+              {/* Search */}
+              <div className="relative w-full lg:flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -683,239 +683,247 @@ export default function ReminderClient() {
                 />
               </div>
 
-              <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-                <select
-                  value={tipeFilter}
-                  onChange={(event) =>
-                    setTipeFilter(
-                      (event.target.value as ReminderType | "all") || "all"
-                    )
-                  }
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:w-48">
-                  <option value="all">Semua Tipe</option>
-                  {REMINDER_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+              {/* Filter Tipe */}
+              <select
+                value={tipeFilter}
+                onChange={(event) =>
+                  setTipeFilter(
+                    (event.target.value as ReminderType | "all") || "all"
+                  )
+                }
+                className="w-full lg:w-48 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                <option value="all">Semua Tipe</option>
+                {REMINDER_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
 
-                <select
-                  value={dayFilter}
-                  onChange={(event) =>
-                    setDayFilter(
-                      (event.target.value as ReminderDay | "all") || "all"
-                    )
-                  }
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:w-48">
-                  <option value="all">Semua Hari</option>
-                  {REMINDER_DAYS.map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Filter Hari */}
+              <select
+                value={dayFilter}
+                onChange={(event) =>
+                  setDayFilter(
+                    (event.target.value as ReminderDay | "all") || "all"
+                  )
+                }
+                className="w-full lg:w-48 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                <option value="all">Semua Hari</option>
+                {REMINDER_DAYS.map((day) => (
+                  <option key={day} value={day}>
+                    {day}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* ✅ RIGHT: tombol berdampingan di layar besar */}
-            <div className="flex w-full lg:w-auto flex-col sm:flex-row lg:flex-row items-stretch lg:items-center gap-2">
+            {/* Baris 2: Action Buttons */}
+            <div className="flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
                 onClick={connectReminderEvents}
                 disabled={!meta.currentPegawaiId}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-70">
-                <Send className="h-4 w-4" />
-                {isReminderListenerActive
-                  ? "Hentikan Pengiriman"
-                  : "Kirim Reminder"}
+                className="w-full sm:flex-1 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70">
+                <Send className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">
+                  {isReminderListenerActive
+                    ? "Hentikan Pengiriman"
+                    : "Kirim Reminder"}
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 whitespace-nowrap">
-                <Plus className="h-4 w-4" />
-                Tambah Reminder
+                className="w-full sm:flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                <Plus className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Tambah Reminder</span>
               </button>
             </div>
-          </div>
 
-          {hasActiveFilters && (
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                <X className="w-4 h-4" />
-                Reset Filter
-              </button>
-            </div>
-          )}
+            {/* Reset Filter Button */}
+            {hasActiveFilters && (
+              <div className="flex justify-center sm:justify-end">
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                  <X className="w-4 h-4" />
+                  Reset Filter
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tabel reminder */}
         <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-gray-800">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  No
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Judul Reminder
-                </th>
-                {meta.isAdmin && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Pegawai
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    No
                   </th>
-                )}
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Tipe
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Jadwal
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={meta.isAdmin ? 7 : 6}
-                    className="px-4 py-10 text-center text-sm text-gray-500">
-                    <div className="flex items-center justify-center gap-2 text-gray-500">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Memuat reminder...
-                    </div>
-                  </td>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 min-w-[200px]">
+                    Judul Reminder
+                  </th>
+                  {meta.isAdmin && (
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      Pegawai
+                    </th>
+                  )}
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    Tipe
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    Jadwal
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    Aksi
+                  </th>
                 </tr>
-              ) : reminders.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={meta.isAdmin ? 7 : 6}
-                    className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Belum ada data reminder.
-                  </td>
-                </tr>
-              ) : (
-                reminders.map((reminder, index) => {
-                  const hariSet = parseHariSet(reminder.hari_dalam_minggu);
-                  const scheduleLabel = (() => {
-                    if (reminder.tipe_reminder === "Sekali") {
-                      return formatDate(reminder.tanggal_spesifik);
-                    }
-                    if (reminder.tipe_reminder === "Mingguan") {
-                      return hariSet.length > 0 ? hariSet.join(", ") : "-";
-                    }
-                    if (reminder.tipe_reminder === "Harian") {
-                      return "Setiap hari";
-                    }
-                    return reminder.tanggal_spesifik
-                      ? formatDate(reminder.tanggal_spesifik)
-                      : "Setiap bulan";
-                  })();
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={meta.isAdmin ? 7 : 6}
+                      className="px-4 py-10 text-center text-sm text-gray-500">
+                      <div className="flex items-center justify-center gap-2 text-gray-500">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Memuat reminder...
+                      </div>
+                    </td>
+                  </tr>
+                ) : reminders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={meta.isAdmin ? 7 : 6}
+                      className="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                      Belum ada data reminder.
+                    </td>
+                  </tr>
+                ) : (
+                  reminders.map((reminder, index) => {
+                    const hariSet = parseHariSet(reminder.hari_dalam_minggu);
+                    const scheduleLabel = (() => {
+                      if (reminder.tipe_reminder === "Sekali") {
+                        return formatDate(reminder.tanggal_spesifik);
+                      }
+                      if (reminder.tipe_reminder === "Mingguan") {
+                        return hariSet.length > 0 ? hariSet.join(", ") : "-";
+                      }
+                      if (reminder.tipe_reminder === "Harian") {
+                        return "Setiap hari";
+                      }
+                      return reminder.tanggal_spesifik
+                        ? formatDate(reminder.tanggal_spesifik)
+                        : "Setiap bulan";
+                    })();
 
-                  return (
-                    <tr
-                      key={reminder.reminder_id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        {totalStart + index}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-100">
-                        <p>{reminder.judul_reminder}</p>
-                        {reminder.pesan_reminder && (
-                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {reminder.pesan_reminder}
-                          </p>
-                        )}
-                      </td>
-                      {meta.isAdmin && (
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                          <Link
-                            href={`/pegawai/${reminder.pegawai_id}`}
-                            className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
-                            {reminder.pegawai_nama ??
-                              `Pegawai ${reminder.pegawai_id}`}
-                          </Link>
+                    return (
+                      <tr
+                        key={reminder.reminder_id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                          {totalStart + index}
                         </td>
-                      )}
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        {reminder.tipe_reminder}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-700 dark:text-gray-200">
-                            {formatTime(reminder.waktu_reminder)} WIT
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {scheduleLabel}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            reminder.is_active === 1
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-gray-200 text-gray-600"
-                          }`}>
-                          {reminder.is_active === 1 ? "Aktif" : "Nonaktif"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center text-sm">
-                        <div className="flex justify-center gap-2">
-                          {canManageReminder(reminder) && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => openEditModal(reminder)}
-                                className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
-                                <Edit2 className="mr-1 h-3.5 w-3.5" />
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(reminder)}
-                                className="inline-flex items-center rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">
-                                <Trash2 className="mr-1 h-3.5 w-3.5" />
-                                Hapus
-                              </button>
-                            </>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-100">
+                          <p className="line-clamp-2">
+                            {reminder.judul_reminder}
+                          </p>
+                          {reminder.pesan_reminder && (
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                              {reminder.pesan_reminder}
+                            </p>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        </td>
+                        {meta.isAdmin && (
+                          <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            <Link
+                              href={`/pegawai/${reminder.pegawai_id}`}
+                              className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
+                              {reminder.pegawai_nama ??
+                                `Pegawai ${reminder.pegawai_id}`}
+                            </Link>
+                          </td>
+                        )}
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                          {reminder.tipe_reminder}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-700 dark:text-gray-200">
+                              {formatTime(reminder.waktu_reminder)} WIT
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {scheduleLabel}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                              reminder.is_active === 1
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-gray-200 text-gray-600"
+                            }`}>
+                            {reminder.is_active === 1 ? "Aktif" : "Nonaktif"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center text-sm whitespace-nowrap">
+                          <div className="flex justify-center gap-2">
+                            {canManageReminder(reminder) && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(reminder)}
+                                  className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700">
+                                  <Edit2 className="mr-1 h-3.5 w-3.5" />
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(reminder)}
+                                  className="inline-flex items-center rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30">
+                                  <Trash2 className="mr-1 h-3.5 w-3.5" />
+                                  Hapus
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
         <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 text-sm text-gray-600 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 md:flex-row">
-          <div>
+          <div className="text-center md:text-left">
             Menampilkan {reminders.length} dari {formatNumber(pagination.total)}{" "}
             reminder
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <button
               type="button"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={pagination.page <= 1 || loading}
               className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
               <ChevronLeft className="mr-1 h-4 w-4" />
-              Sebelumnya
+              <span className="hidden sm:inline">Sebelumnya</span>
+              <span className="sm:hidden">Prev</span>
             </button>
-            <span>
+            <span className="whitespace-nowrap">
               Halaman {pagination.page} dari {pagination.totalPages}
             </span>
             <button
@@ -927,7 +935,8 @@ export default function ReminderClient() {
               }
               disabled={pagination.page >= pagination.totalPages || loading}
               className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
-              Selanjutnya
+              <span className="hidden sm:inline">Selanjutnya</span>
+              <span className="sm:hidden">Next</span>
               <ChevronRight className="ml-1 h-4 w-4" />
             </button>
           </div>
@@ -937,7 +946,7 @@ export default function ReminderClient() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900">
+          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
