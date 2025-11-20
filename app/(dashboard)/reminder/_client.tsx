@@ -344,13 +344,15 @@ export default function ReminderClient() {
   }, [handleErrorEvent, handleReminderEvent]);
 
   const connectReminderEvents = useCallback(() => {
-    if (!meta.currentPegawaiId) {
-      showError("Gagal", "Pegawai tujuan reminder tidak valid");
+    // Toggle: jika sudah aktif, hentikan listener
+    if (isReminderListenerActive) {
+      cleanupReminderEvents();
+      showToast("info", "Pengiriman reminder dihentikan");
       return;
     }
 
-    if (isReminderListenerActive) {
-      showToast("info", "Pengiriman reminder sudah aktif");
+    if (!meta.currentPegawaiId) {
+      showError("Gagal", "Pegawai tujuan reminder tidak valid");
       return;
     }
 
@@ -670,7 +672,7 @@ export default function ReminderClient() {
             {/* LEFT: search + filter */}
             <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center">
               {/* ✅ Search diperkecil di layar besar */}
-              <div className="relative w-full lg:w-80 lg:flex-none">
+              <div className="relative w-full lg:w-100 lg:flex-none">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
@@ -682,11 +684,6 @@ export default function ReminderClient() {
               </div>
 
               <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                  <Filter className="h-4 w-4" />
-                  <span>Filter</span>
-                </div>
-
                 <select
                   value={tipeFilter}
                   onChange={(event) =>
@@ -726,11 +723,11 @@ export default function ReminderClient() {
               <button
                 type="button"
                 onClick={connectReminderEvents}
-                disabled={!meta.currentPegawaiId || isReminderListenerActive}
+                disabled={!meta.currentPegawaiId}
                 className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-70">
                 <Send className="h-4 w-4" />
                 {isReminderListenerActive
-                  ? "Reminder Sedang Dikirim"
+                  ? "Hentikan Pengiriman"
                   : "Kirim Reminder"}
               </button>
 
