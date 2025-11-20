@@ -59,11 +59,11 @@ export async function POST(req: Request) {
       console.log("✅ User session found:", maskedEmail, "PIN:", user.pin);
     }
 
-    // 4. Ambil data pegawai lengkap untuk logging
+    // 4. Ambil data pegawai lengkap untuk logging (hindari query ganda jika sudah ada)
     let pegawaiId = user.pegawai_id;
     let pegawaiNama = user.nama || user.email || "Unknown";
 
-    if (user.pin) {
+    if (!pegawaiId && user.pin) {
       try {
         const pegawaiData = await getPegawaiByPin(user.pin);
         if (pegawaiData) {
@@ -75,11 +75,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // 5. Log aktivitas logout SEBELUM clear cookie
+    // 5. Log aktivitas logout SEBELUM clear cookie (non-blocking agar response cepat)
     try {
       const clientInfo = getClientInfo(req);
 
-      await createLog({
+      void createLog({
         pegawai_id: pegawaiId || null,
         aksi: "Logout",
         modul: "Auth",
@@ -90,11 +90,17 @@ export async function POST(req: Request) {
         user_agent: clientInfo.user_agent,
         endpoint: "/api/logout",
         method: "POST",
-      });
+      })
+        .then(() => {
+          if (isDev) console.log("✅ Logout activity logged");
+        })
+        .catch(() => {
+          console.error("Failed to log logout activity");
+        });
 
       if (isDev) console.log("✅ Logout activity logged");
     } catch (logError) {
-      console.error("Failed to log logout activity");
+      console.error("Failed to prepare logout log");
     }
 
     // ✅ 6. Rotate CSRF token setelah logout (security best practice)

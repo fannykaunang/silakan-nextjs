@@ -188,6 +188,11 @@ export default function TambahLaporanClient() {
       return false;
     }
 
+    const isPublic = Number(template.is_public ?? 0) === 1;
+    if (isPublic) {
+      return true;
+    }
+
     const sessionPegawaiId = normalizeNumber(session?.pegawai_id);
     const templateOwnerId = normalizeNumber(template.pegawai_id);
     const isAdmin = (() => {
@@ -201,11 +206,6 @@ export default function TambahLaporanClient() {
       }
 
       return templateOwnerId === sessionPegawaiId;
-    }
-
-    const isPublic = Number(template.is_public ?? 0) === 1;
-    if (isPublic) {
-      return true;
     }
 
     if (sessionPegawaiId === null || templateOwnerId === null) {

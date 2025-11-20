@@ -212,12 +212,12 @@ export default function FooterClient() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="/settings/laporan-kegiatan"
+              href="/kebijakan-privasi"
               className="transition-colors hover:text-blue-600 dark:hover:text-blue-300">
               Kebijakan Privasi
             </Link>
             <Link
-              href="/settings/app"
+              href="/ketentuan-penggunaan"
               className="transition-colors hover:text-blue-600 dark:hover:text-blue-300">
               Ketentuan Penggunaan
             </Link>

@@ -24,6 +24,8 @@ import {
   Printer,
   AlarmClock,
   Activity,
+  Shield,
+  Scale,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -288,7 +290,21 @@ export default function SidebarClient({
     icon: AlarmClock,
   });
 
-  // --- G. Bagian Sistem (Admin Only - Level 3) ---
+  // --- G. Bagian Legal & Bantuan (Semua Level) ---
+  const legalItems: MenuItemLink[] = [
+    {
+      href: "/ketentuan-penggunaan",
+      label: "Ketentuan Penggunaan",
+      icon: Scale,
+    },
+    {
+      href: "/kebijakan-privasi",
+      label: "Kebijakan Privasi",
+      icon: Shield,
+    },
+  ];
+
+  // --- H. Bagian Sistem (Admin Only - Level 3) ---
   const systemItems: MenuItemLink[] = [];
   if (userLevel === 3) {
     systemItems.push(
@@ -304,6 +320,7 @@ export default function SidebarClient({
     ...managementItems,
     ...configItems,
     ...notificationItems,
+    ...legalItems,
     ...systemItems,
   ];
 
@@ -325,6 +342,9 @@ export default function SidebarClient({
   }
 
   menuSections.push({ title: "Notifikasi", items: notificationItems });
+
+  // Tambahkan section Legal & Bantuan
+  menuSections.push({ title: "Legal & Bantuan", items: legalItems });
 
   if (systemItems.length > 0) {
     menuSections.push({ title: "Sistem", items: systemItems });

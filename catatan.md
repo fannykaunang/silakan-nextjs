@@ -95,3 +95,4 @@ berikut rincian halamannya :
 
 # 20-11-2025
 1. kalo template kegiatan yang dibuat pegawai dijadikan public, select option di Tambah Laporan Kegiatan harus muncul untuk semua pegawai. tanya di room ini saja https://chatgpt.com/codex/tasks/task_e_691df5c5f5a4832c89976da1f676840c
+2. tanya gpt kalau server mati, pm2 harus bisa running saat booting
