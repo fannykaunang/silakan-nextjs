@@ -97,19 +97,13 @@ export default async function PrivacyPolicyPage() {
             Kebijakan Privasi
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Komitmen kami dalam melindungi data pribadi Anda
+            Komitmen kami dalam melindungi data pribadi Anda pada aplikasi{" "}
+            {appAlias}
             <br />
-            <span className="text-sm">
-              ({appName} - {appDescription})
-            </span>
+            <span className="text-sm">({appDescription})</span>
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">
-            Terakhir diperbarui:{" "}
-            {new Date().toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            Terakhir diperbarui: 21 November 2025
           </p>
         </div>
 

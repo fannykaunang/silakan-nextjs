@@ -26,6 +26,7 @@ import {
   Activity,
   Shield,
   Scale,
+  BookOpen,
 } from "lucide-react";
 
 type SidebarProps = {
@@ -292,6 +293,11 @@ export default function SidebarClient({
 
   // --- G. Bagian Legal & Bantuan (Semua Level) ---
   const legalItems: MenuItemLink[] = [
+    {
+      href: "/panduan-penggunaan",
+      label: "Panduan Penggunaan",
+      icon: BookOpen,
+    },
     {
       href: "/ketentuan-penggunaan",
       label: "Ketentuan Penggunaan",

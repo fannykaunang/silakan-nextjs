@@ -96,3 +96,14 @@ berikut rincian halamannya :
 # 20-11-2025
 1. kalo template kegiatan yang dibuat pegawai dijadikan public, select option di Tambah Laporan Kegiatan harus muncul untuk semua pegawai. tanya di room ini saja https://chatgpt.com/codex/tasks/task_e_691df5c5f5a4832c89976da1f676840c
 2. tanya gpt kalau server mati, pm2 harus bisa running saat booting
+
+# 21-11-2025
+1. buatkan halaman manual program atau halaman cara penggunaan aplikasi, link chat https://claude.ai/chat/c09672d1-6f43-4734-ac43-0bd65cc496b9
+prompt : bisakah kamu membuatkan saya satu halaman lagi? yaitu, halaman manual program atau halaman cara penggunaan aplikasi?
+
+1. user pegawai
+- cara mendapatkan username/email dan password (minta ke operator web eabsen di masing-masing skpd)
+- cara membuat laporan kegiatan (catatan: tanggal yang diajukan harus sudah absen di sistem eabsen)
+- cara mengedit laporan kegiatan (jika status masih Diajukan, selain itu tidak bisa diedit)
+- cara mencetak laporan kegiatan
+

@@ -36,17 +36,17 @@ export default async function TermsOfServicePage() {
   const year = settings?.tahun || new Date().getFullYear();
 
   // Contact info
-  const email = settings?.email || "admin@izakod-asn.merauke.go.id";
+  const email = settings?.email || "support@izakod-asn.merauke.go.id";
   const whatsapp =
     settings?.whatsapp || settings?.no_telepon || "+62 XXX-XXXX-XXXX";
   const address =
-    settings?.alamat || "Jl. Raya Mandala, Maro, Merauke, Papua Selatan";
+    settings?.alamat || "Jl. TMP Trikora nO. 78, Maro, Merauke, Papua Selatan";
   const instansiNama =
     settings?.instansi_nama ||
     "Dinas Komunikasi dan Informatika Kabupaten Merauke";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
       <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -90,12 +90,7 @@ export default async function TermsOfServicePage() {
             <span className="text-sm">({appDescription})</span>
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">
-            Terakhir diperbarui:{" "}
-            {new Date().toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
+            Terakhir diperbarui: 21 November 2025
           </p>
         </div>
 
@@ -105,7 +100,7 @@ export default async function TermsOfServicePage() {
             {/* Section 1: Penerimaan Ketentuan */}
             <section>
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
@@ -134,7 +129,7 @@ export default async function TermsOfServicePage() {
             {/* Section 2: Definisi */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="flex-1">
@@ -190,7 +185,7 @@ export default async function TermsOfServicePage() {
             {/* Section 3: Hak Akses & Akun */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                   <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div className="flex-1">
@@ -250,7 +245,7 @@ export default async function TermsOfServicePage() {
             {/* Section 4: Penggunaan Aplikasi */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
                   <Smartphone className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div className="flex-1">
@@ -356,7 +351,7 @@ export default async function TermsOfServicePage() {
             {/* Section 5: Notifikasi WhatsApp */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                   <Bell className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="flex-1">
@@ -399,7 +394,7 @@ export default async function TermsOfServicePage() {
             {/* Section 6: Privasi Data */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                   <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="flex-1">
@@ -431,7 +426,7 @@ export default async function TermsOfServicePage() {
             {/* Section 7: Audit Trail */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
                   <Clock className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div className="flex-1">
@@ -468,7 +463,7 @@ export default async function TermsOfServicePage() {
             {/* Section 12: Kontak */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
               <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <div className="shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="flex-1">
@@ -504,7 +499,7 @@ export default async function TermsOfServicePage() {
 
             {/* Closing Statement */}
             <section className="border-t border-gray-200 dark:border-gray-700 pt-10">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-8 text-center">
+              <div className="bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-8 text-center">
                 <CheckCircle2 className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                   Terima Kasih
