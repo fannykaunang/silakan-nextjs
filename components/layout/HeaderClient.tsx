@@ -58,7 +58,6 @@ export default function Header({
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [userPhoto, setUserPhoto] = useState<string>("");
-  const [loading, setLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const displayName = userName || userEmail?.split("@")[0] || "Pengguna";

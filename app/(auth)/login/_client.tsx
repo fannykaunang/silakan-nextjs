@@ -326,13 +326,29 @@ export default function LoginPageClient() {
                 {isLoading ? "Memproses..." : `Masuk ke ${appInfo.alias}`}
               </button>
             </form>
-
-            <div className="text-center text-sm text-gray-500">
-              Belum punya akun? Hubungi Admin E-NTAGO Kabupaten Merauke
+            <div className="text-center text-sm mb-3 text-gray-500">
+              Belum punya akun? Hubungi Operator masing-masing SKPD
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+              <Link
+                href="/informasi/panduan-penggunaan"
+                className="text-blue-600 hover:underline">
+                Panduan Penggunaan
+              </Link>
+              <Link
+                href="/informasi/ketentuan-penggunaan"
+                className="text-blue-600 hover:underline">
+                Ketentuan Layanan
+              </Link>
+              <Link
+                href="/informasi/kebijakan-privasi"
+                className="text-blue-600 hover:underline">
+                Kebijakan Privasi
+              </Link>
             </div>
           </div>
 
-          <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 space-y-1">
+          <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400 space-y-1">
             <p>
               &copy; {appInfo.tahun} - {currentYear} {appInfo.copyright}. All
               rights reserved.
