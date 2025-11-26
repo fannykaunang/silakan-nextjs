@@ -99,11 +99,6 @@ berikut rincian halamannya :
 
 # 21-11-2025
 1. buatkan halaman manual program atau halaman cara penggunaan aplikasi, link chat https://claude.ai/chat/c09672d1-6f43-4734-ac43-0bd65cc496b9
-prompt : bisakah kamu membuatkan saya satu halaman lagi? yaitu, halaman manual program atau halaman cara penggunaan aplikasi?
 
-1. user pegawai
-- cara mendapatkan username/email dan password (minta ke operator web eabsen di masing-masing skpd)
-- cara membuat laporan kegiatan (catatan: tanggal yang diajukan harus sudah absen di sistem eabsen)
-- cara mengedit laporan kegiatan (jika status masih Diajukan, selain itu tidak bisa diedit)
-- cara mencetak laporan kegiatan
-
+# 27-11-2025
+1. tanya ke chatgpt, cara buat card "SKPD yang sudah terintegrasi" di web api eabsen.link chat https://chatgpt.com/c/69271c10-02a4-8324-b71c-f1078c7e7ebf
