@@ -1,6 +1,7 @@
 // components/layout/PublicLanding.tsx
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -11,6 +12,7 @@ import {
   LogIn,
   ShieldCheck,
   Users,
+  Download,
 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 
@@ -44,8 +46,18 @@ type PublicOverview = {
   recentActivities: RecentActivity[];
 };
 
+type AppInfo = {
+  alias: string;
+  description: string;
+  instansi: string;
+  nama_aplikasi: string;
+  logo: string | null;
+  versi: string;
+};
+
 type Props = {
   overview: PublicOverview;
+  appInfo: AppInfo;
 };
 
 // ====== Animations (ringan) ======
@@ -106,26 +118,43 @@ const FEATURES = [
 
 // ====== MAIN COMPONENT ======
 
-export function PublicLanding({ overview }: Props) {
+export function PublicLanding({ overview, appInfo }: Props) {
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
       {/* NAVBAR */}
       <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-0">
           <Link href="/" className="flex items-center gap-2">
-            <motion.div
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-sky-500 text-slate-950 shadow-lg shadow-emerald-500/30"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.35 }}>
-              <span className="text-xs font-black tracking-tight">IZ</span>
-            </motion.div>
+            {appInfo.logo ? (
+              <motion.div
+                className="relative h-9 w-9 overflow-hidden rounded-xl bg-slate-900/60"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.35 }}>
+                <Image
+                  src={appInfo.logo}
+                  alt={`${appInfo.alias} logo`}
+                  fill
+                  sizes="36px"
+                  className="object-contain"
+                  priority
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-sky-500 text-slate-950 shadow-lg shadow-emerald-500/30"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.35 }}>
+                <span className="text-xs font-black tracking-tight">IZ</span>
+              </motion.div>
+            )}
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold tracking-tight lg:text-base">
-                IZAKOD-ASN
+              <span className="text-sm font-bold tracking-tight lg:text-base bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {appInfo.alias}
               </span>
               <span className="text-[11px] text-slate-400 lg:text-xs">
-                Laporan Kegiatan ASN Kab. Merauke
+                {appInfo.nama_aplikasi}
               </span>
             </div>
           </Link>
@@ -151,7 +180,7 @@ export function PublicLanding({ overview }: Props) {
               size="sm"
               variant="outline"
               className="hidden border-slate-600/60 text-xs md:inline-flex lg:text-sm">
-              <Link href="#panduan">Panduan</Link>
+              <Link href="/informasi/panduan-penggunaan">Panduan</Link>
             </Button>
             <Button asChild size="sm" className="gap-1.5 text-xs lg:text-sm">
               <Link href="/login">
@@ -178,7 +207,7 @@ export function PublicLanding({ overview }: Props) {
             <Badge
               variant="outline"
               className="border-blue-500/40 bg-emerald-500/10 text-[11px] font-medium uppercase tracking-wide text-blue-300">
-              Aplikasi resmi • Dinas Kominfo Kabupaten Merauke
+              Aplikasi resmi • {appInfo.instansi}
             </Badge>
 
             <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl lg:text-5xl">
@@ -190,7 +219,7 @@ export function PublicLanding({ overview }: Props) {
             </h1>
 
             <p className="max-w-xl text-sm text-slate-300 sm:text-base">
-              IZAKOD-ASN membantu ASN Kabupaten Merauke mencatat kegiatan,
+              {appInfo.alias} membantu ASN Kabupaten Merauke mencatat kegiatan,
               memudahkan pimpinan memantau kinerja, dan menyajikan rekap laporan
               yang siap digunakan untuk evaluasi dan pelaporan resmi.
             </p>
@@ -198,7 +227,7 @@ export function PublicLanding({ overview }: Props) {
             <div className="flex flex-wrap items-center gap-3">
               <Button asChild size="lg" className="gap-2">
                 <Link href="/login">
-                  <span>Masuk sebagai ASN</span>
+                  <span>Masuk Aplikasi</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -328,7 +357,7 @@ export function PublicLanding({ overview }: Props) {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
-                Fitur utama IZAKOD-ASN
+                Fitur utama {appInfo.alias}
               </h2>
               <p className="max-w-xl text-sm text-slate-300">
                 Dirancang untuk mendukung siklus pelaporan kinerja ASN secara
@@ -377,9 +406,9 @@ export function PublicLanding({ overview }: Props) {
                 SKPD yang sudah terintegrasi
               </h2>
               <p className="max-w-xl text-sm text-slate-300">
-                Berikut beberapa SKPD yang telah menggunakan IZAKOD-ASN sebagai
-                media pelaporan kegiatan ASN. Daftar ini akan terus bertambah
-                seiring dengan perluasan implementasi.
+                Berikut beberapa SKPD yang telah menggunakan {appInfo.alias}{" "}
+                sebagai media pelaporan kegiatan ASN. Daftar ini akan terus
+                bertambah seiring dengan perluasan implementasi.
               </p>
             </div>
             <p className="text-xs text-slate-400">
@@ -513,7 +542,7 @@ export function PublicLanding({ overview }: Props) {
             <CardContent className="flex flex-col items-start justify-between gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
               <div className="space-y-1.5">
                 <p className="text-sm font-semibold text-slate-50">
-                  Butuh panduan penggunaan IZAKOD-ASN?
+                  Butuh panduan penggunaan {appInfo.alias}?
                 </p>
                 <p className="max-w-xl text-xs text-slate-300">
                   Silakan unduh panduan penggunaan atau hubungi admin SKPD /
@@ -528,7 +557,12 @@ export function PublicLanding({ overview }: Props) {
                   className="border-slate-600/80 text-xs"
                   asChild>
                   {/* TODO: ganti href dengan file panduan asli */}
-                  <Link href="#">Unduh Panduan (PDF)</Link>
+                  <Link
+                    href="/uploads/panduan-penggunaan-izakod-asn.pdf"
+                    download>
+                    <Download className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    Unduh Panduan (PDF)
+                  </Link>
                 </Button>
                 <Button size="sm" className="gap-1.5 text-xs" asChild>
                   <Link href="/login">
@@ -544,17 +578,45 @@ export function PublicLanding({ overview }: Props) {
 
       {/* FOOTER */}
       <footer className="border-t border-slate-800/70 bg-slate-950/90">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-xs text-slate-400 lg:flex-row lg:items-center lg:justify-between lg:px-0">
-          <span>
-            © {new Date().getFullYear()} IZAKOD-ASN – Pemerintah Kabupaten
-            Merauke.
-          </span>
-          <span>
-            Dikelola oleh{" "}
-            <span className="font-medium">
-              Dinas Komunikasi dan Informatika Kabupaten Merauke
-            </span>
+        <div
+          className="
+      mx-auto flex max-w-6xl flex-col
+      items-center text-center
+      gap-2 px-4 py-4
+      text-xs text-slate-400
+      lg:flex-row lg:items-center lg:justify-between lg:px-0 lg:text-left
+    ">
+          {/* Baris kiri */}
+          <span className="w-full lg:w-auto">
+            © 2025 - {new Date().getFullYear()} {appInfo.alias} {"v"}
+            {appInfo.versi} –{" "}
+            <Link
+              className="hover:text-blue-600"
+              href="https://kominfo.merauke.go.id">
+              {appInfo.instansi}
+            </Link>
             .
+          </span>
+
+          {/* Baris kanan: 3 link */}
+          <span className="flex w-full flex-wrap items-center justify-center gap-3 lg:w-auto">
+            <Link
+              href="/informasi/panduan-penggunaan"
+              className="hover:text-blue-600 underline-offset-4">
+              Panduan Penggunaan
+            </Link>
+            <span className="text-slate-600">•</span>
+            <Link
+              href="/informasi/ketentuan-penggunaan"
+              className="hover:text-blue-600 underline-offset-4">
+              Ketentuan Layanan
+            </Link>
+            <span className="text-slate-600">•</span>
+            <Link
+              href="/informasi/kebijakan-privasi"
+              className="hover:text-blue-600 underline-offset-4">
+              Kebijakan Privasi
+            </Link>
           </span>
         </div>
       </footer>

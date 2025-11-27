@@ -5,6 +5,8 @@ import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/helpers/auth-helper";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   return generatePageMetadata({
     title: "Jabatan",

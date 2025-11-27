@@ -598,6 +598,10 @@ export default function PegawaiClient() {
                           }
                           alt={pegawai.pegawai_nama}
                           className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                          onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${pegawai.pegawai_nama}`;
+                          }}
                         />
                       </td>
                       <td className="px-6 py-4">

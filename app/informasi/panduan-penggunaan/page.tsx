@@ -126,6 +126,15 @@ export default async function PanduanPenggunaanPage() {
             </p>
             {/* Quick Navigation */}
             <div className="flex flex-wrap justify-center gap-4">
+              <Link
+                href="/uploads/panduan-penggunaan-izakod-asn.pdf"
+                download
+                className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-gray-700 group">
+                <Download className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <span className="font-medium text-gray-900 dark:text-white">
+                  Unduh Panduan
+                </span>
+              </Link>
               <a
                 href="#user-pegawai"
                 className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-gray-700 group">

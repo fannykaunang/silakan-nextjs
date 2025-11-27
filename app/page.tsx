@@ -2,11 +2,25 @@
 import { executeQuery } from "@/lib/helpers/db-helpers";
 import { PublicLanding } from "@/components/layout/PublicLanding";
 import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
+import { getAppSettings } from "@/lib/models/app-settings-model";
 
 export async function generateMetadata() {
-  return generatePageMetadata({
+  const metadata = await generatePageMetadata({
     path: "/",
   });
+
+  const customTitle = "IZAKOD-ASN | Pemerintah Kabupaten Merauke";
+
+  return {
+    ...metadata,
+    title: customTitle,
+    openGraph: metadata.openGraph
+      ? { ...metadata.openGraph, title: customTitle }
+      : undefined,
+    twitter: metadata.twitter
+      ? { ...metadata.twitter, title: customTitle }
+      : undefined,
+  };
 }
 
 type SkpdItem = {
@@ -136,6 +150,18 @@ async function getPublicOverview(): Promise<PublicOverview> {
 
 export default async function HomePage() {
   const overview = await getPublicOverview();
+  const appSettings = await getAppSettings();
 
-  return <PublicLanding overview={overview} />;
+  const appInfo = {
+    alias: appSettings?.alias_aplikasi ?? "IZAKOD-ASN",
+    description: appSettings?.deskripsi ?? "Laporan Kegiatan ASN Kab. Merauke",
+    instansi: appSettings?.instansi_nama ?? "Dinas Kominfo Kabupaten Merauke",
+    nama_aplikasi:
+      appSettings?.nama_aplikasi ??
+      "Integrasi Laporan Kegiatan Online Digital ASN",
+    logo: appSettings?.logo ?? null,
+    versi: appSettings?.versi ?? "1.0.0",
+  };
+
+  return <PublicLanding overview={overview} appInfo={appInfo} />;
 }

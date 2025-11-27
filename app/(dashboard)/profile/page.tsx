@@ -6,6 +6,8 @@ import ProfileClient from "./_client";
 import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import { getUserWithPegawaiData } from "@/lib/helpers/auth-helper";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   const { session, pegawai } = await getUserWithPegawaiData();
 

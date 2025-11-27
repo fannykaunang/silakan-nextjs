@@ -4,6 +4,8 @@ import KategoriKegiatanClient from "./_client";
 import { requireAdmin } from "@/lib/helpers/auth-helper";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   return generatePageMetadata({
     title: "Kategori Kegiatan",

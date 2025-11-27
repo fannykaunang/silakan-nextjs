@@ -5,6 +5,8 @@ import { getUserFromCookie } from "@/lib/helpers/auth-helper";
 import { redirect } from "next/navigation";
 import RekapHarianClient from "./_client";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   return generatePageMetadata({
     title: "Statistik Harian",

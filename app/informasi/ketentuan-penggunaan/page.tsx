@@ -53,7 +53,7 @@ export default async function TermsOfServicePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
-                href="/dashboard"
+                href="/"
                 className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
                 <span className="font-medium">Kembali</span>

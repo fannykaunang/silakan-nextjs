@@ -4,6 +4,8 @@ import { getUserFromCookie } from "@/lib/helpers/auth-helper";
 import RekapBulananClient from "./_client";
 import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   return generatePageMetadata({
     title: "Statistik Bulanan",
