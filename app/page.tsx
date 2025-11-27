@@ -1,13 +1,13 @@
 // app/page.tsx
-import type { Metadata } from "next";
 import { executeQuery } from "@/lib/helpers/db-helpers";
 import { PublicLanding } from "@/components/layout/PublicLanding";
+import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 
-export const metadata: Metadata = {
-  title: "IZAKOD-ASN – Laporan Kegiatan ASN Kabupaten Merauke",
-  description:
-    "Aplikasi laporan kegiatan ASN Kabupaten Merauke untuk pencatatan, monitoring, dan pelaporan kinerja ASN secara terintegrasi.",
-};
+export async function generateMetadata() {
+  return generatePageMetadata({
+    path: "/",
+  });
+}
 
 type SkpdItem = {
   id: number;

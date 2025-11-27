@@ -108,13 +108,13 @@ const FEATURES = [
 
 export function PublicLanding({ overview }: Props) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
       {/* NAVBAR */}
       <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-0">
           <Link href="/" className="flex items-center gap-2">
             <motion.div
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-sky-500 text-slate-950 shadow-lg shadow-emerald-500/30"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-sky-500 text-slate-950 shadow-lg shadow-emerald-500/30"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.35 }}>
