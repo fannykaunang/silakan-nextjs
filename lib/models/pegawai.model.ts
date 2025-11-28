@@ -216,11 +216,6 @@ export async function deletePegawai(id: number): Promise<number> {
       message: "Data pegawai masih terkait dengan data 'Reminder'.",
     },
     {
-      table: "revisi_laporan",
-      column: "pegawai_id",
-      message: "Data pegawai masih terkait dengan data 'Revisi Laporan'.",
-    },
-    {
       table: "template_kegiatan",
       column: "pegawai_id",
       message: "Data pegawai masih terkait dengan data 'Template Kegiatan'.",

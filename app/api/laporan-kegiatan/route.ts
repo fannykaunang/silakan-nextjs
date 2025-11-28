@@ -252,22 +252,25 @@ export async function POST(req: Request) {
       }
     }
 
-    const tanggalKegiatan = `${body.tanggal_kegiatan}`.trim();
-    const attendanceCheck = await checkAttendanceToday(
-      user.pin,
-      tanggalKegiatan
-    );
-
-    if (!attendanceCheck.success) {
-      return NextResponse.json(
-        {
-          error:
-            attendanceCheck.message ||
-            "Anda belum absen pada tanggal yang dipilih!",
-          requiresAttendance: true,
-        },
-        { status: 403 }
+    const isAdmin = user.level === 3;
+    if (!isAdmin) {
+      const tanggalKegiatan = `${body.tanggal_kegiatan}`.trim();
+      const attendanceCheck = await checkAttendanceToday(
+        user.pin,
+        tanggalKegiatan
       );
+
+      if (!attendanceCheck.success) {
+        return NextResponse.json(
+          {
+            error:
+              attendanceCheck.message ||
+              "Anda belum absen pada tanggal yang dipilih!",
+            requiresAttendance: true,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // ===== PREPARE LAPORAN DATA =====

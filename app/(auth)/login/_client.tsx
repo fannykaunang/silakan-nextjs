@@ -330,6 +330,9 @@ export default function LoginPageClient() {
               Belum punya akun? Hubungi Operator masing-masing SKPD
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+              <Link href="/" className="text-blue-600 hover:underline">
+                Beranda
+              </Link>
               <Link
                 href="/informasi/panduan-penggunaan"
                 className="text-blue-600 hover:underline">
@@ -338,7 +341,7 @@ export default function LoginPageClient() {
               <Link
                 href="/informasi/ketentuan-penggunaan"
                 className="text-blue-600 hover:underline">
-                Ketentuan Layanan
+                Ketentuan
               </Link>
               <Link
                 href="/informasi/kebijakan-privasi"

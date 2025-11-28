@@ -102,3 +102,6 @@ berikut rincian halamannya :
 
 # 27-11-2025
 1. tanya ke chatgpt, cara buat card "SKPD yang sudah terintegrasi" di web api eabsen.link chat https://chatgpt.com/c/69271c10-02a4-8324-b71c-f1078c7e7ebf
+
+# 28-11-2025
+1. tambahkan toggle theme di samping panduan halaman components/layout/PublicLanding.tsx

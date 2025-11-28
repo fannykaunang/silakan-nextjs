@@ -1,4 +1,5 @@
 // components/layout/PublicLanding.tsx
+
 "use client";
 
 import Image from "next/image";
@@ -20,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+
+import ThemeToggle from "@/components/ui/theme-toggle";
 
 // ====== TYPES ======
 
@@ -61,6 +64,7 @@ type Props = {
 };
 
 // ====== Animations (ringan) ======
+
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: {
@@ -120,14 +124,14 @@ const FEATURES = [
 
 export function PublicLanding({ overview, appInfo }: Props) {
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+    <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300">
       {/* NAVBAR */}
-      <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800/60 bg-white/80 dark:bg-slate-950/80 backdrop-blur transition-colors duration-300">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-0">
           <Link href="/" className="flex items-center gap-2">
             {appInfo.logo ? (
               <motion.div
-                className="relative h-9 w-9 overflow-hidden rounded-xl bg-slate-900/60"
+                className="relative h-9 w-9 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-900/60 transition-colors duration-300"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.35 }}>
@@ -142,7 +146,7 @@ export function PublicLanding({ overview, appInfo }: Props) {
               </motion.div>
             ) : (
               <motion.div
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-400 to-sky-500 text-slate-950 shadow-lg shadow-emerald-500/30"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-purple-600 text-slate-950 shadow-lg shadow-blue-500/30"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.35 }}>
@@ -153,33 +157,38 @@ export function PublicLanding({ overview, appInfo }: Props) {
               <span className="text-sm font-bold tracking-tight lg:text-base bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {appInfo.alias}
               </span>
-              <span className="text-[11px] text-slate-400 lg:text-xs">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 lg:text-xs transition-colors duration-300">
                 {appInfo.nama_aplikasi}
               </span>
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-6 text-xs font-medium text-slate-300 md:flex lg:text-sm">
-            <a href="#beranda" className="hover:text-emerald-400">
+          <nav className="hidden items-center gap-6 text-xs font-medium text-slate-600 dark:text-slate-300 md:flex lg:text-sm transition-colors duration-300">
+            <a
+              href="#beranda"
+              className="hover:text-blue-600 transition-colors">
               Beranda
             </a>
-            <a href="#fitur" className="hover:text-emerald-400">
+            <a href="#fitur" className="hover:text-blue-600 transition-colors">
               Fitur
             </a>
-            <a href="#skpd" className="hover:text-emerald-400">
+            <a href="#skpd" className="hover:text-blue-600 transition-colors">
               Integrasi SKPD
             </a>
-            <a href="#keamanan" className="hover:text-emerald-400">
+            <a
+              href="#keamanan"
+              className="hover:text-blue-600 transition-colors">
               Keamanan
             </a>
           </nav>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button
               asChild
               size="sm"
               variant="outline"
-              className="hidden border-slate-600/60 text-xs md:inline-flex lg:text-sm">
+              className="hidden border-slate-300 dark:border-slate-600/60 text-xs md:inline-flex lg:text-sm transition-colors duration-300">
               <Link href="/informasi/panduan-penggunaan">Panduan</Link>
             </Button>
             <Button asChild size="sm" className="gap-1.5 text-xs lg:text-sm">
@@ -206,11 +215,11 @@ export function PublicLanding({ overview, appInfo }: Props) {
           <motion.div className="space-y-6" variants={fadeInUp}>
             <Badge
               variant="outline"
-              className="border-blue-500/40 bg-emerald-500/10 text-[11px] font-medium uppercase tracking-wide text-blue-300">
+              className="border-blue-500/40 bg-linear-to-r from-blue-600/10 to-purple-600/10 text-[11px] font-medium uppercase tracking-wide text-blue-600 dark:text-blue-300 transition-colors duration-300">
               Aplikasi resmi • {appInfo.instansi}
             </Badge>
 
-            <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl lg:text-5xl">
+            <h1 className="text-balance text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl lg:text-5xl transition-colors duration-300">
               Digitalisasi laporan kegiatan ASN untuk{" "}
               <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 kinerja yang transparan
@@ -218,7 +227,7 @@ export function PublicLanding({ overview, appInfo }: Props) {
               .
             </h1>
 
-            <p className="max-w-xl text-sm text-slate-300 sm:text-base">
+            <p className="max-w-xl text-sm text-slate-600 dark:text-slate-300 sm:text-base transition-colors duration-300">
               {appInfo.alias} membantu ASN Kabupaten Merauke mencatat kegiatan,
               memudahkan pimpinan memantau kinerja, dan menyajikan rekap laporan
               yang siap digunakan untuk evaluasi dan pelaporan resmi.
@@ -235,12 +244,12 @@ export function PublicLanding({ overview, appInfo }: Props) {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-slate-600/70 bg-slate-900/60 text-slate-100">
+                className="border-slate-300 dark:border-slate-600/70 bg-white/60 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 transition-colors duration-300">
                 <Link href="#fitur">Lihat fitur utama</Link>
               </Button>
             </div>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">
               Akses aplikasi terbatas untuk ASN dan pejabat berwenang di
               lingkungan Pemerintah Kabupaten Merauke.
             </p>
@@ -250,18 +259,18 @@ export function PublicLanding({ overview, appInfo }: Props) {
               className="mt-4 grid gap-4 sm:grid-cols-2"
               variants={staggerContainer}>
               <motion.div variants={fadeInUp}>
-                <Card className="border-slate-700/70 bg-slate-900/70">
+                <Card className="border-slate-200 dark:border-slate-700/70 bg-white/70 dark:bg-slate-900/70 transition-colors duration-300">
                   <CardContent className="flex items-center gap-3 p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                      <Building2 className="h-5 w-5 text-emerald-400" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-r from-blue-600/10 to-purple-600/10">
+                      <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-400">
+                      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 transition-colors duration-300">
                         SKPD Terintegrasi
                       </p>
-                      <p className="text-lg font-semibold text-slate-50">
+                      <p className="text-lg font-semibold text-slate-900 dark:text-slate-50 transition-colors duration-300">
                         {overview.totalSkpd.toLocaleString("id-ID")}{" "}
-                        <span className="text-xs font-normal text-slate-400">
+                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400 transition-colors duration-300">
                           unit
                         </span>
                       </p>
@@ -271,18 +280,18 @@ export function PublicLanding({ overview, appInfo }: Props) {
               </motion.div>
 
               <motion.div variants={fadeInUp}>
-                <Card className="border-slate-700/70 bg-slate-900/70">
+                <Card className="border-slate-200 dark:border-slate-700/70 bg-white/70 dark:bg-slate-900/70 transition-colors duration-300">
                   <CardContent className="flex items-center gap-3 p-4">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10">
-                      <Users className="h-5 w-5 text-sky-400" />
+                      <Users className="h-5 w-5 text-sky-600 dark:text-sky-400 transition-colors duration-300" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-slate-400">
+                      <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 transition-colors duration-300">
                         ASN Pengguna
                       </p>
-                      <p className="text-lg font-semibold text-slate-50">
+                      <p className="text-lg font-semibold text-slate-900 dark:text-slate-50 transition-colors duration-300">
                         {overview.totalPegawai.toLocaleString("id-ID")}{" "}
-                        <span className="text-xs font-normal text-slate-400">
+                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400 transition-colors duration-300">
                           pegawai
                         </span>
                       </p>
@@ -299,14 +308,14 @@ export function PublicLanding({ overview, appInfo }: Props) {
             variants={fadeIn}
             transition={{ delay: 0.1 }}>
             {/* Glow background */}
-            <div className="pointer-events-none absolute -left-10 top-0 -z-10 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl" />
+            <div className="pointer-events-none absolute -left-10 top-0 -z-10 h-64 w-64 rounded-full bg-linear-to-r from-blue-500/20 to-purple-500/20 blur-3xl" />
             <div className="pointer-events-none absolute bottom-0 right-0 -z-10 h-52 w-52 rounded-full bg-sky-500/20 blur-3xl" />
 
-            <Card className="border-slate-700/70 bg-slate-900/80 shadow-2xl shadow-blue-500/15">
-              <CardHeader className="border-b border-slate-700/60 pb-3">
-                <CardTitle className="flex items-center justify-between text-sm font-semibold text-slate-100">
+            <Card className="border-slate-200 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/80 shadow-2xl shadow-blue-500/15 transition-colors duration-300">
+              <CardHeader className="border-b border-slate-200 dark:border-slate-700/60 pb-3 transition-colors duration-300">
+                <CardTitle className="flex items-center justify-between text-sm font-semibold text-slate-900 dark:text-slate-100 transition-colors duration-300">
                   Aktivitas Terkini ASN
-                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-medium bg-linear-to-r from-blue-600 to-purple-600">
+                  <span className="rounded-full bg-linear-to-r from-blue-600 to-purple-600 px-2 py-0.5 text-[11px] font-medium bg-linear-to-r from-blue-600 to-purple-600 text-white">
                     Laporan Kegiatan
                   </span>
                 </CardTitle>
@@ -314,7 +323,7 @@ export function PublicLanding({ overview, appInfo }: Props) {
               <CardContent className="space-y-4 p-4">
                 <div className="space-y-3 text-xs">
                   {overview.recentActivities.length === 0 ? (
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 transition-colors duration-300">
                       Belum ada aktivitas yang dapat ditampilkan.
                     </p>
                   ) : (
@@ -331,9 +340,9 @@ export function PublicLanding({ overview, appInfo }: Props) {
                   )}
                 </div>
 
-                <Separator className="border-slate-700/70" />
+                <Separator className="border-slate-200 dark:border-slate-700/70 transition-colors duration-300" />
 
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 transition-colors duration-300">
                   <span>Alur singkat:</span>
                   <div className="flex items-center gap-2">
                     <StepBadge label="Login" />
@@ -356,10 +365,10 @@ export function PublicLanding({ overview, appInfo }: Props) {
           viewport={{ once: true, amount: 0.25 }}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl transition-colors duration-300">
                 Fitur utama {appInfo.alias}
               </h2>
-              <p className="max-w-xl text-sm text-slate-300">
+              <p className="max-w-xl text-sm text-slate-600 dark:text-slate-300 transition-colors duration-300">
                 Dirancang untuk mendukung siklus pelaporan kinerja ASN secara
                 end-to-end, dari input kegiatan sampai monitoring di level SKPD.
               </p>
@@ -374,15 +383,15 @@ export function PublicLanding({ overview, appInfo }: Props) {
             viewport={{ once: true, amount: 0.2 }}>
             {FEATURES.map((feature) => (
               <motion.div key={feature.title} variants={fadeInUp}>
-                <Card className="group border-slate-700/60 bg-slate-900/70 transition-colors hover:border-emerald-500/70 hover:bg-slate-900">
+                <Card className="group border-slate-200 dark:border-slate-700/60 bg-white/70 dark:bg-slate-900/70 transition-all duration-300 hover:border-blue-500/70 hover:bg-white dark:hover:bg-slate-900">
                   <CardContent className="space-y-3 p-4">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800/80 group-hover:bg-emerald-500/15">
-                      <feature.icon className="h-4 w-4 text-emerald-300" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800/80 group-hover:bg-linear-to-r group-hover:from-blue-600/15 group-hover:to-purple-600/15 transition-colors duration-300">
+                      <feature.icon className="h-4 w-4 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                     </div>
-                    <h3 className="text-sm font-semibold text-slate-50">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50 transition-colors duration-300">
                       {feature.title}
                     </h3>
-                    <p className="text-xs text-slate-300">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -402,25 +411,25 @@ export function PublicLanding({ overview, appInfo }: Props) {
           viewport={{ once: true, amount: 0.25 }}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl transition-colors duration-300">
                 SKPD yang sudah terintegrasi
               </h2>
-              <p className="max-w-xl text-sm text-slate-300">
+              <p className="max-w-xl text-sm text-slate-600 dark:text-slate-300 transition-colors duration-300">
                 Berikut beberapa SKPD yang telah menggunakan {appInfo.alias}{" "}
                 sebagai media pelaporan kegiatan ASN. Daftar ini akan terus
                 bertambah seiring dengan perluasan implementasi.
               </p>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">
               Total SKPD:{" "}
-              <span className="font-semibold text-emerald-300">
+              <span className="font-semibold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {overview.totalSkpd.toLocaleString("id-ID")} unit
               </span>
             </p>
           </div>
 
           <motion.div
-            className="rounded-2xl border border-slate-700/70 bg-slate-900/80 p-4"
+            className="rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/80 p-4 transition-colors duration-300"
             variants={fadeIn}>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {overview.skpd.map((item) => (
@@ -430,19 +439,19 @@ export function PublicLanding({ overview, appInfo }: Props) {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.3 }}
-                  className="flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-950/40 px-3 py-2.5">
+                  className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/40 px-3 py-2.5 transition-colors duration-300">
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-slate-100">
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 transition-colors duration-300">
                       {item.singkatan ?? item.nama}
                     </span>
                     {item.singkatan && (
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 transition-colors duration-300">
                         {item.nama}
                       </span>
                     )}
                   </div>
-                  <div className="text-right text-[11px] text-slate-400">
-                    <span className="block text-xs font-semibold text-emerald-300">
+                  <div className="text-right text-[11px] text-slate-500 dark:text-slate-400 transition-colors duration-300">
+                    <span className="block text-xs font-semibold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                       {item.totalPegawai.toLocaleString("id-ID")}
                     </span>
                     <span>ASN terdaftar</span>
@@ -463,10 +472,10 @@ export function PublicLanding({ overview, appInfo }: Props) {
           viewport={{ once: true, amount: 0.25 }}>
           {/* Alur penggunaan */}
           <motion.div className="space-y-5" variants={fadeInUp}>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl transition-colors duration-300">
               Alur singkat penggunaan untuk ASN
             </h2>
-            <div className="space-y-3 text-sm text-slate-300">
+            <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300 transition-colors duration-300">
               <FlowStep
                 step="01"
                 title="Login menggunakan akun ASN"
@@ -487,38 +496,38 @@ export function PublicLanding({ overview, appInfo }: Props) {
 
           {/* Keamanan */}
           <motion.div className="space-y-5" variants={fadeInUp}>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-50 sm:text-xl">
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-xl transition-colors duration-300">
               Keamanan & pengelolaan data
             </h2>
-            <Card className="border-slate-700/70 bg-slate-900/80">
+            <Card className="border-slate-200 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/80 transition-colors duration-300">
               <CardContent className="space-y-4 p-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15">
-                    <ShieldCheck className="h-5 w-5 text-emerald-300" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-r from-blue-600/15 to-purple-600/15">
+                    <ShieldCheck className="h-5 w-5 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                   </div>
-                  <p className="text-sm text-slate-100">
+                  <p className="text-sm text-slate-900 dark:text-slate-100 transition-colors duration-300">
                     Akses aplikasi dibatasi untuk ASN dan pejabat yang
                     berwenang, dengan pengaturan hak akses sesuai peran.
                   </p>
                 </div>
 
-                <ul className="space-y-2 text-xs text-slate-300">
+                <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                     <span>
                       Data laporan disimpan pada infrastruktur server yang
                       dikelola Pemerintah Kabupaten Merauke.
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                     <span>
                       Mendukung pemisahan akses Admin, Operator SKPD, Pimpinan,
                       dan ASN pelaksana.
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-300" />
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                     <span>
                       Riwayat aktivitas dapat ditelusuri untuk mendukung audit
                       dan pelaporan kinerja.
@@ -538,13 +547,13 @@ export function PublicLanding({ overview, appInfo }: Props) {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.25 }}>
-          <Card className="border-slate-700/70 bg-slate-900/80">
+          <Card className="border-slate-200 dark:border-slate-700/70 bg-white/80 dark:bg-slate-900/80 transition-colors duration-300">
             <CardContent className="flex flex-col items-start justify-between gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
               <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-slate-50">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 transition-colors duration-300">
                   Butuh panduan penggunaan {appInfo.alias}?
                 </p>
-                <p className="max-w-xl text-xs text-slate-300">
+                <p className="max-w-xl text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300">
                   Silakan unduh panduan penggunaan atau hubungi admin SKPD /
                   Dinas Kominfo bila membutuhkan bantuan lebih lanjut. (Link
                   panduan dapat disesuaikan nantinya.)
@@ -554,7 +563,7 @@ export function PublicLanding({ overview, appInfo }: Props) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-slate-600/80 text-xs"
+                  className="border-slate-300 dark:border-slate-600/80 text-xs transition-colors duration-300"
                   asChild>
                   {/* TODO: ganti href dengan file panduan asli */}
                   <Link
@@ -577,21 +586,22 @@ export function PublicLanding({ overview, appInfo }: Props) {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-slate-800/70 bg-slate-950/90">
+      <footer className="border-t border-slate-200 dark:border-slate-800/70 bg-white/90 dark:bg-slate-950/90 transition-colors duration-300">
         <div
           className="
       mx-auto flex max-w-6xl flex-col
       items-center text-center
       gap-2 px-4 py-4
-      text-xs text-slate-400
+      text-xs text-slate-600 dark:text-slate-400
       lg:flex-row lg:items-center lg:justify-between lg:px-0 lg:text-left
+      transition-colors duration-300
     ">
           {/* Baris kiri */}
           <span className="w-full lg:w-auto">
             © 2025 - {new Date().getFullYear()} {appInfo.alias} {"v"}
             {appInfo.versi} –{" "}
             <Link
-              className="hover:text-blue-600"
+              className="hover:text-blue-600 transition-colors"
               href="https://kominfo.merauke.go.id">
               {appInfo.instansi}
             </Link>
@@ -602,19 +612,19 @@ export function PublicLanding({ overview, appInfo }: Props) {
           <span className="flex w-full flex-wrap items-center justify-center gap-3 lg:w-auto">
             <Link
               href="/informasi/panduan-penggunaan"
-              className="hover:text-blue-600 underline-offset-4">
+              className="hover:text-blue-600 underline-offset-4 transition-colors">
               Panduan Penggunaan
             </Link>
-            <span className="text-slate-600">•</span>
+            <span className="text-slate-400">•</span>
             <Link
               href="/informasi/ketentuan-penggunaan"
-              className="hover:text-blue-600 underline-offset-4">
+              className="hover:text-blue-600 underline-offset-4 transition-colors">
               Ketentuan Layanan
             </Link>
-            <span className="text-slate-600">•</span>
+            <span className="text-slate-400">•</span>
             <Link
               href="/informasi/kebijakan-privasi"
-              className="hover:text-blue-600 underline-offset-4">
+              className="hover:text-blue-600 underline-offset-4 transition-colors">
               Kebijakan Privasi
             </Link>
           </span>
@@ -642,26 +652,32 @@ function ActivityItem({
 }: ActivityItemProps) {
   return (
     <motion.div
-      className="rounded-xl border border-slate-800/70 bg-slate-950/40 p-3"
+      className="rounded-xl border border-slate-200 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-950/40 p-3 transition-colors duration-300"
       variants={fadeInUp}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}>
       <div className="flex items-center justify-between gap-2 text-[11px]">
-        <span className="font-semibold text-slate-100">{namaPegawai}</span>
-        <span className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+        <span className="font-semibold text-slate-900 dark:text-slate-100 transition-colors duration-300">
+          {namaPegawai}
+        </span>
+        <span className="rounded-full bg-slate-200 dark:bg-slate-800/80 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-700 dark:text-slate-300 transition-colors duration-300">
           {skpd}
         </span>
       </div>
-      <p className="mt-1 text-[11px] text-slate-300">{kegiatan}</p>
-      <p className="mt-1 text-[10px] text-slate-500">Hari ini • {waktu}</p>
+      <p className="mt-1 text-[11px] text-slate-700 dark:text-slate-300 transition-colors duration-300">
+        {kegiatan}
+      </p>
+      <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400 transition-colors duration-300">
+        Hari ini • {waktu}
+      </p>
     </motion.div>
   );
 }
 
 function StepBadge({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-slate-700/70 bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-300">
+    <span className="rounded-full border border-slate-300 dark:border-slate-700/70 bg-white dark:bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-700 dark:text-slate-300 transition-colors duration-300">
       {label}
     </span>
   );
@@ -681,12 +697,16 @@ function FlowStep({ step, title, description }: FlowStepProps) {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.25 }}>
-      <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900/80 text-[11px] font-semibold text-emerald-300">
+      <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-white dark:bg-slate-900/80 text-[11px] font-semibold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
         {step}
       </div>
       <div className="space-y-1">
-        <p className="text-sm font-medium text-slate-100">{title}</p>
-        <p className="text-xs text-slate-300">{description}</p>
+        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 transition-colors duration-300">
+          {title}
+        </p>
+        <p className="text-xs text-slate-600 dark:text-slate-300 transition-colors duration-300">
+          {description}
+        </p>
       </div>
     </motion.div>
   );
