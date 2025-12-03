@@ -12,7 +12,7 @@ if (
 
 // Reuse instance untuk dev hot-reload & serverless reuse
 declare global {
-  // eslint-disable-next-line no-var
+   
   var __UPSTASH_REDIS__: Redis | undefined;
 }
 

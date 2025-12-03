@@ -1,4 +1,4 @@
-// File: app/laporan-kegiatan/[id]/DetailEditClient.tsx
+// app/laporan-kegiatan/[id]/DetailEditClient.tsx
 
 "use client";
 

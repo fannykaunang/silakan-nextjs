@@ -15,7 +15,6 @@ import {
   Bell,
   MapPin,
   Camera,
-  Phone,
 } from "lucide-react";
 import { generatePageMetadata } from "@/lib/helpers/metadata-helper";
 import { getAppSettings } from "@/lib/models/app-settings-model";
@@ -53,7 +52,6 @@ export default async function PrivacyPolicyPage() {
 
   // Technical settings
   const timezone = settings?.timezone || "Asia/Jayapura";
-  const sessionTimeout = settings?.session_timeout || 120;
   const maxUploadSize = settings?.max_upload_size || 5;
   const logRetentionDays = settings?.log_retention_days || 90;
 

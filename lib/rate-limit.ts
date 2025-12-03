@@ -1,4 +1,4 @@
-// src/lib/rate-limit.ts
+// lib/rate-limit.ts
 import "server-only";
 import type { NextRequest } from "next/server";
 import { redis } from "@/lib/redis";
@@ -22,7 +22,6 @@ export function getIp(req: Request | NextRequest) {
   const xri = h.get("x-real-ip");
   if (xri) return xri.trim();
   // NextRequest punya .ip; ignore kalau tipe Request biasa
-  // @ts-ignore
   if (typeof (req as any).ip === "string" && (req as any).ip)
     return (req as any).ip;
   return "unknown";

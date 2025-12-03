@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
     const isAdmin = user.level >= 3;
 
     // Build WHERE clause
-    let whereConditions: string[] = [];
-    let queryParams: any[] = [];
+    const whereConditions: string[] = [];
+    const queryParams: any[] = [];
 
     if (!isAdmin) {
       // Non-admin can only see their own data
@@ -186,7 +186,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get filter options (only for admin)
-    let filters = {
+    const filters = {
       skpdList: [] as SkpdItem[],
       pegawaiList: [] as PegawaiItem[],
       bulanList: [] as BulanItem[],
@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
         FROM pegawai_cache pc
         INNER JOIN rekap_bulanan rb ON pc.pegawai_id = rb.pegawai_id
       `;
-      let pegawaiParams: any[] = [];
+      const pegawaiParams: any[] = [];
 
       if (skpdid) {
         pegawaiQuery += " WHERE pc.skpdid = ?";

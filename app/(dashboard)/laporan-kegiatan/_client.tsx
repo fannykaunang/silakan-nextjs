@@ -12,7 +12,6 @@ import {
   Printer,
   Filter,
   X,
-  Star,
   ChevronLeft,
   ChevronRight,
   Eye,

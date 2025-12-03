@@ -1,10 +1,5 @@
 // lib/models/pegawai.model.ts
-import {
-  executeQuery,
-  executeInsert,
-  executeUpdate,
-  getOne,
-} from "@/lib/helpers/db-helpers";
+import { executeQuery, executeUpdate, getOne } from "@/lib/helpers/db-helpers";
 import {
   Pegawai,
   CreatePegawaiInput,
