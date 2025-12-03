@@ -186,54 +186,86 @@ export async function POST(req: Request) {
     // Fire-and-forget pattern: jangan gunakan await
     const pegawaiData = await fetchPegawaiFromEabsen(pin);
 
-    if (pegawaiData) {
-      const normalizedSkpdidRaw =
-        pegawaiData.skpdid ?? pegawaiData.skpd_id ?? skpdid ?? null;
-      let normalizedSkpdid: number | null = null;
-
-      if (
-        normalizedSkpdidRaw !== null &&
-        normalizedSkpdidRaw !== undefined &&
-        !(
-          typeof normalizedSkpdidRaw === "string" &&
-          normalizedSkpdidRaw.trim() === ""
-        )
-      ) {
-        const parsed = Number(normalizedSkpdidRaw);
-        normalizedSkpdid = Number.isNaN(parsed) ? null : parsed;
-      }
-
-      const normalizedPegawaiData = {
-        ...pegawaiData,
-        skpdid: normalizedSkpdid,
-      };
-      // Jalankan di background tanpa menunggu selesai
-      Promise.allSettled([
-        upsertPegawai(normalizedPegawaiData),
-        createLog({
-          pegawai_id: normalizedPegawaiData.pegawai_id,
-          aksi: "Login",
-          modul: "Auth",
-          detail_aksi: `User ${normalizedPegawaiData.pegawai_nama} berhasil login`,
-          data_sebelum: null,
-          data_sesudah: null,
-          ip_address: getClientInfo(req).ip_address,
-          user_agent: getClientInfo(req).user_agent,
-          endpoint: "/api/login",
-          method: "POST",
-        }),
-      ]).catch((err) => {
-        // Log error tapi jangan ganggu response ke client
-        console.error("Background DB operations failed:", err);
-      });
-    } else {
-      console.warn("Could not fetch pegawai data for PIN (masked).");
+    if (!pegawaiData) {
+      console.error("❌ CRITICAL: Cannot fetch pegawai data");
+      // Opsional: rollback auth cookie atau beri warning
+      return NextResponse.json(
+        {
+          result: 1,
+          response:
+            "Login berhasil, tetapi data pegawai belum lengkap. Silakan refresh halaman.",
+          email: maskedUserEmail,
+          level: numericLevel,
+          skpdid,
+        },
+        { status: 200 }
+      );
     }
+
+    // Normalisasi data
+    const normalizedSkpdidRaw =
+      pegawaiData.skpdid ?? pegawaiData.skpd_id ?? skpdid ?? null;
+    let normalizedSkpdid: number | null = null;
+
+    if (
+      normalizedSkpdidRaw !== null &&
+      normalizedSkpdidRaw !== undefined &&
+      !(
+        typeof normalizedSkpdidRaw === "string" &&
+        normalizedSkpdidRaw.trim() === ""
+      )
+    ) {
+      const parsed = Number(normalizedSkpdidRaw);
+      normalizedSkpdid = Number.isNaN(parsed) ? null : parsed;
+    }
+
+    const normalizedPegawaiData = {
+      ...pegawaiData,
+      skpdid: normalizedSkpdid,
+    };
+
+    try {
+      // ✅ AWAIT - Operasi CRITICAL untuk dashboard
+      await upsertPegawai(normalizedPegawaiData);
+      console.log("✅ Pegawai cache updated successfully");
+    } catch (error) {
+      console.error("❌ CRITICAL ERROR: Failed to upsert pegawai:", error);
+
+      // Opsional: Beri warning ke user
+      return NextResponse.json(
+        {
+          result: 1,
+          response:
+            "Login berhasil, tetapi terjadi kesalahan menyimpan data. Silakan coba login ulang.",
+          email: maskedUserEmail,
+          level: numericLevel,
+          skpdid,
+        },
+        { status: 200 }
+      );
+    }
+
+    // 9) NON-CRITICAL OPERATIONS - FIRE-AND-FORGET
+    // Log tidak critical, bisa gagal tanpa ganggu UX
+    createLog({
+      pegawai_id: normalizedPegawaiData.pegawai_id,
+      aksi: "Login",
+      modul: "Auth",
+      detail_aksi: `User ${normalizedPegawaiData.pegawai_nama} berhasil login`,
+      data_sebelum: null,
+      data_sesudah: null,
+      ip_address: getClientInfo(req).ip_address,
+      user_agent: getClientInfo(req).user_agent,
+      endpoint: "/api/login",
+      method: "POST",
+    }).catch((err) => {
+      console.error("⚠️ Failed to create login log (non-critical):", err);
+    });
 
     // 9) Bersihkan marker duplikat
     await clearDuplicate(email);
 
-    // 10) ✅ Response SEGERA - tidak menunggu operasi DB selesai
+    // 11) ✅ Response - data sudah aman di DB
     return NextResponse.json(
       {
         result: 1,
@@ -242,14 +274,7 @@ export async function POST(req: Request) {
         level: numericLevel,
         skpdid,
       },
-      {
-        status: 200,
-        headers: {
-          "X-Content-Type-Options": "nosniff",
-          "Content-Security-Policy": "default-src 'self'",
-          "X-Frame-Options": "DENY",
-        },
-      }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Server error during login:", error);
